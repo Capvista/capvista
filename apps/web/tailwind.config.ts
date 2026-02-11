@@ -9,29 +9,41 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Capvista brand colors
+        // Deep Institutional Palette
         primary: {
-          50: "#eff6ff",
-          100: "#dbeafe",
-          200: "#bfdbfe",
-          300: "#93c5fd",
-          400: "#60a5fa",
-          500: "#3b82f6", // Main blue
-          600: "#2563eb",
-          700: "#1d4ed8",
-          800: "#1e40af",
-          900: "#1e3a8a",
+          50: "#F0F4F8",
+          100: "#D9E2EC",
+          200: "#BCCCDC",
+          300: "#9FB3C8",
+          400: "#829AB1",
+          500: "#627D98",
+          600: "#486581",
+          700: "#334E68",
+          800: "#243B53",
+          900: "#142B4F",
+          950: "#0B1C2D",
         },
-        // Trust indicators
-        verified: "#10b981", // Green
-        watch: "#f59e0b", // Yellow
-        intervention: "#ef4444", // Red
-        // Lanes
-        yield: "#3b82f6", // Blue
-        ventures: "#8b5cf6", // Purple
+        slate: {
+          DEFAULT: "#2F3B4A",
+          light: "#6B7C93",
+        },
+        gold: {
+          DEFAULT: "#C8A24D",
+          light: "#D4B66A",
+          dark: "#B38F3A",
+        },
+        emerald: {
+          DEFAULT: "#1C8C5E",
+          light: "#2DAA7A",
+          dark: "#156B47",
+        },
+        verified: "#1C8C5E",
+        watch: "#C8A24D",
+        intervention: "#DC2626",
       },
       fontFamily: {
         sans: ["var(--font-inter)", "system-ui", "sans-serif"],
+        mono: ["JetBrains Mono", "IBM Plex Mono", "monospace"],
       },
     },
   },

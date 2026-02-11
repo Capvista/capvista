@@ -1,31 +1,36 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "@/lib/contexts/AuthContext";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+});
 
 export const metadata: Metadata = {
-  title: "Capvista - Private Markets Infrastructure for African Startups",
+  title: "Capvista - Institutional Access to African Private Markets",
   description:
-    "Connecting verified African startups with global capital through structured investment vehicles.",
+    "Private markets infrastructure connecting verified African startups with global capital through standardized investment vehicles.",
   keywords: [
-    "investment",
-    "startups",
-    "Africa",
-    "Nigeria",
-    "venture capital",
     "private markets",
+    "African startups",
+    "investment",
+    "venture capital",
+    "private equity",
   ],
 };
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
     <html lang="en">
-      <body className={inter.variable}>{children}</body>
+      <body className={`${inter.variable} font-sans antialiased`}>
+        <AuthProvider>{children}</AuthProvider>
+      </body>
     </html>
   );
 }

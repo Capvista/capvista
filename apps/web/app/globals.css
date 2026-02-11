@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900 antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-semibold tracking-tight;
+  }
+}
+
+@layer components {
+  .container {
+    @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+
+  .btn-primary {
+    background-color: #c8a24d;
+    color: #0b1c2d;
+    @apply px-6 py-3 rounded-lg font-semibold transition-all shadow-sm;
+  }
+
+  .btn-primary:hover {
+    background-color: #d4b66a;
+  }
+
+  .btn-secondary {
+    background-color: #142b4f;
+    @apply text-white px-6 py-3 rounded-lg font-semibold transition-all border;
+    border-color: #334e68;
+  }
+
+  .btn-secondary:hover {
+    background-color: #243b53;
+  }
+
+  .card {
+    @apply bg-white rounded-lg border border-gray-200 p-6 shadow-sm;
+  }
+
+  .institutional-hero {
+    background: linear-gradient(to bottom right, #0b1c2d, #142b4f, #243b53);
+  }
+
+  .gold-accent {
+    border-bottom: 2px solid #c8a24d;
+  }
+}
