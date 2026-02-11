@@ -1,0 +1,498 @@
+import { Router, Request, Response } from "express";
+import { prisma } from "@capvista/database";
+import { z } from "zod";
+import { requireAuth, requireRole } from "../middleware/auth";
+
+const router = Router();
+
+// Validation schemas
+const createDealSchema = z.object({
+  companyId: z.string(),
+  name: z.string().min(1),
+  lane: z.enum(["YIELD", "VENTURES"]),
+  instrumentType: z.enum([
+    "REVENUE_SHARE_NOTE",
+    "ASSET_BACKED_PARTICIPATION",
+    "CONVERTIBLE_NOTE",
+    "SAFE",
+    "SPV_EQUITY",
+  ]),
+  targetAmount: z.number().positive(),
+  minimumInvestment: z.number().positive(),
+  terms: z.any(), // JSON object with instrument-specific terms
+  duration: z.number().int().positive().optional(),
+  pitchDeckUrl: z.string().url().optional(),
+  financialDocsUrl: z.string().url().optional(),
+  termsSheetUrl: z.string().url().optional(),
+});
+
+const updateDealSchema = createDealSchema.partial().omit({ companyId: true });
+
+// POST /v1/deals - Create deal (founders only)
+router.post(
+  "/",
+  requireAuth,
+  requireRole("FOUNDER"),
+  async (req: Request, res: Response) => {
+    try {
+      const body = createDealSchema.parse(req.body);
+
+      // Verify user is founder of the company
+      const companyFounder = await prisma.companyFounder.findFirst({
+        where: {
+          companyId: body.companyId,
+          userId: req.user!.id,
+        },
+      });
+
+      if (!companyFounder) {
+        return res.status(403).json({
+          success: false,
+          error: {
+            code: "FORBIDDEN",
+            message: "You are not authorized to create deals for this company",
+          },
+        });
+      }
+
+      // Verify company has completed equity acknowledgement
+      const company = await prisma.company.findUnique({
+        where: { id: body.companyId },
+        select: { equityAcknowledgementAccepted: true },
+      });
+
+      if (!company?.equityAcknowledgementAccepted) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: "ACKNOWLEDGEMENT_REQUIRED",
+            message:
+              "Company must accept platform equity terms before creating deals",
+          },
+        });
+      }
+
+      // Validate lane and instrument match
+      const yieldInstruments = [
+        "REVENUE_SHARE_NOTE",
+        "ASSET_BACKED_PARTICIPATION",
+      ];
+      const venturesInstruments = ["CONVERTIBLE_NOTE", "SAFE", "SPV_EQUITY"];
+
+      if (
+        body.lane === "YIELD" &&
+        !yieldInstruments.includes(body.instrumentType)
+      ) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: "INVALID_INSTRUMENT",
+            message: "Selected instrument is not valid for Yield lane",
+          },
+        });
+      }
+
+      if (
+        body.lane === "VENTURES" &&
+        !venturesInstruments.includes(body.instrumentType)
+      ) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: "INVALID_INSTRUMENT",
+            message: "Selected instrument is not valid for Ventures lane",
+          },
+        });
+      }
+
+      // Create deal in DRAFT status (needs admin approval)
+      const deal = await prisma.deal.create({
+        data: {
+          companyId: body.companyId,
+          name: body.name,
+          lane: body.lane,
+          instrumentType: body.instrumentType,
+          targetAmount: body.targetAmount,
+          minimumInvestment: body.minimumInvestment,
+          terms: body.terms,
+          duration: body.duration,
+          pitchDeckUrl: body.pitchDeckUrl,
+          financialDocsUrl: body.financialDocsUrl,
+          termsSheetUrl: body.termsSheetUrl,
+          status: "DRAFT",
+        },
+        include: {
+          company: {
+            select: {
+              id: true,
+              legalName: true,
+              tradingName: true,
+              sector: true,
+              stage: true,
+            },
+          },
+        },
+      });
+
+      return res.status(201).json({
+        success: true,
+        data: deal,
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "Invalid request data",
+            details: error.errors,
+          },
+        });
+      }
+
+      console.error("Create deal error:", error);
+      return res.status(500).json({
+        success: false,
+        error: {
+          code: "INTERNAL_ERROR",
+          message: "Failed to create deal",
+        },
+      });
+    }
+  },
+);
+
+// GET /v1/deals - Browse deals (public with filters)
+router.get("/", async (req: Request, res: Response) => {
+  try {
+    const {
+      lane,
+      sector,
+      stage,
+      status = "LIVE",
+      page = "1",
+      limit = "20",
+    } = req.query;
+
+    const where: any = {
+      status: status, // Default to LIVE deals only
+    };
+
+    if (lane) where.lane = lane;
+    if (sector) {
+      where.company = { sector };
+    }
+    if (stage) {
+      where.company = { ...where.company, stage };
+    }
+
+    const skip = (Number(page) - 1) * Number(limit);
+    const take = Number(limit);
+
+    const [deals, total] = await Promise.all([
+      prisma.deal.findMany({
+        where,
+        skip,
+        take,
+        select: {
+          id: true,
+          name: true,
+          lane: true,
+          instrumentType: true,
+          targetAmount: true,
+          raisedAmount: true,
+          minimumInvestment: true,
+          duration: true,
+          status: true,
+          currentMonitoringStatus: true,
+          createdAt: true,
+          company: {
+            select: {
+              id: true,
+              legalName: true,
+              tradingName: true,
+              oneLineDescription: true,
+              sector: true,
+              stage: true,
+              verificationRecords: {
+                where: { status: "VERIFIED" },
+                select: { type: true },
+              },
+            },
+          },
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      }),
+      prisma.deal.count({ where }),
+    ]);
+
+    return res.json({
+      success: true,
+      data: deals,
+      meta: {
+        total,
+        page: Number(page),
+        limit: Number(limit),
+        totalPages: Math.ceil(total / Number(limit)),
+      },
+    });
+  } catch (error) {
+    console.error("List deals error:", error);
+    return res.status(500).json({
+      success: false,
+      error: {
+        code: "INTERNAL_ERROR",
+        message: "Failed to fetch deals",
+      },
+    });
+  }
+});
+
+// GET /v1/deals/:id - Get deal details
+router.get("/:id", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const deal = await prisma.deal.findUnique({
+      where: { id },
+      include: {
+        company: {
+          include: {
+            founders: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                  },
+                },
+              },
+            },
+            verificationRecords: {
+              where: { status: "VERIFIED" },
+              select: {
+                type: true,
+                verifiedAt: true,
+              },
+            },
+          },
+        },
+        investments: {
+          select: {
+            id: true,
+            commitmentAmount: true,
+            fundedAmount: true,
+            status: true,
+            committedAt: true,
+          },
+        },
+      },
+    });
+
+    if (!deal) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: "DEAL_NOT_FOUND",
+          message: "Deal not found",
+        },
+      });
+    }
+
+    // Calculate progress
+    // Calculate progress
+    const targetAmount = Number(deal.targetAmount);
+    const raisedAmount = Number(deal.raisedAmount);
+    const progress = targetAmount > 0 ? (raisedAmount / targetAmount) * 100 : 0;
+
+    return res.json({
+      success: true,
+      data: {
+        ...deal,
+        progress: Math.round(progress * 100) / 100, // Round to 2 decimals
+      },
+    });
+  } catch (error) {
+    console.error("Get deal error:", error);
+    return res.status(500).json({
+      success: false,
+      error: {
+        code: "INTERNAL_ERROR",
+        message: "Failed to fetch deal",
+      },
+    });
+  }
+});
+
+// PATCH /v1/deals/:id - Update deal (founders only, only if DRAFT)
+router.patch(
+  "/:id",
+  requireAuth,
+  requireRole("FOUNDER"),
+  async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const body = updateDealSchema.parse(req.body);
+
+      // Get deal with company
+      const deal = await prisma.deal.findUnique({
+        where: { id },
+        include: {
+          company: {
+            include: {
+              founders: true,
+            },
+          },
+        },
+      });
+
+      if (!deal) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: "DEAL_NOT_FOUND",
+            message: "Deal not found",
+          },
+        });
+      }
+
+      // Verify user is founder
+      const isFounder = deal.company.founders.some(
+        (f) => f.userId === req.user!.id,
+      );
+      if (!isFounder) {
+        return res.status(403).json({
+          success: false,
+          error: {
+            code: "FORBIDDEN",
+            message: "You are not authorized to update this deal",
+          },
+        });
+      }
+
+      // Can only update DRAFT deals
+      if (deal.status !== "DRAFT") {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: "INVALID_STATUS",
+            message: "Can only update deals in DRAFT status",
+          },
+        });
+      }
+
+      // Update deal
+      const updatedDeal = await prisma.deal.update({
+        where: { id },
+        data: body,
+      });
+
+      return res.json({
+        success: true,
+        data: updatedDeal,
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "Invalid request data",
+            details: error.errors,
+          },
+        });
+      }
+
+      console.error("Update deal error:", error);
+      return res.status(500).json({
+        success: false,
+        error: {
+          code: "INTERNAL_ERROR",
+          message: "Failed to update deal",
+        },
+      });
+    }
+  },
+);
+
+// POST /v1/deals/:id/submit - Submit deal for review (founders only)
+router.post(
+  "/:id/submit",
+  requireAuth,
+  requireRole("FOUNDER"),
+  async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+
+      const deal = await prisma.deal.findUnique({
+        where: { id },
+        include: {
+          company: {
+            include: { founders: true },
+          },
+        },
+      });
+
+      if (!deal) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: "DEAL_NOT_FOUND",
+            message: "Deal not found",
+          },
+        });
+      }
+
+      // Verify founder
+      const isFounder = deal.company.founders.some(
+        (f) => f.userId === req.user!.id,
+      );
+      if (!isFounder) {
+        return res.status(403).json({
+          success: false,
+          error: {
+            code: "FORBIDDEN",
+            message: "Not authorized",
+          },
+        });
+      }
+
+      // Can only submit DRAFT deals
+      if (deal.status !== "DRAFT") {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: "INVALID_STATUS",
+            message: "Deal is not in DRAFT status",
+          },
+        });
+      }
+
+      // Update to UNDER_REVIEW
+      const updatedDeal = await prisma.deal.update({
+        where: { id },
+        data: { status: "UNDER_REVIEW" },
+      });
+
+      return res.json({
+        success: true,
+        data: updatedDeal,
+        message: "Deal submitted for admin review",
+      });
+    } catch (error) {
+      console.error("Submit deal error:", error);
+      return res.status(500).json({
+        success: false,
+        error: {
+          code: "INTERNAL_ERROR",
+          message: "Failed to submit deal",
+        },
+      });
+    }
+  },
+);
+
+export default router;
