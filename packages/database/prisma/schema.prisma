@@ -1,0 +1,524 @@
+// Capvista Database Schema
+// This schema defines the complete data model for the platform
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// USERS & AUTHENTICATION
+// ============================================================================
+
+enum UserRole {
+  FOUNDER
+  INVESTOR
+  ADMIN
+}
+
+model User {
+  id        String   @id @default(cuid())
+  clerkId   String   @unique // Clerk authentication ID
+  email     String   @unique
+  role      UserRole
+  firstName String?
+  lastName  String?
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Risk acknowledgement (for investors)
+  riskAcknowledgedAt DateTime?
+  riskAcknowledgedIp String?
+
+  // Relationships
+  verificationRecords VerificationRecord[]
+  foundedCompanies    CompanyFounder[]
+  investments         Investment[]
+  adminActions        AdminAction[]
+
+  @@index([clerkId])
+  @@index([email])
+  @@index([role])
+}
+
+// ============================================================================
+// COMPANIES
+// ============================================================================
+
+enum CompanyStage {
+  PRE_REVENUE
+  EARLY_REVENUE
+  GROWTH
+  PROFITABLE
+}
+
+enum BusinessModel {
+  B2B
+  B2C
+  B2B2C
+}
+
+enum RevenueModel {
+  TRANSACTIONAL
+  SUBSCRIPTION
+  ASSET_BACKED
+}
+
+enum Sector {
+  FINTECH
+  LOGISTICS
+  ENERGY
+  CONSUMER_FMCG
+  HEALTH
+  AGRI_FOOD
+  REAL_ESTATE
+  INFRASTRUCTURE
+  SAAS_TECH
+  MANUFACTURING
+}
+
+model Company {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 1️⃣ Identity (Foundational)
+  legalName              String
+  tradingName            String?
+  countryOfIncorporation String  @default("Nigeria")
+  incorporationNumber    String  @unique // CAC number
+  incorporationDate      DateTime
+  companyAddress         String
+  operatingCountries     String[] // Array of country codes
+  website                String?
+  officialEmailDomain    String
+
+  // Internal only
+  cacVerificationStatus   String? // JSON status
+  sanctionsWatchlistCheck String? // JSON result
+
+  // 2️⃣ Founders & Team
+  teamSize String? // Enum: founders_only, 1-5, 6-20, 21-50, 50+
+
+  // 3️⃣ Company Overview
+  oneLineDescription  String
+  detailedDescription String        @db.Text
+  sector              Sector
+  businessModel       BusinessModel
+  revenueModel        RevenueModel
+  stage               CompanyStage
+
+  // 4️⃣ Traction & Operations
+  revenueStatus             String? // no_revenue, monthly, annual
+  revenueRange              String? // JSON: {min, max}
+  primaryRevenueSource      String?
+  keyMetrics                Json? // Array of {metric_name, metric_value}
+  majorCustomers            String[] // Array of customer names
+  geographicFootprint       String?
+  regulatoryDependencies    String?
+  bankAccountVerified       Boolean  @default(false)
+  revenueVerificationMethod String?
+
+  // 5️⃣ Capital & History
+  hasRaisedBefore          Boolean  @default(false)
+  previousRaises           Json? // Array of {amount_range, instrument_types}
+  founderOwnedPercent      Decimal? @db.Decimal(5, 2)
+  externalInvestorsPercent Decimal? @db.Decimal(5, 2)
+  notableInvestors         String[] // Array of investor names
+
+  // 6️⃣ Risk & Reality
+  topRisks                String[] // Array of 3 risks (founder-written)
+  materialThreats         String?
+  singleSupplier          Boolean  @default(false)
+  fxExposure              Boolean  @default(false)
+  regulationDependent     Boolean  @default(false)
+  infrastructureDependent Boolean  @default(false)
+
+  // 7️⃣ Fundraising Intent
+  preferredLane       DealLane?
+  preferredInstrument InstrumentType?
+  targetRaiseRange    String? // JSON: {min, max}
+  primaryUseOfFunds   String?
+
+  // 8️⃣ Platform Equity Acknowledgement
+  equityAcknowledgementAccepted  Boolean   @default(false)
+  equityAcknowledgementTimestamp DateTime?
+  equityAcknowledgementIp        String?
+  equityIssuedToCapvistaHoldings Boolean   @default(false)
+
+  // Monitoring
+  currentMonitoringStatus MonitoringMode @default(NORMAL)
+
+  // Relationships
+  founders            CompanyFounder[]
+  verificationRecords VerificationRecord[]
+  deals               Deal[]
+  monitoringStatuses  MonitoringStatus[]
+  capvistaEquity      CapvistaHoldingsEquity?
+
+  @@index([incorporationNumber])
+  @@index([sector])
+  @@index([stage])
+}
+
+model CompanyFounder {
+  id              String   @id @default(cuid())
+  companyId       String
+  userId          String
+  role            String // CEO, CTO, etc.
+  bio             String   @db.Text
+  linkedinUrl     String?
+  yearsExperience Int?
+  isPrimary       Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  // Internal only
+  nin String? // National Identification Number
+  bvn String? // Bank Verification Number
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@unique([companyId, userId])
+  @@index([companyId])
+}
+
+// ============================================================================
+// DEALS & INSTRUMENTS
+// ============================================================================
+
+enum DealLane {
+  YIELD
+  VENTURES
+}
+
+enum InstrumentType {
+  REVENUE_SHARE_NOTE         // Yield
+  ASSET_BACKED_PARTICIPATION // Yield
+  CONVERTIBLE_NOTE           // Ventures
+  SAFE                       // Ventures
+  SPV_EQUITY                 // Ventures
+}
+
+enum DealStatus {
+  DRAFT
+  UNDER_REVIEW
+  APPROVED
+  LIVE
+  CLOSED
+  DEFAULTED
+}
+
+model Deal {
+  id        String   @id @default(cuid())
+  companyId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Basic info
+  name           String
+  lane           DealLane
+  instrumentType InstrumentType
+  status         DealStatus     @default(DRAFT)
+
+  // Raise details
+  targetAmount      Decimal @db.Decimal(12, 2)
+  minimumInvestment Decimal @db.Decimal(12, 2)
+  raisedAmount      Decimal @db.Decimal(12, 2) @default(0)
+
+  // Terms (stored as JSON for flexibility per instrument)
+  terms Json // Structure varies by instrument type
+
+  // Timeline
+  openedAt DateTime?
+  closedAt DateTime?
+  duration Int? // Expected duration in months
+
+  // Documents
+  pitchDeckUrl     String?
+  financialDocsUrl String?
+  termsSheetUrl    String?
+
+  // Monitoring
+  currentMonitoringStatus MonitoringMode @default(NORMAL)
+
+  // Relationships
+  company            Company            @relation(fields: [companyId], references: [id])
+  investments        Investment[]
+  monitoringStatuses MonitoringStatus[]
+  adminActions       AdminAction[]
+
+  @@index([companyId])
+  @@index([status])
+  @@index([lane])
+}
+
+// ============================================================================
+// INVESTMENTS
+// ============================================================================
+
+enum InvestmentStatus {
+  COMMITTED // Soft commitment
+  FUNDED    // Money in escrow/transferred
+  ACTIVE    // Investment is live
+  EXITED    // Successful exit
+  DEFAULTED // Company defaulted
+}
+
+model Investment {
+  id        String   @id @default(cuid())
+  investorId String
+  dealId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Amounts
+  commitmentAmount Decimal @db.Decimal(12, 2)
+  fundedAmount     Decimal @db.Decimal(12, 2) @default(0)
+
+  // Status
+  status InvestmentStatus @default(COMMITTED)
+
+  // Timeline
+  committedAt DateTime @default(now())
+  fundedAt    DateTime?
+
+  // Returns tracking
+  totalReturned Decimal @db.Decimal(12, 2) @default(0)
+  currentValue  Decimal @db.Decimal(12, 2) @default(0)
+
+  // Relationships
+  investor           User                @relation(fields: [investorId], references: [id])
+  deal               Deal                @relation(fields: [dealId], references: [id])
+  escrowTransactions EscrowTransaction[]
+  ownershipRecords   OwnershipRecord[]
+
+  @@index([investorId])
+  @@index([dealId])
+  @@index([status])
+}
+
+// ============================================================================
+// VERIFICATION
+// ============================================================================
+
+enum VerificationType {
+  CAC          // Certificate of incorporation
+  NIN          // National ID
+  BVN          // Bank verification
+  BANK_ACCOUNT // Bank account ownership
+  REVENUE      // Revenue verification
+  ASSET        // Asset verification
+  IDENTITY     // General identity verification
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  EXPIRED
+}
+
+model VerificationRecord {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Subject (either user or company)
+  userId    String?
+  companyId String?
+
+  // Verification details
+  type            VerificationType
+  status          VerificationStatus @default(PENDING)
+  documentUrl     String? // Azure Blob Storage URL
+  verifiedAt      DateTime?
+  verifiedBy      String? // Admin user ID
+  rejectionReason String?
+
+  // Metadata (JSON for flexibility)
+  metadata Json?
+
+  // Immutable - never delete, only supersede
+  supersededBy String? // ID of newer verification record
+
+  // Relationships
+  user    User?    @relation(fields: [userId], references: [id])
+  company Company? @relation(fields: [companyId], references: [id])
+
+  @@index([userId])
+  @@index([companyId])
+  @@index([type])
+  @@index([status])
+}
+
+// ============================================================================
+// ESCROW & TRANSACTIONS
+// ============================================================================
+
+enum TransactionDirection {
+  INVESTOR_TO_ESCROW
+  ESCROW_TO_COMPANY
+  COMPANY_TO_INVESTOR
+  ESCROW_TO_INVESTOR // Refund
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REVERSED
+}
+
+model EscrowTransaction {
+  id           String   @id @default(cuid())
+  investmentId String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  amount    Decimal              @db.Decimal(12, 2)
+  direction TransactionDirection
+  status    TransactionStatus    @default(PENDING)
+
+  // External reference (from payment provider)
+  externalRef String?
+
+  // Metadata
+  metadata Json?
+
+  // Relationships
+  investment Investment @relation(fields: [investmentId], references: [id])
+
+  @@index([investmentId])
+  @@index([status])
+}
+
+// ============================================================================
+// OWNERSHIP RECORDS
+// ============================================================================
+
+enum OwnershipType {
+  EQUITY_PERCENTAGE
+  REVENUE_SHARE_PERCENTAGE
+  CONVERTIBLE_RIGHTS
+  ASSET_PARTICIPATION
+}
+
+model OwnershipRecord {
+  id           String   @id @default(cuid())
+  investmentId String
+  createdAt    DateTime @default(now())
+
+  ownershipType OwnershipType
+  terms         Json // Structure varies by ownership type
+  issuedAt      DateTime          @default(now())
+
+  // Relationships
+  investment Investment @relation(fields: [investmentId], references: [id])
+
+  @@index([investmentId])
+}
+
+// ============================================================================
+// MONITORING
+// ============================================================================
+
+enum MonitoringMode {
+  NORMAL       // Everything good
+  WATCH        // Minor concerns, increased monitoring
+  INTERVENTION // Serious issues, escalation required
+}
+
+model MonitoringStatus {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Subject (either company or deal)
+  companyId String?
+  dealId    String?
+
+  mode              MonitoringMode
+  triggeredBy       String // Event/reason that triggered this status
+  notes             String?        @db.Text
+  escalationHistory Json? // Array of escalation events
+
+  // Resolution
+  resolvedAt DateTime?
+  resolution String?
+
+  // Relationships
+  company Company? @relation(fields: [companyId], references: [id])
+  deal    Deal?    @relation(fields: [dealId], references: [id])
+
+  @@index([companyId])
+  @@index([dealId])
+  @@index([mode])
+}
+
+// ============================================================================
+// ADMIN ACTIONS
+// ============================================================================
+
+enum AdminActionType {
+  APPROVE_VERIFICATION
+  REJECT_VERIFICATION
+  APPROVE_DEAL
+  REJECT_DEAL
+  CHANGE_MONITORING_STATUS
+  SUSPEND_COMPANY
+  SUSPEND_USER
+  MANUAL_INTERVENTION
+}
+
+model AdminAction {
+  id        String   @id @default(cuid())
+  adminId   String
+  createdAt DateTime @default(now())
+
+  actionType AdminActionType
+  targetType String // "company", "deal", "user", "verification"
+  targetId   String // ID of the target
+
+  // Associated deal if applicable
+  dealId String?
+
+  reason   String? @db.Text
+  metadata Json? // Additional context
+
+  // Relationships
+  admin User  @relation(fields: [adminId], references: [id])
+  deal  Deal? @relation(fields: [dealId], references: [id])
+
+  @@index([adminId])
+  @@index([targetType, targetId])
+  @@index([actionType])
+}
+
+// ============================================================================
+// CAPVISTA HOLDINGS EQUITY
+// ============================================================================
+
+model CapvistaHoldingsEquity {
+  id        String   @id @default(cuid())
+  companyId String   @unique
+  createdAt DateTime @default(now())
+
+  // Standard terms
+  equityPercentage    Decimal  @default(1.0000) @db.Decimal(5, 4) // 1%
+  isNonPreferential   Boolean  @default(true)
+  issuedAt            DateTime @default(now())
+
+  // Legal docs
+  shareholderAgreementUrl String?
+
+  // Relationships
+  company Company @relation(fields: [companyId], references: [id])
+
+  @@index([companyId])
+}
