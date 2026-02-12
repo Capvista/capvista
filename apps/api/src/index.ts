@@ -4,16 +4,14 @@ import helmet from "helmet";
 import dotenv from "dotenv";
 
 // Import routes
-import authRoutes from "./routes/auth.routes";
-import companiesRoutes from "./routes/companies.routes";
-import dealsRoutes from "./routes/deals.routes";
-import investmentsRoutes from "./routes/investments.routes";
+import companiesRoutes from "./routes/companies";
+import usersRoutes from "./routes/users";
 
 // Load environment variables
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 4000;
 
 // Middleware
 app.use(helmet()); // Security headers
@@ -39,24 +37,20 @@ app.get("/health", (req: Request, res: Response) => {
 });
 
 // API version info
-app.get("/v1", (req: Request, res: Response) => {
+app.get("/api", (req: Request, res: Response) => {
   res.json({
-    message: "Capvista API v1",
-    version: "0.1.0",
+    message: "Capvista API",
+    version: "1.0.0",
     endpoints: {
-      auth: "/v1/auth",
-      companies: "/v1/companies",
-      deals: "/v1/deals",
-      investments: "/v1/investments",
+      companies: "/api/companies",
+      users: "/api/users",
     },
   });
 });
 
 // Mount route handlers
-app.use("/v1/auth", authRoutes);
-app.use("/v1/companies", companiesRoutes);
-app.use("/v1/deals", dealsRoutes);
-app.use("/v1/investments", investmentsRoutes);
+app.use("/api/companies", companiesRoutes);
+app.use("/api/users", usersRoutes);
 
 // Error handling middleware
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
@@ -89,7 +83,7 @@ app.use((req: Request, res: Response) => {
 app.listen(PORT, () => {
   console.log(`🚀 Capvista API running on http://localhost:${PORT}`);
   console.log(`📊 Environment: ${process.env.NODE_ENV || "development"}`);
-  console.log(`📍 Endpoints available at http://localhost:${PORT}/v1`);
+  console.log(`📍 Endpoints available at http://localhost:${PORT}/api`);
 });
 
 export default app;
