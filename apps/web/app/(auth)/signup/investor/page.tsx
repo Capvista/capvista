@@ -7,7 +7,8 @@ import Link from "next/link";
 
 export default function InvestorSignupPage() {
   const [formData, setFormData] = useState({
-    fullName: "",
+    firstName: "",
+    lastName: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -35,14 +36,14 @@ export default function InvestorSignupPage() {
 
     const { error } = await signUp(formData.email, formData.password, {
       role: "INVESTOR",
-      fullName: formData.fullName,
+      firstName: formData.firstName,
+      lastName: formData.lastName,
     });
 
     if (error) {
       setError(error.message);
       setLoading(false);
     } else {
-      // Redirect to dashboard or email verification page
       router.push("/dashboard");
     }
   };
@@ -85,24 +86,46 @@ export default function InvestorSignupPage() {
               </div>
             )}
 
-            <div>
-              <label
-                htmlFor="fullName"
-                className="block text-sm font-semibold text-gray-900 mb-2"
-              >
-                Full Name
-              </label>
-              <input
-                id="fullName"
-                type="text"
-                required
-                value={formData.fullName}
-                onChange={(e) =>
-                  setFormData({ ...formData, fullName: e.target.value })
-                }
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none transition-all"
-                placeholder="John Doe"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label
+                  htmlFor="firstName"
+                  className="block text-sm font-semibold text-gray-900 mb-2"
+                >
+                  First Name
+                </label>
+                <input
+                  id="firstName"
+                  type="text"
+                  required
+                  value={formData.firstName}
+                  onChange={(e) =>
+                    setFormData({ ...formData, firstName: e.target.value })
+                  }
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none transition-all"
+                  placeholder="John"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="lastName"
+                  className="block text-sm font-semibold text-gray-900 mb-2"
+                >
+                  Last Name
+                </label>
+                <input
+                  id="lastName"
+                  type="text"
+                  required
+                  value={formData.lastName}
+                  onChange={(e) =>
+                    setFormData({ ...formData, lastName: e.target.value })
+                  }
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none transition-all"
+                  placeholder="Doe"
+                />
+              </div>
             </div>
 
             <div>

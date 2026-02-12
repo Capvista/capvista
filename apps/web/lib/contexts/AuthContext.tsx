@@ -1,9 +1,15 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { User } from "@supabase/supabase-js";
+import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+
+type SignUpMetadata = {
+  role: "INVESTOR" | "FOUNDER";
+  firstName: string;
+  lastName: string;
+};
 
 type AuthContextType = {
   user: User | null;
@@ -11,7 +17,7 @@ type AuthContextType = {
   signUp: (
     email: string,
     password: string,
-    metadata: { role: "INVESTOR" | "FOUNDER"; fullName: string },
+    metadata: SignUpMetadata,
   ) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
@@ -46,7 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signUp = async (
     email: string,
     password: string,
-    metadata: { role: "INVESTOR" | "FOUNDER"; fullName: string },
+    metadata: SignUpMetadata,
   ) => {
     const { error } = await supabase.auth.signUp({
       email,
@@ -54,7 +60,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       options: {
         data: {
           role: metadata.role,
-          full_name: metadata.fullName,
+          first_name: metadata.firstName,
+          last_name: metadata.lastName,
         },
       },
     });
