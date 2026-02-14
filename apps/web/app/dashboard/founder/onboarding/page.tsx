@@ -1,14 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-);
+import CustomSelect from "@/components/CustomSelect";
+import { useAuth } from "@/lib/contexts/AuthContext";
 
 type FormData = {
   // 1️⃣ Company Identity
@@ -33,6 +30,15 @@ type FormData = {
   founderLinkedIn: string;
   yearsExperience: string;
   keyExecutives: string;
+
+  // 2B️⃣ Founder Verification
+  founderFullName: string;
+  founderEmail: string;
+  founderPhone: string;
+  founderNIN: string;
+  founderBVN: string;
+  founderIDType: string;
+  founderIDNumber: string;
 
   // 3️⃣ Traction
   revenueStatus: string;
@@ -85,6 +91,7 @@ type FormData = {
 const STEPS = [
   "Company Identity",
   "Team & Overview",
+  "Founder Verification",
   "Traction",
   "Capital & History",
   "Risks",
@@ -93,9 +100,173 @@ const STEPS = [
   "Review & Submit",
 ];
 
+// All African countries
+const countryOptions = [
+  { value: "Nigeria", label: "Nigeria" },
+  { value: "Kenya", label: "Kenya" },
+  { value: "Ghana", label: "Ghana" },
+  { value: "South Africa", label: "South Africa" },
+  { value: "Egypt", label: "Egypt" },
+  { value: "Morocco", label: "Morocco" },
+  { value: "Algeria", label: "Algeria" },
+  { value: "Tunisia", label: "Tunisia" },
+  { value: "Libya", label: "Libya" },
+  { value: "Sudan", label: "Sudan" },
+  { value: "Ethiopia", label: "Ethiopia" },
+  { value: "Eritrea", label: "Eritrea" },
+  { value: "Djibouti", label: "Djibouti" },
+  { value: "Somalia", label: "Somalia" },
+  { value: "Tanzania", label: "Tanzania" },
+  { value: "Uganda", label: "Uganda" },
+  { value: "Rwanda", label: "Rwanda" },
+  { value: "Burundi", label: "Burundi" },
+  { value: "Zambia", label: "Zambia" },
+  { value: "Zimbabwe", label: "Zimbabwe" },
+  { value: "Malawi", label: "Malawi" },
+  { value: "Mozambique", label: "Mozambique" },
+  { value: "Botswana", label: "Botswana" },
+  { value: "Namibia", label: "Namibia" },
+  { value: "Angola", label: "Angola" },
+  { value: "Lesotho", label: "Lesotho" },
+  { value: "Eswatini", label: "Eswatini" },
+  { value: "Mauritius", label: "Mauritius" },
+  { value: "Seychelles", label: "Seychelles" },
+  { value: "Madagascar", label: "Madagascar" },
+  { value: "Comoros", label: "Comoros" },
+  { value: "Senegal", label: "Senegal" },
+  { value: "Gambia", label: "Gambia" },
+  { value: "Guinea-Bissau", label: "Guinea-Bissau" },
+  { value: "Guinea", label: "Guinea" },
+  { value: "Sierra Leone", label: "Sierra Leone" },
+  { value: "Liberia", label: "Liberia" },
+  { value: "Ivory Coast", label: "Ivory Coast" },
+  { value: "Burkina Faso", label: "Burkina Faso" },
+  { value: "Mali", label: "Mali" },
+  { value: "Mauritania", label: "Mauritania" },
+  { value: "Niger", label: "Niger" },
+  { value: "Chad", label: "Chad" },
+  { value: "Cameroon", label: "Cameroon" },
+  { value: "Central African Republic", label: "Central African Republic" },
+  { value: "Equatorial Guinea", label: "Equatorial Guinea" },
+  { value: "Gabon", label: "Gabon" },
+  { value: "Republic of the Congo", label: "Republic of the Congo" },
+  {
+    value: "Democratic Republic of the Congo",
+    label: "Democratic Republic of the Congo",
+  },
+  { value: "Benin", label: "Benin" },
+  { value: "Togo", label: "Togo" },
+  { value: "Cape Verde", label: "Cape Verde" },
+  { value: "Sao Tome and Principe", label: "Sao Tome and Principe" },
+];
+
+const teamSizeOptions = [
+  { value: "", label: "Select team size" },
+  { value: "founders_only", label: "Founders only" },
+  { value: "1-5", label: "1-5 employees" },
+  { value: "6-20", label: "6-20 employees" },
+  { value: "21-50", label: "21-50 employees" },
+  { value: "50+", label: "50+ employees" },
+];
+
+const stageOptions = [
+  { value: "", label: "Select stage" },
+  { value: "PRE_REVENUE", label: "Pre-revenue" },
+  { value: "EARLY_REVENUE", label: "Early revenue" },
+  { value: "GROWTH", label: "Growth" },
+  { value: "PROFITABLE", label: "Profitable" },
+];
+
+const sectorOptions = [
+  { value: "", label: "Select sector" },
+  { value: "FINTECH", label: "Fintech" },
+  { value: "LOGISTICS", label: "Logistics" },
+  { value: "ENERGY", label: "Energy" },
+  { value: "CONSUMER_FMCG", label: "Consumer / FMCG" },
+  { value: "HEALTH", label: "Health" },
+  { value: "AGRI_FOOD", label: "Agri / Food" },
+  { value: "REAL_ESTATE", label: "Real Estate" },
+  { value: "INFRASTRUCTURE", label: "Infrastructure" },
+  { value: "SAAS_TECH", label: "SaaS / Tech" },
+  { value: "AI", label: "AI / Machine Learning" },
+  { value: "MANUFACTURING", label: "Manufacturing" },
+];
+
+const businessModelOptions = [
+  { value: "", label: "Select business model" },
+  { value: "B2B", label: "B2B" },
+  { value: "B2C", label: "B2C" },
+  { value: "B2B2C", label: "B2B2C" },
+];
+
+const idTypeOptions = [
+  { value: "", label: "Select ID type" },
+  { value: "DRIVERS_LICENSE", label: "Driver's License" },
+  { value: "PASSPORT", label: "Passport" },
+];
+
+const revenueStatusOptions = [
+  { value: "", label: "Select revenue status" },
+  { value: "no_revenue", label: "No revenue" },
+  { value: "monthly", label: "Monthly revenue" },
+  { value: "annual", label: "Annual revenue" },
+];
+
+const revenueRangeOptions = [
+  { value: "", label: "Select range" },
+  { value: "0-50k", label: "$0 - $50k" },
+  { value: "50k-200k", label: "$50k - $200k" },
+  { value: "200k-500k", label: "$200k - $500k" },
+  { value: "500k-1m", label: "$500k - $1M" },
+  { value: "1m-5m", label: "$1M - $5M" },
+  { value: "5m+", label: "$5M+" },
+];
+
+const revenueTypeOptions = [
+  { value: "", label: "Select revenue type" },
+  { value: "contracts", label: "Contracts" },
+  { value: "consumers", label: "Consumers" },
+  { value: "assets", label: "Assets" },
+  { value: "subscription", label: "Subscription" },
+  { value: "enterprise", label: "Enterprise" },
+];
+
+const laneOptions = [
+  { value: "", label: "Select lane" },
+  { value: "YIELD", label: "Yield (Revenue/Asset-based)" },
+  { value: "VENTURES", label: "Ventures (Equity)" },
+];
+
+const instrumentOptions = [
+  { value: "", label: "Select instrument" },
+  { value: "REVENUE_SHARE_NOTE", label: "Revenue Share Note" },
+  { value: "ASSET_BACKED_PARTICIPATION", label: "Asset-Backed Participation" },
+  { value: "CONVERTIBLE_NOTE", label: "Convertible Note" },
+  { value: "SAFE", label: "SAFE" },
+  { value: "SPV_EQUITY", label: "SPV Equity" },
+];
+
+const deploymentTimelineOptions = [
+  { value: "", label: "Select timeline" },
+  { value: "immediate", label: "Immediate (1-3 months)" },
+  { value: "short", label: "Short-term (3-6 months)" },
+  { value: "medium", label: "Medium-term (6-12 months)" },
+  { value: "long", label: "Long-term (12+ months)" },
+];
+
 export default function CompanyOnboarding() {
   const router = useRouter();
+  const { user, accessToken, loading } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
+
+  // ✅ REPLACE THE ENTIRE useEffect WITH THIS:
+  useEffect(() => {
+    if (!loading && !user) {
+      console.error("No user found, redirecting to login");
+      router.push("/login");
+    }
+  }, [user, loading, router]);
+
   const [formData, setFormData] = useState<FormData>({
     legalName: "",
     tradingName: "",
@@ -116,6 +287,13 @@ export default function CompanyOnboarding() {
     founderLinkedIn: "",
     yearsExperience: "",
     keyExecutives: "",
+    founderFullName: "",
+    founderEmail: "",
+    founderPhone: "",
+    founderNIN: "",
+    founderBVN: "",
+    founderIDType: "",
+    founderIDNumber: "",
     revenueStatus: "",
     revenueRange: "",
     revenueType: "",
@@ -175,15 +353,13 @@ export default function CompanyOnboarding() {
 
   const handleSubmit = async () => {
     try {
-      // Get auth token
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!session) {
-        alert("You must be logged in to submit");
+      if (!accessToken) {
+        alert("Your session has expired. Please log in again.");
+        router.push("/login");
         return;
       }
+
+      console.log("✅ Submitting for user:", user?.email);
 
       // Format data for API
       const payload = {
@@ -241,28 +417,51 @@ export default function CompanyOnboarding() {
         primaryUseOfFunds: formData.primaryUseOfFunds,
       };
 
+      console.log("📤 Sending payload to API...");
+
       const response = await fetch("http://localhost:4000/api/companies", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
+          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify(payload),
       });
 
+      console.log("📥 API response status:", response.status);
       const result = await response.json();
+      console.log("📥 API response body:", result);
 
       if (result.success) {
         alert("Company submitted successfully! 🎉");
         router.push("/dashboard/founder");
       } else {
-        alert(`Error: ${result.error.message}`);
+        console.error("❌ API error:", result.error);
+        alert(`Error: ${result.error?.message || "Unknown error"}`);
       }
     } catch (error) {
-      console.error("Submission error:", error);
+      console.error("❌ Submission error:", error);
       alert("Failed to submit company. Please try again.");
     }
   };
+
+  // Loading state
+  if (loading) {
+    // ✅ CHANGE isLoading to loading
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ backgroundColor: "#F6F8FA" }}
+      >
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) return null; // ✅ CHANGE !isAuthenticated to !user
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#F6F8FA" }}>
@@ -342,21 +541,27 @@ export default function CompanyOnboarding() {
             <Step2Team formData={formData} updateField={updateField} />
           )}
           {currentStep === 2 && (
-            <Step3Traction formData={formData} updateField={updateField} />
+            <Step3FounderVerification
+              formData={formData}
+              updateField={updateField}
+            />
           )}
           {currentStep === 3 && (
-            <Step4Capital formData={formData} updateField={updateField} />
+            <Step4Traction formData={formData} updateField={updateField} />
           )}
           {currentStep === 4 && (
-            <Step5Risks formData={formData} updateField={updateField} />
+            <Step5Capital formData={formData} updateField={updateField} />
           )}
           {currentStep === 5 && (
-            <Step6Fundraising formData={formData} updateField={updateField} />
+            <Step6Risks formData={formData} updateField={updateField} />
           )}
           {currentStep === 6 && (
-            <Step7Legal formData={formData} updateField={updateField} />
+            <Step7Fundraising formData={formData} updateField={updateField} />
           )}
-          {currentStep === 7 && <Step8Review formData={formData} />}
+          {currentStep === 7 && (
+            <Step8Legal formData={formData} updateField={updateField} />
+          )}
+          {currentStep === 8 && <Step9Review formData={formData} />}
 
           {/* Navigation Buttons */}
           <div className="flex items-center justify-between mt-8 pt-8 border-t border-gray-200">
@@ -391,7 +596,6 @@ export default function CompanyOnboarding() {
     </div>
   );
 }
-
 // ============================================================================
 // STEP 1: COMPANY IDENTITY
 // ============================================================================
@@ -470,21 +674,11 @@ function Step1Identity({
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Country of Incorporation <span className="text-red-500">*</span>
           </label>
-          <select
-            required
+          <CustomSelect
             value={formData.countryOfIncorporation}
-            onChange={(e) =>
-              updateField("countryOfIncorporation", e.target.value)
-            }
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
-          >
-            <option value="Nigeria">Nigeria</option>
-            <option value="Kenya">Kenya</option>
-            <option value="Ghana">Ghana</option>
-            <option value="South Africa">South Africa</option>
-            <option value="Egypt">Egypt</option>
-            <option value="Other">Other</option>
-          </select>
+            onChange={(value) => updateField("countryOfIncorporation", value)}
+            options={countryOptions}
+          />
         </div>
 
         <div>
@@ -594,37 +788,22 @@ function Step2Team({
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Team Size <span className="text-red-500">*</span>
           </label>
-          <select
-            required
+          <CustomSelect
             value={formData.teamSize}
-            onChange={(e) => updateField("teamSize", e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
-          >
-            <option value="">Select team size</option>
-            <option value="founders_only">Founders only</option>
-            <option value="1-5">1-5 employees</option>
-            <option value="6-20">6-20 employees</option>
-            <option value="21-50">21-50 employees</option>
-            <option value="50+">50+ employees</option>
-          </select>
+            onChange={(value) => updateField("teamSize", value)}
+            options={teamSizeOptions}
+          />
         </div>
 
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Stage <span className="text-red-500">*</span>
           </label>
-          <select
-            required
+          <CustomSelect
             value={formData.stage}
-            onChange={(e) => updateField("stage", e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
-          >
-            <option value="">Select stage</option>
-            <option value="PRE_REVENUE">Pre-revenue</option>
-            <option value="EARLY_REVENUE">Early revenue</option>
-            <option value="GROWTH">Growth</option>
-            <option value="PROFITABLE">Profitable</option>
-          </select>
+            onChange={(value) => updateField("stage", value)}
+            options={stageOptions}
+          />
         </div>
 
         <div className="md:col-span-2">
@@ -667,41 +846,22 @@ function Step2Team({
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Sector <span className="text-red-500">*</span>
           </label>
-          <select
-            required
+          <CustomSelect
             value={formData.sector}
-            onChange={(e) => updateField("sector", e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
-          >
-            <option value="">Select sector</option>
-            <option value="FINTECH">Fintech</option>
-            <option value="LOGISTICS">Logistics</option>
-            <option value="ENERGY">Energy</option>
-            <option value="CONSUMER_FMCG">Consumer / FMCG</option>
-            <option value="HEALTH">Health</option>
-            <option value="AGRI_FOOD">Agri / Food</option>
-            <option value="REAL_ESTATE">Real Estate</option>
-            <option value="INFRASTRUCTURE">Infrastructure</option>
-            <option value="SAAS_TECH">SaaS / Tech</option>
-            <option value="MANUFACTURING">Manufacturing</option>
-          </select>
+            onChange={(value) => updateField("sector", value)}
+            options={sectorOptions}
+          />
         </div>
 
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Business Model <span className="text-red-500">*</span>
           </label>
-          <select
-            required
+          <CustomSelect
             value={formData.businessModel}
-            onChange={(e) => updateField("businessModel", e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
-          >
-            <option value="">Select business model</option>
-            <option value="B2B">B2B</option>
-            <option value="B2C">B2C</option>
-            <option value="B2B2C">B2B2C</option>
-          </select>
+            onChange={(value) => updateField("businessModel", value)}
+            options={businessModelOptions}
+          />
         </div>
 
         <div className="md:col-span-2">
@@ -749,9 +909,142 @@ function Step2Team({
 }
 
 // ============================================================================
-// STEP 3: TRACTION
+// STEP 3: FOUNDER VERIFICATION (NEW!)
 // ============================================================================
-function Step3Traction({
+function Step3FounderVerification({
+  formData,
+  updateField,
+}: {
+  formData: FormData;
+  updateField: (field: keyof FormData, value: any) => void;
+}) {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold text-primary-950 mb-2">
+          Founder Verification
+        </h2>
+        <p className="text-gray-600">
+          For compliance and verification purposes, we need the primary
+          founder's details
+        </p>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-6">
+        <div className="md:col-span-2">
+          <label className="block text-sm font-semibold text-gray-900 mb-2">
+            Full Name <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            required
+            value={formData.founderFullName}
+            onChange={(e) => updateField("founderFullName", e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+            placeholder="As it appears on government ID"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-900 mb-2">
+            Email Address <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="email"
+            required
+            value={formData.founderEmail}
+            onChange={(e) => updateField("founderEmail", e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+            placeholder="founder@company.com"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-900 mb-2">
+            Phone Number <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="tel"
+            required
+            value={formData.founderPhone}
+            onChange={(e) => updateField("founderPhone", e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+            placeholder="+234 xxx xxx xxxx"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-900 mb-2">
+            National Identity Number (NIN){" "}
+            <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            required
+            value={formData.founderNIN}
+            onChange={(e) => updateField("founderNIN", e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+            placeholder="11-digit NIN"
+            maxLength={11}
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-900 mb-2">
+            Bank Verification Number (BVN){" "}
+            <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            required
+            value={formData.founderBVN}
+            onChange={(e) => updateField("founderBVN", e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+            placeholder="11-digit BVN"
+            maxLength={11}
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-900 mb-2">
+            ID Type <span className="text-red-500">*</span>
+          </label>
+          <CustomSelect
+            value={formData.founderIDType}
+            onChange={(value) => updateField("founderIDType", value)}
+            options={idTypeOptions}
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-900 mb-2">
+            ID Number <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            required
+            value={formData.founderIDNumber}
+            onChange={(e) => updateField("founderIDNumber", e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+            placeholder="ID number"
+          />
+        </div>
+
+        <div className="md:col-span-2 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-sm text-blue-900">
+            <strong>Privacy Note:</strong> Your personal information is
+            encrypted and stored securely. We use this information solely for
+            identity verification and compliance purposes.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+// ============================================================================
+// STEP 4: TRACTION
+// ============================================================================
+function Step4Traction({
   formData,
   updateField,
 }: {
@@ -770,55 +1063,38 @@ function Step3Traction({
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Revenue Status <span className="text-red-500">*</span>
           </label>
-          <select
-            required
+          <CustomSelect
             value={formData.revenueStatus}
-            onChange={(e) => updateField("revenueStatus", e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
-          >
-            <option value="">Select revenue status</option>
-            <option value="no_revenue">No revenue</option>
-            <option value="monthly">Monthly revenue</option>
-            <option value="annual">Annual revenue</option>
-          </select>
+            onChange={(value) => updateField("revenueStatus", value)}
+            options={revenueStatusOptions}
+          />
         </div>
 
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Revenue Range (if applicable)
           </label>
-          <select
+          <CustomSelect
             value={formData.revenueRange}
-            onChange={(e) => updateField("revenueRange", e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
-            disabled={formData.revenueStatus === "no_revenue"}
-          >
-            <option value="">Select range</option>
-            <option value="0-50k">$0 - $50k</option>
-            <option value="50k-200k">$50k - $200k</option>
-            <option value="200k-500k">$200k - $500k</option>
-            <option value="500k-1m">$500k - $1M</option>
-            <option value="1m-5m">$1M - $5M</option>
-            <option value="5m+">$5M+</option>
-          </select>
+            onChange={(value) => updateField("revenueRange", value)}
+            options={revenueRangeOptions}
+            className={
+              formData.revenueStatus === "no_revenue"
+                ? "opacity-50 pointer-events-none"
+                : ""
+            }
+          />
         </div>
 
         <div className="md:col-span-2">
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Revenue Type
           </label>
-          <select
+          <CustomSelect
             value={formData.revenueType}
-            onChange={(e) => updateField("revenueType", e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
-          >
-            <option value="">Select revenue type</option>
-            <option value="contracts">Contracts</option>
-            <option value="consumers">Consumers</option>
-            <option value="assets">Assets</option>
-            <option value="subscription">Subscription</option>
-            <option value="enterprise">Enterprise</option>
-          </select>
+            onChange={(value) => updateField("revenueType", value)}
+            options={revenueTypeOptions}
+          />
         </div>
 
         <div className="md:col-span-2">
@@ -888,9 +1164,9 @@ function Step3Traction({
 }
 
 // ============================================================================
-// STEP 4: CAPITAL & HISTORY
+// STEP 5: CAPITAL & HISTORY
 // ============================================================================
-function Step4Capital({
+function Step5Capital({
   formData,
   updateField,
 }: {
@@ -1041,9 +1317,9 @@ function Step4Capital({
 }
 
 // ============================================================================
-// STEP 5: RISKS
+// STEP 6: RISKS
 // ============================================================================
-function Step5Risks({
+function Step6Risks({
   formData,
   updateField,
 }: {
@@ -1204,9 +1480,9 @@ function Step5Risks({
 }
 
 // ============================================================================
-// STEP 6: FUNDRAISING INTENT
+// STEP 7: FUNDRAISING INTENT
 // ============================================================================
-function Step6Fundraising({
+function Step7Fundraising({
   formData,
   updateField,
 }: {
@@ -1227,41 +1503,22 @@ function Step6Fundraising({
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Preferred Lane <span className="text-red-500">*</span>
           </label>
-          <select
-            required
+          <CustomSelect
             value={formData.preferredLane}
-            onChange={(e) => updateField("preferredLane", e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
-          >
-            <option value="">Select lane</option>
-            <option value="YIELD">Yield (Revenue/Asset-based)</option>
-            <option value="VENTURES">Ventures (Equity)</option>
-          </select>
+            onChange={(value) => updateField("preferredLane", value)}
+            options={laneOptions}
+          />
         </div>
 
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Preferred Instrument <span className="text-red-500">*</span>
           </label>
-          <select
-            required
+          <CustomSelect
             value={formData.preferredInstrument}
-            onChange={(e) => updateField("preferredInstrument", e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
-          >
-            <option value="">Select instrument</option>
-            <optgroup label="Yield Lane">
-              <option value="REVENUE_SHARE_NOTE">Revenue Share Note</option>
-              <option value="ASSET_BACKED_PARTICIPATION">
-                Asset-Backed Participation
-              </option>
-            </optgroup>
-            <optgroup label="Ventures Lane">
-              <option value="CONVERTIBLE_NOTE">Convertible Note</option>
-              <option value="SAFE">SAFE</option>
-              <option value="SPV_EQUITY">SPV Equity</option>
-            </optgroup>
-          </select>
+            onChange={(value) => updateField("preferredInstrument", value)}
+            options={instrumentOptions}
+          />
         </div>
 
         <div className="md:col-span-2">
@@ -1350,17 +1607,11 @@ function Step6Fundraising({
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Expected Timeline to Deploy Funds
           </label>
-          <select
+          <CustomSelect
             value={formData.deploymentTimeline}
-            onChange={(e) => updateField("deploymentTimeline", e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
-          >
-            <option value="">Select timeline</option>
-            <option value="immediate">Immediate (1-3 months)</option>
-            <option value="short">Short-term (3-6 months)</option>
-            <option value="medium">Medium-term (6-12 months)</option>
-            <option value="long">Long-term (12+ months)</option>
-          </select>
+            onChange={(value) => updateField("deploymentTimeline", value)}
+            options={deploymentTimelineOptions}
+          />
         </div>
       </div>
     </div>
@@ -1368,9 +1619,9 @@ function Step6Fundraising({
 }
 
 // ============================================================================
-// STEP 7: LEGAL REPRESENTATIONS
+// STEP 8: LEGAL REPRESENTATIONS
 // ============================================================================
-function Step7Legal({
+function Step8Legal({
   formData,
   updateField,
 }: {
@@ -1507,9 +1758,9 @@ function Step7Legal({
 }
 
 // ============================================================================
-// STEP 8: REVIEW & SUBMIT
+// STEP 9: REVIEW & SUBMIT
 // ============================================================================
-function Step8Review({ formData }: { formData: FormData }) {
+function Step9Review({ formData }: { formData: FormData }) {
   return (
     <div className="space-y-6">
       <div>
@@ -1621,8 +1872,7 @@ function Step8Review({ formData }: { formData: FormData }) {
         <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
           <p className="text-sm text-yellow-900">
             <strong>Next Steps:</strong> After submission, our team will review
-            your application. You'll receive an email within 5-7 business days
-            with next steps.
+            your application. You'll receive an email with next steps.
           </p>
         </div>
       </div>

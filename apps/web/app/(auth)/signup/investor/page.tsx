@@ -34,17 +34,19 @@ export default function InvestorSignupPage() {
 
     setLoading(true);
 
-    const { error } = await signUp(formData.email, formData.password, {
-      role: "INVESTOR",
+    const { error } = await signUp({
+      email: formData.email,
+      password: formData.password,
       firstName: formData.firstName,
       lastName: formData.lastName,
+      role: "INVESTOR",
     });
 
     if (error) {
       setError(error.message);
       setLoading(false);
     } else {
-      router.push("/dashboard");
+      router.push("/dashboard/investor");
     }
   };
 

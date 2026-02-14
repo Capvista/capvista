@@ -1,211 +1,219 @@
-import { Router, Request, Response } from 'express';
-import { prisma } from '@capvista/database';
-import { z } from 'zod';
-import { requireAuth } from '../middleware/auth';
+import { Router, Request, Response } from "express";
+import { prisma } from "@capvista/database";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 const router = Router();
 
-// Validation schemas
-const signupSchema = z.object({
-  clerkId: z.string(),
-  email: z.string().email(),
-  role: z.enum(['FOUNDER', 'INVESTOR', 'ADMIN']),
-  firstName: z.string().optional(),
-  lastName: z.string().optional(),
-  phone: z.string().optional()
-});
+const JWT_SECRET =
+  process.env.JWT_SECRET || "capvista-dev-secret-change-in-production";
+const JWT_EXPIRES_IN = "7d";
 
-const riskAcknowledgementSchema = z.object({
-  acknowledged: z.boolean(),
-  ipAddress: z.string()
-});
+// Helper to generate tokens
+function generateTokens(userId: string, role: string) {
+  const accessToken = jwt.sign({ userId, role }, JWT_SECRET, {
+    expiresIn: JWT_EXPIRES_IN,
+  });
+  return { accessToken };
+}
 
-// POST /v1/auth/signup - Create user after Clerk signup
-router.post('/signup', async (req: Request, res: Response) => {
+// POST /api/auth/register
+router.post("/register", async (req: Request, res: Response) => {
   try {
-    const body = signupSchema.parse(req.body);
+    const { email, password, firstName, lastName, role } = req.body;
+
+    // Validate required fields
+    if (!email || !password || !firstName || !lastName || !role) {
+      return res.status(400).json({
+        success: false,
+        error: { code: "VALIDATION_ERROR", message: "All fields are required" },
+      });
+    }
+
+    if (!["FOUNDER", "INVESTOR"].includes(role)) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "Role must be FOUNDER or INVESTOR",
+        },
+      });
+    }
+
+    if (password.length < 8) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "Password must be at least 8 characters",
+        },
+      });
+    }
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
-      where: { clerkId: body.clerkId }
+      where: { email },
     });
 
     if (existingUser) {
-      return res.status(400).json({
+      return res.status(409).json({
         success: false,
         error: {
-          code: 'USER_EXISTS',
-          message: 'User already exists'
-        }
+          code: "USER_EXISTS",
+          message: "An account with this email already exists",
+        },
       });
     }
 
-    // Create user
-    const user = await prisma.user.create({
-      data: {
-        clerkId: body.clerkId,
-        email: body.email,
-        role: body.role,
-        firstName: body.firstName,
-        lastName: body.lastName,
-        phone: body.phone
+    // Hash password
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    // Create User + profile in a transaction
+    const result = await prisma.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: {
+          email,
+          passwordHash,
+          role,
+          firstName,
+          lastName,
+          status: "active",
+        },
+      });
+
+      if (role === "FOUNDER") {
+        const founderProfile = await tx.founderProfile.create({
+          data: {
+            userId: user.id,
+            onboardingCompleted: false,
+            ninVerified: false,
+            bvnVerified: false,
+          },
+        });
+        return { user, founderProfile, investorProfile: null };
+      } else {
+        const investorProfile = await tx.investorProfile.create({
+          data: {
+            userId: user.id,
+            accreditationStatus: "PENDING",
+            investmentFocus: [],
+            preferredLanes: [],
+          },
+        });
+        return { user, founderProfile: null, investorProfile };
       }
     });
+
+    // Generate token
+    const { accessToken } = generateTokens(result.user.id, result.user.role);
+
+    console.log(`✅ Registered: ${role} - ${email} (${result.user.id})`);
 
     return res.status(201).json({
       success: true,
+      message: "Registration successful",
       data: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        createdAt: user.createdAt
-      }
-    });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({
-        success: false,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'Invalid request data',
-          details: error.errors
-        }
-      });
-    }
-
-    console.error('Signup error:', error);
-    return res.status(500).json({
-      success: false,
-      error: {
-        code: 'INTERNAL_ERROR',
-        message: 'Failed to create user'
-      }
-    });
-  }
-});
-
-// GET /v1/auth/me - Get current user
-router.get('/me', requireAuth, async (req: Request, res: Response) => {
-  try {
-    const user = await prisma.user.findUnique({
-      where: { clerkId: req.user!.clerkId },
-      select: {
-        id: true,
-        email: true,
-        role: true,
-        firstName: true,
-        lastName: true,
-        phone: true,
-        riskAcknowledgedAt: true,
-        createdAt: true,
-        updatedAt: true
-      }
-    });
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        error: {
-          code: 'USER_NOT_FOUND',
-          message: 'User not found'
-        }
-      });
-    }
-
-    return res.json({
-      success: true,
-      data: user
-    });
-  } catch (error) {
-    console.error('Get user error:', error);
-    return res.status(500).json({
-      success: false,
-      error: {
-        code: 'INTERNAL_ERROR',
-        message: 'Failed to fetch user'
-      }
-    });
-  }
-});
-
-// POST /v1/auth/acknowledge-risk - Investor risk acknowledgement
-router.post('/acknowledge-risk', requireAuth, async (req: Request, res: Response) => {
-  try {
-    const body = riskAcknowledgementSchema.parse(req.body);
-
-    // Only investors need to acknowledge risk
-    const user = await prisma.user.findUnique({
-      where: { clerkId: req.user!.clerkId }
-    });
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        error: {
-          code: 'USER_NOT_FOUND',
-          message: 'User not found'
-        }
-      });
-    }
-
-    if (user.role !== 'INVESTOR') {
-      return res.status(400).json({
-        success: false,
-        error: {
-          code: 'INVALID_ROLE',
-          message: 'Only investors need to acknowledge risk'
-        }
-      });
-    }
-
-    if (!body.acknowledged) {
-      return res.status(400).json({
-        success: false,
-        error: {
-          code: 'ACKNOWLEDGEMENT_REQUIRED',
-          message: 'Risk acknowledgement is required'
-        }
-      });
-    }
-
-    // Update user with acknowledgement
-    const updatedUser = await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        riskAcknowledgedAt: new Date(),
-        riskAcknowledgedIp: body.ipAddress
+        accessToken,
+        user: {
+          id: result.user.id,
+          email: result.user.email,
+          role: result.user.role,
+          firstName: result.user.firstName,
+          lastName: result.user.lastName,
+        },
+        founderProfile: result.founderProfile,
+        investorProfile: result.investorProfile,
       },
-      select: {
-        id: true,
-        email: true,
-        role: true,
-        riskAcknowledgedAt: true
-      }
-    });
-
-    return res.json({
-      success: true,
-      data: updatedUser
     });
   } catch (error) {
-    if (error instanceof z.ZodError) {
+    console.error("Registration error:", error);
+    return res.status(500).json({
+      success: false,
+      error: { code: "INTERNAL_ERROR", message: "Registration failed" },
+    });
+  }
+});
+
+// POST /api/auth/login
+router.post("/login", async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
       return res.status(400).json({
         success: false,
         error: {
-          code: 'VALIDATION_ERROR',
-          message: 'Invalid request data',
-          details: error.errors
-        }
+          code: "VALIDATION_ERROR",
+          message: "Email and password are required",
+        },
       });
     }
 
-    console.error('Risk acknowledgement error:', error);
+    // Find user
+    const user = await prisma.user.findUnique({
+      where: { email },
+      include: {
+        founderProfile: true,
+        investorProfile: true,
+      },
+    });
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        error: {
+          code: "INVALID_CREDENTIALS",
+          message: "Invalid email or password",
+        },
+      });
+    }
+
+    // Check password
+    const passwordValid = await bcrypt.compare(password, user.passwordHash);
+    if (!passwordValid) {
+      return res.status(401).json({
+        success: false,
+        error: {
+          code: "INVALID_CREDENTIALS",
+          message: "Invalid email or password",
+        },
+      });
+    }
+
+    // Check status
+    if (user.status !== "active") {
+      return res.status(403).json({
+        success: false,
+        error: { code: "ACCOUNT_INACTIVE", message: "Account is not active" },
+      });
+    }
+
+    // Generate token
+    const { accessToken } = generateTokens(user.id, user.role);
+
+    console.log(`✅ Login: ${user.role} - ${email}`);
+
+    return res.json({
+      success: true,
+      message: "Login successful",
+      data: {
+        accessToken,
+        user: {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+          firstName: user.firstName,
+          lastName: user.lastName,
+        },
+        founderProfile: user.founderProfile,
+        investorProfile: user.investorProfile,
+      },
+    });
+  } catch (error) {
+    console.error("Login error:", error);
     return res.status(500).json({
       success: false,
-      error: {
-        code: 'INTERNAL_ERROR',
-        message: 'Failed to record acknowledgement'
-      }
+      error: { code: "INTERNAL_ERROR", message: "Login failed" },
     });
   }
 });

@@ -1,10 +1,8 @@
 import { Request, Response, NextFunction } from "express";
-import { createClient } from "@supabase/supabase-js";
+import jwt from "jsonwebtoken";
 
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_ANON_KEY!,
-);
+const JWT_SECRET =
+  process.env.JWT_SECRET || "capvista-dev-secret-change-in-production";
 
 // Extend Express Request type to include user
 declare global {
@@ -12,21 +10,19 @@ declare global {
     interface Request {
       user?: {
         id: string;
-        email: string;
         role: "INVESTOR" | "FOUNDER" | "ADMIN";
       };
     }
   }
 }
 
-// Middleware to verify Supabase JWT token
+// Middleware to verify JWT token
 export const requireAuth = async (
   req: Request,
   res: Response,
   next: NextFunction,
 ) => {
   try {
-    // Get token from Authorization header
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -39,41 +35,25 @@ export const requireAuth = async (
       });
     }
 
-    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+    const token = authHeader.substring(7);
 
-    // Verify token with Supabase
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser(token);
+    const decoded = jwt.verify(token, JWT_SECRET) as {
+      userId: string;
+      role: "INVESTOR" | "FOUNDER" | "ADMIN";
+    };
 
-    if (error || !user) {
-      return res.status(401).json({
-        success: false,
-        error: {
-          code: "INVALID_TOKEN",
-          message: "Invalid or expired token",
-        },
-      });
-    }
-
-    // Attach user info to request
     req.user = {
-      id: user.id,
-      email: user.email!,
-      role:
-        (user.user_metadata?.role as "INVESTOR" | "FOUNDER" | "ADMIN") ||
-        "INVESTOR",
+      id: decoded.userId,
+      role: decoded.role,
     };
 
     next();
   } catch (error) {
-    console.error("Auth middleware error:", error);
     return res.status(401).json({
       success: false,
       error: {
-        code: "AUTH_ERROR",
-        message: "Authentication failed",
+        code: "INVALID_TOKEN",
+        message: "Invalid or expired token",
       },
     });
   }

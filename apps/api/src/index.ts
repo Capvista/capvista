@@ -1,14 +1,15 @@
+import dotenv from "dotenv";
+// Load environment variables FIRST before any other imports
+dotenv.config();
+
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import helmet from "helmet";
-import dotenv from "dotenv";
 
 // Import routes
 import companiesRoutes from "./routes/companies";
 import usersRoutes from "./routes/users";
-
-// Load environment variables
-dotenv.config();
+import authRoutes from "./routes/auth";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -51,6 +52,7 @@ app.get("/api", (req: Request, res: Response) => {
 // Mount route handlers
 app.use("/api/companies", companiesRoutes);
 app.use("/api/users", usersRoutes);
+app.use("/api/auth", authRoutes);
 
 // Error handling middleware
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {

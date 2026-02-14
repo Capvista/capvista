@@ -9,7 +9,7 @@ export default function InvestorDashboard() {
   const { user, loading, signOut } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<
-    "overview" | "companies" | "opportunities" | "watchlist" | "portfolio"
+    "overview" | "opportunities" | "watchlist" | "portfolio"
   >("overview");
 
   useEffect(() => {
@@ -88,7 +88,9 @@ export default function InvestorDashboard() {
                   {/* Dropdown Menu - RIGHT ALIGNED */}
                   <div className="absolute top-full right-0 mt-2 w-72 bg-white rounded-lg shadow-lg border border-gray-200 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
                     <button
-                      onClick={() => setActiveTab("companies")}
+                      onClick={() =>
+                        router.push("/dashboard/investor/companies")
+                      }
                       className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-start gap-3"
                     >
                       <svg
@@ -249,27 +251,18 @@ export default function InvestorDashboard() {
       {/* Main Content */}
       <main className="container py-8">
         {activeTab === "overview" && (
-          <OverviewTab user={user} setActiveTab={setActiveTab} />
+          <OverviewTab user={user} router={router} />
         )}
-        {activeTab === "companies" && <CompaniesTab />}
         {activeTab === "opportunities" && <OpportunitiesTab />}
         {activeTab === "watchlist" && <WatchlistTab />}
-        {activeTab === "portfolio" && (
-          <PortfolioTab setActiveTab={setActiveTab} />
-        )}
+        {activeTab === "portfolio" && <PortfolioTab router={router} />}
       </main>
     </div>
   );
 }
 
 // Overview Tab Component
-function OverviewTab({
-  user,
-  setActiveTab,
-}: {
-  user: any;
-  setActiveTab: (tab: any) => void;
-}) {
+function OverviewTab({ user, router }: { user: any; router: any }) {
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
@@ -378,7 +371,7 @@ function OverviewTab({
         </h2>
         <div className="grid md:grid-cols-2 gap-4">
           <button
-            onClick={() => setActiveTab("companies")}
+            onClick={() => router.push("/dashboard/investor/companies")}
             className="flex items-center gap-4 p-6 rounded-xl border-2 border-gray-200 hover:border-primary-900 transition-all group"
           >
             <div
@@ -472,7 +465,7 @@ function OverviewTab({
           Start exploring companies to see your activity here
         </p>
         <button
-          onClick={() => setActiveTab("companies")}
+          onClick={() => router.push("/dashboard/investor/companies")}
           className="inline-block px-6 py-3 rounded-lg font-semibold transition-all"
           style={{
             backgroundColor: "#C8A24D",
@@ -481,86 +474,6 @@ function OverviewTab({
         >
           Browse Companies
         </button>
-      </div>
-    </div>
-  );
-}
-
-// Companies Tab Component
-function CompaniesTab() {
-  const [filter, setFilter] = useState<"all" | "yield" | "ventures">("all");
-
-  return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-        <h2 className="text-2xl font-bold text-primary-950 mb-4">
-          Browse Companies
-        </h2>
-        <p className="text-slate-light mb-8">
-          Explore verified investment opportunities in African private markets
-        </p>
-
-        {/* Filter Tabs */}
-        <div className="flex gap-4 mb-8 border-b border-gray-200">
-          <button
-            onClick={() => setFilter("all")}
-            className={`px-4 py-2 font-semibold transition-colors ${
-              filter === "all"
-                ? "border-b-2 border-primary-900 text-primary-950"
-                : "text-gray-600 hover:text-primary-950"
-            }`}
-          >
-            All Companies
-          </button>
-          <button
-            onClick={() => setFilter("yield")}
-            className={`px-4 py-2 font-medium transition-colors ${
-              filter === "yield"
-                ? "border-b-2 border-primary-900 text-primary-950"
-                : "text-gray-600 hover:text-primary-950"
-            }`}
-          >
-            Yield Lane
-          </button>
-          <button
-            onClick={() => setFilter("ventures")}
-            className={`px-4 py-2 font-medium transition-colors ${
-              filter === "ventures"
-                ? "border-b-2 border-primary-900 text-primary-950"
-                : "text-gray-600 hover:text-primary-950"
-            }`}
-          >
-            Ventures Lane
-          </button>
-        </div>
-
-        {/* Empty State */}
-        <div className="text-center py-12">
-          <div
-            className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center"
-            style={{ backgroundColor: "rgba(107, 124, 147, 0.1)" }}
-          >
-            <svg
-              className="w-8 h-8 text-slate-light"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-              />
-            </svg>
-          </div>
-          <h3 className="text-lg font-semibold text-primary-950 mb-2">
-            No Companies Listed Yet
-          </h3>
-          <p className="text-gray-600">
-            Check back soon for verified investment opportunities
-          </p>
-        </div>
       </div>
     </div>
   );
@@ -653,7 +566,7 @@ function WatchlistTab() {
 }
 
 // Portfolio Tab Component
-function PortfolioTab({ setActiveTab }: { setActiveTab: (tab: any) => void }) {
+function PortfolioTab({ router }: { router: any }) {
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
@@ -691,7 +604,7 @@ function PortfolioTab({ setActiveTab }: { setActiveTab: (tab: any) => void }) {
             Start investing to build your portfolio
           </p>
           <button
-            onClick={() => setActiveTab("companies")}
+            onClick={() => router.push("/dashboard/investor/companies")}
             className="inline-block px-6 py-3 rounded-lg font-semibold transition-all"
             style={{
               backgroundColor: "#C8A24D",

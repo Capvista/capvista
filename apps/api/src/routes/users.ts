@@ -12,36 +12,45 @@ const updateUserSchema = z.object({
   phone: z.string().optional(),
 });
 
-// GET /api/users/me - Get current user profile
+// GET /api/users/me - Get current user profile + role-specific profile
 router.get("/me", requireAuth, async (req: Request, res: Response) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user!.id },
       include: {
-        companiesOwned: {
-          select: {
-            id: true,
-            legalName: true,
-            tradingName: true,
-            sector: true,
-            stage: true,
-            oneLineDescription: true,
-          },
-        },
-        investments: {
-          select: {
-            id: true,
-            commitmentAmount: true,
-            fundedAmount: true,
-            status: true,
-            deal: {
+        founderProfile: {
+          include: {
+            companiesOwned: {
               select: {
                 id: true,
-                name: true,
-                company: {
+                legalName: true,
+                tradingName: true,
+                sector: true,
+                stage: true,
+                oneLineDescription: true,
+                verificationStatus: true,
+              },
+            },
+          },
+        },
+        investorProfile: {
+          include: {
+            investments: {
+              select: {
+                id: true,
+                commitmentAmount: true,
+                fundedAmount: true,
+                status: true,
+                deal: {
                   select: {
-                    legalName: true,
-                    tradingName: true,
+                    id: true,
+                    name: true,
+                    company: {
+                      select: {
+                        legalName: true,
+                        tradingName: true,
+                      },
+                    },
                   },
                 },
               },
