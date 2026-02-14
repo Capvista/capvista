@@ -7,21 +7,17 @@ const router = Router();
 
 // Validation schemas
 const createCompanySchema = z.object({
-  // 1️⃣ Identity
+  logoUrl: z.string().url().optional(),
   legalName: z.string().min(1),
   tradingName: z.string().optional(),
   countryOfIncorporation: z.string().default("Nigeria"),
-  incorporationNumber: z.string().min(1), // CAC number
+  incorporationNumber: z.string().min(1),
   incorporationDate: z.string().datetime(),
   companyAddress: z.string().min(1),
   operatingCountries: z.array(z.string()),
   website: z.string().url().optional(),
   officialEmailDomain: z.string().min(1),
-
-  // 2️⃣ Team
   teamSize: z.string().optional(),
-
-  // 3️⃣ Overview
   oneLineDescription: z.string().min(10).max(200),
   detailedDescription: z.string().min(50),
   sector: z.enum([
@@ -39,8 +35,6 @@ const createCompanySchema = z.object({
   businessModel: z.enum(["B2B", "B2C", "B2B2C"]),
   revenueModel: z.enum(["TRANSACTIONAL", "SUBSCRIPTION", "ASSET_BACKED"]),
   stage: z.enum(["PRE_REVENUE", "EARLY_REVENUE", "GROWTH", "PROFITABLE"]),
-
-  // 4️⃣ Traction
   revenueStatus: z.string().optional(),
   revenueRange: z.string().optional(),
   primaryRevenueSource: z.string().optional(),
@@ -48,23 +42,17 @@ const createCompanySchema = z.object({
   majorCustomers: z.array(z.string()).optional(),
   geographicFootprint: z.string().optional(),
   regulatoryDependencies: z.string().optional(),
-
-  // 5️⃣ Capital History
   hasRaisedBefore: z.boolean().default(false),
   previousRaises: z.any().optional(),
   founderOwnedPercent: z.number().min(0).max(100).optional(),
   externalInvestorsPercent: z.number().min(0).max(100).optional(),
   notableInvestors: z.array(z.string()).optional(),
-
-  // 6️⃣ Risks
   topRisks: z.array(z.string()).min(3).max(3),
   materialThreats: z.string().optional(),
   singleSupplier: z.boolean().default(false),
   fxExposure: z.boolean().default(false),
   regulationDependent: z.boolean().default(false),
   infrastructureDependent: z.boolean().default(false),
-
-  // 7️⃣ Fundraising Intent
   preferredLane: z.enum(["YIELD", "VENTURES"]).optional(),
   preferredInstrument: z
     .enum([
@@ -81,13 +69,12 @@ const createCompanySchema = z.object({
 
 const updateCompanySchema = createCompanySchema.partial();
 
-// GET /api/companies - List companies (with filters)
+// GET /api/companies - List companies
 router.get("/", async (req: Request, res: Response) => {
   try {
     const { sector, stage, lane, page = "1", limit = "20" } = req.query;
 
     const where: any = {};
-
     if (sector) where.sector = sector;
     if (stage) where.stage = stage;
     if (lane) where.preferredLane = lane;
@@ -113,9 +100,7 @@ router.get("/", async (req: Request, res: Response) => {
           currentMonitoringStatus: true,
           createdAt: true,
           deals: {
-            where: {
-              status: "LIVE",
-            },
+            where: { status: "LIVE" },
             select: {
               id: true,
               name: true,
@@ -125,9 +110,7 @@ router.get("/", async (req: Request, res: Response) => {
             },
           },
         },
-        orderBy: {
-          createdAt: "desc",
-        },
+        orderBy: { createdAt: "desc" },
       }),
       prisma.company.count({ where }),
     ]);
@@ -146,13 +129,53 @@ router.get("/", async (req: Request, res: Response) => {
     console.error("List companies error:", error);
     return res.status(500).json({
       success: false,
-      error: {
-        code: "INTERNAL_ERROR",
-        message: "Failed to fetch companies",
-      },
+      error: { code: "INTERNAL_ERROR", message: "Failed to fetch companies" },
     });
   }
 });
+
+// GET /api/companies/my-companies - Get current founder's companies
+router.get(
+  "/my-companies",
+  requireAuth,
+  requireRole("FOUNDER"),
+  async (req: Request, res: Response) => {
+    try {
+      const founderProfile = await prisma.founderProfile.findUnique({
+        where: { userId: req.user!.id },
+      });
+
+      if (!founderProfile) {
+        return res.json({ success: true, data: [] });
+      }
+
+      const companies = await prisma.company.findMany({
+        where: { ownerId: founderProfile.id },
+        select: {
+          id: true,
+          legalName: true,
+          tradingName: true,
+          sector: true,
+          stage: true,
+          preferredLane: true,
+          preferredInstrument: true,
+          targetRaiseRange: true,
+          currentMonitoringStatus: true,
+          createdAt: true,
+        },
+        orderBy: { createdAt: "desc" },
+      });
+
+      return res.json({ success: true, data: companies });
+    } catch (error) {
+      console.error("My companies error:", error);
+      return res.status(500).json({
+        success: false,
+        error: { code: "INTERNAL_ERROR", message: "Failed to fetch companies" },
+      });
+    }
+  },
+);
 
 // GET /api/companies/:id - Get company details
 router.get("/:id", async (req: Request, res: Response) => {
@@ -162,7 +185,7 @@ router.get("/:id", async (req: Request, res: Response) => {
     const company = await prisma.company.findUnique({
       where: { id },
       include: {
-        founders: {
+        owner: {
           include: {
             user: {
               select: {
@@ -170,6 +193,22 @@ router.get("/:id", async (req: Request, res: Response) => {
                 email: true,
                 firstName: true,
                 lastName: true,
+              },
+            },
+          },
+        },
+        founders: {
+          include: {
+            founder: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    email: true,
+                    firstName: true,
+                    lastName: true,
+                  },
+                },
               },
             },
           },
@@ -190,13 +229,8 @@ router.get("/:id", async (req: Request, res: Response) => {
           },
         },
         verificationRecords: {
-          where: {
-            status: "VERIFIED",
-          },
-          select: {
-            type: true,
-            verifiedAt: true,
-          },
+          where: { status: "VERIFIED" },
+          select: { type: true, verifiedAt: true },
         },
       },
     });
@@ -204,49 +238,19 @@ router.get("/:id", async (req: Request, res: Response) => {
     if (!company) {
       return res.status(404).json({
         success: false,
-        error: {
-          code: "COMPANY_NOT_FOUND",
-          message: "Company not found",
-        },
+        error: { code: "COMPANY_NOT_FOUND", message: "Company not found" },
       });
     }
 
-    // Get owner separately
-    const owner = await prisma.user.findUnique({
-      where: { id: company.ownerId },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        email: true,
-      },
-    });
-
-    // Hide sensitive internal fields
-    const publicCompany = {
-      ...company,
-      owner,
-      cacVerificationStatus: undefined,
-      sanctionsWatchlistCheck: undefined,
-      bankAccountVerified: undefined,
-      revenueVerificationMethod: undefined,
-      equityAcknowledgementAccepted: undefined,
-      equityAcknowledgementTimestamp: undefined,
-      equityAcknowledgementIp: undefined,
-    };
-
     return res.json({
       success: true,
-      data: publicCompany,
+      data: company,
     });
   } catch (error) {
     console.error("Get company error:", error);
     return res.status(500).json({
       success: false,
-      error: {
-        code: "INTERNAL_ERROR",
-        message: "Failed to fetch company",
-      },
+      error: { code: "INTERNAL_ERROR", message: "Failed to fetch company" },
     });
   }
 });
@@ -259,6 +263,18 @@ router.post(
   async (req: Request, res: Response) => {
     try {
       const body = createCompanySchema.parse(req.body);
+
+      // Look up the FounderProfile for this user
+      const founderProfile = await prisma.founderProfile.findUnique({
+        where: { userId: req.user!.id },
+      });
+
+      if (!founderProfile) {
+        return res.status(400).json({
+          success: false,
+          error: { code: "NO_PROFILE", message: "Founder profile not found" },
+        });
+      }
 
       // Check if CAC number already exists
       const existing = await prisma.company.findUnique({
@@ -275,10 +291,11 @@ router.post(
         });
       }
 
-      // Create company
+      // Create company + CompanyFounder in a transaction
       const company = await prisma.company.create({
         data: {
-          ownerId: req.user!.id,
+          ownerId: founderProfile.id,
+          logoUrl: body.logoUrl,
           legalName: body.legalName,
           tradingName: body.tradingName,
           countryOfIncorporation: body.countryOfIncorporation,
@@ -319,7 +336,7 @@ router.post(
           primaryUseOfFunds: body.primaryUseOfFunds,
           founders: {
             create: {
-              userId: req.user!.id,
+              founderId: founderProfile.id,
               role: "CEO",
               bio: "Founder and CEO",
               isPrimary: true,
@@ -329,18 +346,24 @@ router.post(
         include: {
           founders: {
             include: {
-              user: {
-                select: {
-                  id: true,
-                  email: true,
-                  firstName: true,
-                  lastName: true,
+              founder: {
+                include: {
+                  user: {
+                    select: {
+                      id: true,
+                      email: true,
+                      firstName: true,
+                      lastName: true,
+                    },
+                  },
                 },
               },
             },
           },
         },
       });
+
+      console.log(`✅ Company created: ${company.legalName} (${company.id})`);
 
       return res.status(201).json({
         success: true,
@@ -361,10 +384,7 @@ router.post(
       console.error("Create company error:", error);
       return res.status(500).json({
         success: false,
-        error: {
-          code: "INTERNAL_ERROR",
-          message: "Failed to create company",
-        },
+        error: { code: "INTERNAL_ERROR", message: "Failed to create company" },
       });
     }
   },
@@ -380,29 +400,34 @@ router.patch(
       const { id } = req.params;
       const body = updateCompanySchema.parse(req.body);
 
-      // Check if user is the owner or a founder of this company
+      // Get founder profile
+      const founderProfile = await prisma.founderProfile.findUnique({
+        where: { userId: req.user!.id },
+      });
+
+      if (!founderProfile) {
+        return res.status(400).json({
+          success: false,
+          error: { code: "NO_PROFILE", message: "Founder profile not found" },
+        });
+      }
+
+      // Check ownership
       const company = await prisma.company.findUnique({
         where: { id },
         include: {
-          founders: {
-            where: {
-              userId: req.user!.id,
-            },
-          },
+          founders: { where: { founderId: founderProfile.id } },
         },
       });
 
       if (!company) {
         return res.status(404).json({
           success: false,
-          error: {
-            code: "COMPANY_NOT_FOUND",
-            message: "Company not found",
-          },
+          error: { code: "COMPANY_NOT_FOUND", message: "Company not found" },
         });
       }
 
-      const isOwner = company.ownerId === req.user!.id;
+      const isOwner = company.ownerId === founderProfile.id;
       const isFounder = company.founders.length > 0;
 
       if (!isOwner && !isFounder) {
@@ -415,7 +440,6 @@ router.patch(
         });
       }
 
-      // Update company
       const updatedCompany = await prisma.company.update({
         where: { id },
         data: {
@@ -423,20 +447,6 @@ router.patch(
           incorporationDate: body.incorporationDate
             ? new Date(body.incorporationDate)
             : undefined,
-        },
-        include: {
-          founders: {
-            include: {
-              user: {
-                select: {
-                  id: true,
-                  firstName: true,
-                  lastName: true,
-                  email: true,
-                },
-              },
-            },
-          },
         },
       });
 
@@ -459,10 +469,7 @@ router.patch(
       console.error("Update company error:", error);
       return res.status(500).json({
         success: false,
-        error: {
-          code: "INTERNAL_ERROR",
-          message: "Failed to update company",
-        },
+        error: { code: "INTERNAL_ERROR", message: "Failed to update company" },
       });
     }
   },
@@ -477,9 +484,7 @@ router.delete(
     try {
       const { id } = req.params;
 
-      await prisma.company.delete({
-        where: { id },
-      });
+      await prisma.company.delete({ where: { id } });
 
       return res.json({
         success: true,
@@ -489,10 +494,7 @@ router.delete(
       console.error("Delete company error:", error);
       return res.status(500).json({
         success: false,
-        error: {
-          code: "INTERNAL_ERROR",
-          message: "Failed to delete company",
-        },
+        error: { code: "INTERNAL_ERROR", message: "Failed to delete company" },
       });
     }
   },

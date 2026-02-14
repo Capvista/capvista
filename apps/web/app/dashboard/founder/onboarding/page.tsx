@@ -3,12 +3,18 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { createClient } from "@supabase/supabase-js";
 import CustomSelect from "@/components/CustomSelect";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+);
 
 type FormData = {
-  // 1️⃣ Company Identity
+  logoFile: File | null;
+  logoPreview: string;
   legalName: string;
   tradingName: string;
   incorporationNumber: string;
@@ -19,8 +25,6 @@ type FormData = {
   website: string;
   officialEmailDomain: string;
   regulatoryLicenses: string;
-
-  // 2️⃣ Team & Overview
   teamSize: string;
   oneLineDescription: string;
   detailedDescription: string;
@@ -30,8 +34,6 @@ type FormData = {
   founderLinkedIn: string;
   yearsExperience: string;
   keyExecutives: string;
-
-  // 2B️⃣ Founder Verification
   founderFullName: string;
   founderEmail: string;
   founderPhone: string;
@@ -39,8 +41,6 @@ type FormData = {
   founderBVN: string;
   founderIDType: string;
   founderIDNumber: string;
-
-  // 3️⃣ Traction
   revenueStatus: string;
   revenueRange: string;
   revenueType: string;
@@ -49,8 +49,6 @@ type FormData = {
   topMetric3: string;
   majorCustomers: string;
   geographicFootprint: string;
-
-  // 4️⃣ Capital & History
   hasRaisedBefore: boolean;
   previousRaises: string;
   founderOwnedPercent: string;
@@ -59,8 +57,6 @@ type FormData = {
   existingDebt: string;
   convertibleInstruments: string;
   investorSideLetters: string;
-
-  // 5️⃣ Risks
   topRisk1: string;
   topRisk2: string;
   topRisk3: string;
@@ -69,8 +65,6 @@ type FormData = {
   fxExposure: boolean;
   singleSupplier: boolean;
   keyConcentrationRisk: string;
-
-  // 6️⃣ Fundraising Intent
   preferredLane: string;
   preferredInstrument: string;
   targetRaiseMin: string;
@@ -79,8 +73,6 @@ type FormData = {
   proposedValuation: string;
   proposedRevenueShare: string;
   deploymentTimeline: string;
-
-  // 7️⃣ Legal Representations
   acknowledgePlacement: boolean;
   acknowledgeNoSolicitation: boolean;
   acknowledgeAccuracy: boolean;
@@ -100,7 +92,6 @@ const STEPS = [
   "Review & Submit",
 ];
 
-// All African countries
 const countryOptions = [
   { value: "Nigeria", label: "Nigeria" },
   { value: "Kenya", label: "Kenya" },
@@ -254,12 +245,118 @@ const deploymentTimelineOptions = [
   { value: "long", label: "Long-term (12+ months)" },
 ];
 
+// ============================================================================
+// VALIDATION LOGIC PER STEP
+// ============================================================================
+function validateStep(step: number, formData: FormData): string[] {
+  const errors: string[] = [];
+
+  switch (step) {
+    case 0: // Company Identity
+      if (!formData.logoFile) errors.push("logoFile");
+      if (!formData.legalName.trim()) errors.push("legalName");
+      if (!formData.incorporationNumber.trim())
+        errors.push("incorporationNumber");
+      if (!formData.incorporationDate) errors.push("incorporationDate");
+      if (!formData.countryOfIncorporation)
+        errors.push("countryOfIncorporation");
+      if (
+        !formData.operatingCountries.length ||
+        !formData.operatingCountries[0]?.trim()
+      )
+        errors.push("operatingCountries");
+      if (!formData.companyAddress.trim()) errors.push("companyAddress");
+      if (!formData.officialEmailDomain.trim())
+        errors.push("officialEmailDomain");
+      break;
+
+    case 1: // Team & Overview
+      if (!formData.teamSize) errors.push("teamSize");
+      if (!formData.stage) errors.push("stage");
+      if (
+        !formData.oneLineDescription.trim() ||
+        formData.oneLineDescription.trim().length < 10
+      )
+        errors.push("oneLineDescription");
+      if (
+        !formData.detailedDescription.trim() ||
+        formData.detailedDescription.trim().length < 50
+      )
+        errors.push("detailedDescription");
+      if (!formData.sector) errors.push("sector");
+      if (!formData.businessModel) errors.push("businessModel");
+      break;
+
+    case 2: // Founder Verification
+      if (!formData.founderFullName.trim()) errors.push("founderFullName");
+      if (!formData.founderEmail.trim()) errors.push("founderEmail");
+      if (!formData.founderPhone.trim()) errors.push("founderPhone");
+      if (!formData.founderNIN.trim()) errors.push("founderNIN");
+      if (!formData.founderBVN.trim()) errors.push("founderBVN");
+      if (!formData.founderIDType) errors.push("founderIDType");
+      if (!formData.founderIDNumber.trim()) errors.push("founderIDNumber");
+      break;
+
+    case 3: // Traction
+      if (!formData.revenueStatus) errors.push("revenueStatus");
+      if (!formData.topMetric1.trim()) errors.push("topMetric1");
+      if (!formData.topMetric2.trim()) errors.push("topMetric2");
+      if (!formData.topMetric3.trim()) errors.push("topMetric3");
+      break;
+
+    case 4: // Capital & History
+      if (!formData.founderOwnedPercent) errors.push("founderOwnedPercent");
+      if (!formData.externalInvestorsPercent)
+        errors.push("externalInvestorsPercent");
+      break;
+
+    case 5: // Risks
+      if (!formData.topRisk1.trim()) errors.push("topRisk1");
+      if (!formData.topRisk2.trim()) errors.push("topRisk2");
+      if (!formData.topRisk3.trim()) errors.push("topRisk3");
+      break;
+
+    case 6: // Fundraising Intent
+      if (!formData.preferredLane) errors.push("preferredLane");
+      if (!formData.preferredInstrument) errors.push("preferredInstrument");
+      if (!formData.targetRaiseMin) errors.push("targetRaiseMin");
+      if (!formData.targetRaiseMax) errors.push("targetRaiseMax");
+      if (!formData.primaryUseOfFunds.trim()) errors.push("primaryUseOfFunds");
+      break;
+
+    case 7: // Legal Representations
+      if (!formData.acknowledgePlacement) errors.push("acknowledgePlacement");
+      if (!formData.acknowledgeNoSolicitation)
+        errors.push("acknowledgeNoSolicitation");
+      if (!formData.acknowledgeAccuracy) errors.push("acknowledgeAccuracy");
+      if (!formData.acknowledgeEquity) errors.push("acknowledgeEquity");
+      if (!formData.acknowledgeNoGuarantee)
+        errors.push("acknowledgeNoGuarantee");
+      break;
+  }
+
+  return errors;
+}
+
+// Helper: input border class based on error
+function inputClass(hasError: boolean) {
+  return `w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none ${
+    hasError ? "border-red-400 bg-red-50" : "border-gray-300"
+  }`;
+}
+
+// Helper: error message
+function FieldError({ show, message }: { show: boolean; message: string }) {
+  if (!show) return null;
+  return <p className="text-xs text-red-600 mt-1">{message}</p>;
+}
+
 export default function CompanyOnboarding() {
   const router = useRouter();
   const { user, accessToken, loading } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
-  // ✅ REPLACE THE ENTIRE useEffect WITH THIS:
   useEffect(() => {
     if (!loading && !user) {
       console.error("No user found, redirecting to login");
@@ -268,6 +365,8 @@ export default function CompanyOnboarding() {
   }, [user, loading, router]);
 
   const [formData, setFormData] = useState<FormData>({
+    logoFile: null,
+    logoPreview: "",
     legalName: "",
     tradingName: "",
     incorporationNumber: "",
@@ -338,6 +437,14 @@ export default function CompanyOnboarding() {
   };
 
   const nextStep = () => {
+    const errors = validateStep(currentStep, formData);
+    if (errors.length > 0) {
+      setValidationErrors(errors);
+      window.scrollTo(0, 0);
+      return;
+    }
+    setValidationErrors([]);
+
     if (currentStep < STEPS.length - 1) {
       setCurrentStep((prev) => prev + 1);
       window.scrollTo(0, 0);
@@ -345,6 +452,7 @@ export default function CompanyOnboarding() {
   };
 
   const prevStep = () => {
+    setValidationErrors([]);
     if (currentStep > 0) {
       setCurrentStep((prev) => prev - 1);
       window.scrollTo(0, 0);
@@ -361,8 +469,8 @@ export default function CompanyOnboarding() {
 
       console.log("✅ Submitting for user:", user?.email);
 
-      // Format data for API
       const payload = {
+        logoUrl,
         legalName: formData.legalName,
         tradingName: formData.tradingName || undefined,
         incorporationNumber: formData.incorporationNumber,
@@ -372,7 +480,6 @@ export default function CompanyOnboarding() {
         companyAddress: formData.companyAddress,
         website: formData.website || undefined,
         officialEmailDomain: formData.officialEmailDomain,
-
         teamSize: formData.teamSize,
         oneLineDescription: formData.oneLineDescription,
         detailedDescription: formData.detailedDescription,
@@ -380,7 +487,6 @@ export default function CompanyOnboarding() {
         businessModel: formData.businessModel,
         revenueModel: "TRANSACTIONAL",
         stage: formData.stage,
-
         revenueStatus: formData.revenueStatus,
         revenueRange: formData.revenueRange,
         primaryRevenueSource: formData.revenueType,
@@ -394,7 +500,6 @@ export default function CompanyOnboarding() {
           .map((s) => s.trim())
           .filter(Boolean),
         geographicFootprint: formData.geographicFootprint,
-
         hasRaisedBefore: formData.hasRaisedBefore,
         previousRaises: formData.previousRaises || undefined,
         founderOwnedPercent:
@@ -402,7 +507,6 @@ export default function CompanyOnboarding() {
         externalInvestorsPercent:
           parseFloat(formData.externalInvestorsPercent) || undefined,
         notableInvestors: [],
-
         topRisks: [formData.topRisk1, formData.topRisk2, formData.topRisk3],
         materialThreats: `${formData.existingDebt ? "Debt: " + formData.existingDebt + ". " : ""}${formData.convertibleInstruments ? "Convertibles: " + formData.convertibleInstruments : ""}`,
         singleSupplier: formData.singleSupplier,
@@ -410,12 +514,35 @@ export default function CompanyOnboarding() {
         regulationDependent: formData.regulationDependent,
         regulatoryDependencies: formData.regulatoryDependencies || undefined,
         infrastructureDependent: false,
-
         preferredLane: formData.preferredLane,
         preferredInstrument: formData.preferredInstrument,
         targetRaiseRange: `$${formData.targetRaiseMin} - $${formData.targetRaiseMax}`,
         primaryUseOfFunds: formData.primaryUseOfFunds,
       };
+
+      // Upload logo to Supabase Storage
+      let logoUrl = "";
+      if (formData.logoFile) {
+        const fileExt = formData.logoFile.name.split(".").pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("company-logos")
+          .upload(fileName, formData.logoFile);
+
+        if (uploadError) {
+          console.error("❌ Logo upload error:", uploadError);
+          alert("Failed to upload logo. Please try again.");
+          return;
+        }
+
+        const { data: urlData } = supabase.storage
+          .from("company-logos")
+          .getPublicUrl(fileName);
+
+        logoUrl = urlData.publicUrl;
+        console.log("✅ Logo uploaded:", logoUrl);
+      }
 
       console.log("📤 Sending payload to API...");
 
@@ -433,8 +560,7 @@ export default function CompanyOnboarding() {
       console.log("📥 API response body:", result);
 
       if (result.success) {
-        alert("Company submitted successfully! 🎉");
-        router.push("/dashboard/founder");
+        router.push("/dashboard/founder/submission-success");
       } else {
         console.error("❌ API error:", result.error);
         alert(`Error: ${result.error?.message || "Unknown error"}`);
@@ -445,9 +571,7 @@ export default function CompanyOnboarding() {
     }
   };
 
-  // Loading state
   if (loading) {
-    // ✅ CHANGE isLoading to loading
     return (
       <div
         className="min-h-screen flex items-center justify-center"
@@ -461,11 +585,12 @@ export default function CompanyOnboarding() {
     );
   }
 
-  if (!user) return null; // ✅ CHANGE !isAuthenticated to !user
+  if (!user) return null;
+
+  const hasErr = (field: string) => validationErrors.includes(field);
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#F6F8FA" }}>
-      {/* Header */}
       <header className="bg-white border-b border-gray-200">
         <div className="container">
           <div className="flex items-center justify-between py-4">
@@ -498,7 +623,6 @@ export default function CompanyOnboarding() {
         </div>
       </header>
 
-      {/* Progress Bar */}
       <div className="bg-white border-b border-gray-200">
         <div className="container py-6">
           <div className="flex items-center justify-between mb-4">
@@ -506,19 +630,13 @@ export default function CompanyOnboarding() {
               <div key={step} className="flex-1 relative">
                 <div className="flex items-center">
                   <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm transition-colors ${
-                      index <= currentStep
-                        ? "bg-primary-950 text-white"
-                        : "bg-gray-200 text-gray-500"
-                    }`}
+                    className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm transition-colors ${index <= currentStep ? "bg-primary-950 text-white" : "bg-gray-200 text-gray-500"}`}
                   >
                     {index + 1}
                   </div>
                   {index < STEPS.length - 1 && (
                     <div
-                      className={`flex-1 h-1 mx-2 transition-colors ${
-                        index < currentStep ? "bg-primary-950" : "bg-gray-200"
-                      }`}
+                      className={`flex-1 h-1 mx-2 transition-colors ${index < currentStep ? "bg-primary-950" : "bg-gray-200"}`}
                     />
                   )}
                 </div>
@@ -531,39 +649,72 @@ export default function CompanyOnboarding() {
         </div>
       </div>
 
-      {/* Form Content */}
       <main className="container py-8">
         <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+          {validationErrors.length > 0 && (
+            <div className="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg text-sm font-medium mb-6">
+              ⚠ Please fill in all required fields before proceeding
+            </div>
+          )}
+
           {currentStep === 0 && (
-            <Step1Identity formData={formData} updateField={updateField} />
+            <Step1Identity
+              formData={formData}
+              updateField={updateField}
+              errors={validationErrors}
+            />
           )}
           {currentStep === 1 && (
-            <Step2Team formData={formData} updateField={updateField} />
+            <Step2Team
+              formData={formData}
+              updateField={updateField}
+              errors={validationErrors}
+            />
           )}
           {currentStep === 2 && (
             <Step3FounderVerification
               formData={formData}
               updateField={updateField}
+              errors={validationErrors}
             />
           )}
           {currentStep === 3 && (
-            <Step4Traction formData={formData} updateField={updateField} />
+            <Step4Traction
+              formData={formData}
+              updateField={updateField}
+              errors={validationErrors}
+            />
           )}
           {currentStep === 4 && (
-            <Step5Capital formData={formData} updateField={updateField} />
+            <Step5Capital
+              formData={formData}
+              updateField={updateField}
+              errors={validationErrors}
+            />
           )}
           {currentStep === 5 && (
-            <Step6Risks formData={formData} updateField={updateField} />
+            <Step6Risks
+              formData={formData}
+              updateField={updateField}
+              errors={validationErrors}
+            />
           )}
           {currentStep === 6 && (
-            <Step7Fundraising formData={formData} updateField={updateField} />
+            <Step7Fundraising
+              formData={formData}
+              updateField={updateField}
+              errors={validationErrors}
+            />
           )}
           {currentStep === 7 && (
-            <Step8Legal formData={formData} updateField={updateField} />
+            <Step8Legal
+              formData={formData}
+              updateField={updateField}
+              errors={validationErrors}
+            />
           )}
           {currentStep === 8 && <Step9Review formData={formData} />}
 
-          {/* Navigation Buttons */}
           <div className="flex items-center justify-between mt-8 pt-8 border-t border-gray-200">
             <button
               onClick={prevStep}
@@ -596,16 +747,21 @@ export default function CompanyOnboarding() {
     </div>
   );
 }
+
+// ============================================================================
+// Shared prop type for steps with validation
+// ============================================================================
+type StepProps = {
+  formData: FormData;
+  updateField: (field: keyof FormData, value: any) => void;
+  errors: string[];
+};
+
 // ============================================================================
 // STEP 1: COMPANY IDENTITY
 // ============================================================================
-function Step1Identity({
-  formData,
-  updateField,
-}: {
-  formData: FormData;
-  updateField: (field: keyof FormData, value: any) => void;
-}) {
+function Step1Identity({ formData, updateField, errors }: StepProps) {
+  const has = (f: string) => errors.includes(f);
   return (
     <div className="space-y-6">
       <div>
@@ -614,22 +770,82 @@ function Step1Identity({
         </h2>
         <p className="text-gray-600">Basic information about your company</p>
       </div>
-
       <div className="grid md:grid-cols-2 gap-6">
+        <div className="md:col-span-2">
+          <label className="block text-sm font-semibold text-gray-900 mb-2">
+            Company Logo <span className="text-red-500">*</span>
+          </label>
+          <div className="flex items-center gap-6">
+            <div className="w-24 h-24 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50">
+              {formData.logoPreview ? (
+                <img
+                  src={formData.logoPreview}
+                  alt="Logo preview"
+                  className="w-full h-full object-cover rounded-xl"
+                />
+              ) : (
+                <svg
+                  className="w-8 h-8 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+              )}
+            </div>
+            <div>
+              <label className="inline-block px-4 py-2 rounded-lg font-semibold text-sm cursor-pointer transition-all border-2 border-gray-300 text-gray-700 hover:border-gray-400">
+                {formData.logoPreview ? "Change Logo" : "Upload Logo"}
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      if (file.size > 2 * 1024 * 1024) {
+                        alert("Logo must be under 2MB");
+                        return;
+                      }
+                      updateField("logoFile", file);
+                      updateField("logoPreview", URL.createObjectURL(file));
+                    }
+                  }}
+                />
+              </label>
+              <p className="text-xs text-gray-500 mt-2">
+                PNG, JPG, or WebP. Max 2MB.
+              </p>
+              {has("logoFile") && (
+                <p className="text-xs text-red-600 mt-1">
+                  Company logo is required
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
         <div className="md:col-span-2">
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Legal Name <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
-            required
             value={formData.legalName}
             onChange={(e) => updateField("legalName", e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+            className={inputClass(has("legalName"))}
             placeholder="As registered with CAC"
           />
+          <FieldError
+            show={has("legalName")}
+            message="Legal name is required"
+          />
         </div>
-
         <div className="md:col-span-2">
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Trading Name (if different)
@@ -638,38 +854,41 @@ function Step1Identity({
             type="text"
             value={formData.tradingName}
             onChange={(e) => updateField("tradingName", e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+            className={inputClass(false)}
             placeholder="DBA or brand name"
           />
         </div>
-
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             CAC Registration Number <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
-            required
             value={formData.incorporationNumber}
             onChange={(e) => updateField("incorporationNumber", e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+            className={inputClass(has("incorporationNumber"))}
             placeholder="RC123456"
           />
+          <FieldError
+            show={has("incorporationNumber")}
+            message="CAC number is required"
+          />
         </div>
-
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Incorporation Date <span className="text-red-500">*</span>
           </label>
           <input
             type="date"
-            required
             value={formData.incorporationDate}
             onChange={(e) => updateField("incorporationDate", e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+            className={inputClass(has("incorporationDate"))}
+          />
+          <FieldError
+            show={has("incorporationDate")}
+            message="Incorporation date is required"
           />
         </div>
-
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Country of Incorporation <span className="text-red-500">*</span>
@@ -680,14 +899,12 @@ function Step1Identity({
             options={countryOptions}
           />
         </div>
-
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Operating Countries <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
-            required
             value={formData.operatingCountries.join(", ")}
             onChange={(e) =>
               updateField(
@@ -695,28 +912,35 @@ function Step1Identity({
                 e.target.value.split(",").map((s) => s.trim()),
               )
             }
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+            className={inputClass(has("operatingCountries"))}
             placeholder="Nigeria, Ghana, Kenya"
           />
-          <p className="text-xs text-gray-500 mt-1">
-            Separate multiple countries with commas
-          </p>
+          <FieldError
+            show={has("operatingCountries")}
+            message="At least one operating country is required"
+          />
+          {!has("operatingCountries") && (
+            <p className="text-xs text-gray-500 mt-1">
+              Separate multiple countries with commas
+            </p>
+          )}
         </div>
-
         <div className="md:col-span-2">
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Company Address <span className="text-red-500">*</span>
           </label>
           <textarea
-            required
             value={formData.companyAddress}
             onChange={(e) => updateField("companyAddress", e.target.value)}
             rows={3}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+            className={inputClass(has("companyAddress"))}
             placeholder="Full registered address"
           />
+          <FieldError
+            show={has("companyAddress")}
+            message="Company address is required"
+          />
         </div>
-
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Website
@@ -725,28 +949,26 @@ function Step1Identity({
             type="url"
             value={formData.website}
             onChange={(e) => updateField("website", e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+            className={inputClass(false)}
             placeholder="https://yourcompany.com"
           />
         </div>
-
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Official Email Domain <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
-            required
             value={formData.officialEmailDomain}
             onChange={(e) => updateField("officialEmailDomain", e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+            className={inputClass(has("officialEmailDomain"))}
             placeholder="company.com"
           />
-          <p className="text-xs text-gray-500 mt-1">
-            Domain for official communications
-          </p>
+          <FieldError
+            show={has("officialEmailDomain")}
+            message="Email domain is required"
+          />
         </div>
-
         <div className="md:col-span-2">
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Regulatory Licenses (if applicable)
@@ -755,7 +977,7 @@ function Step1Identity({
             value={formData.regulatoryLicenses}
             onChange={(e) => updateField("regulatoryLicenses", e.target.value)}
             rows={2}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+            className={inputClass(false)}
             placeholder="e.g., CBN banking license, FCCPC approval, etc."
           />
         </div>
@@ -763,17 +985,14 @@ function Step1Identity({
     </div>
   );
 }
-
 // ============================================================================
 // STEP 2: TEAM & OVERVIEW
 // ============================================================================
-function Step2Team({
-  formData,
-  updateField,
-}: {
-  formData: FormData;
-  updateField: (field: keyof FormData, value: any) => void;
-}) {
+function Step2Team({ formData, updateField, errors }: StepProps) {
+  const has = (f: string) => errors.includes(f);
+  const descLen = formData.detailedDescription.length;
+  const descTooShort = descLen > 0 && descLen < 50;
+
   return (
     <div className="space-y-6">
       <div>
@@ -782,88 +1001,121 @@ function Step2Team({
         </h2>
         <p className="text-gray-600">Tell us about your team and what you do</p>
       </div>
-
       <div className="grid md:grid-cols-2 gap-6">
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Team Size <span className="text-red-500">*</span>
           </label>
-          <CustomSelect
-            value={formData.teamSize}
-            onChange={(value) => updateField("teamSize", value)}
-            options={teamSizeOptions}
-          />
+          <div
+            className={has("teamSize") ? "ring-2 ring-red-400 rounded-lg" : ""}
+          >
+            <CustomSelect
+              value={formData.teamSize}
+              onChange={(value) => updateField("teamSize", value)}
+              options={teamSizeOptions}
+            />
+          </div>
+          <FieldError show={has("teamSize")} message="Team size is required" />
         </div>
-
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Stage <span className="text-red-500">*</span>
           </label>
-          <CustomSelect
-            value={formData.stage}
-            onChange={(value) => updateField("stage", value)}
-            options={stageOptions}
-          />
+          <div className={has("stage") ? "ring-2 ring-red-400 rounded-lg" : ""}>
+            <CustomSelect
+              value={formData.stage}
+              onChange={(value) => updateField("stage", value)}
+              options={stageOptions}
+            />
+          </div>
+          <FieldError show={has("stage")} message="Stage is required" />
         </div>
-
         <div className="md:col-span-2">
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             One-Line Description <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
-            required
             maxLength={200}
             value={formData.oneLineDescription}
             onChange={(e) => updateField("oneLineDescription", e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+            className={inputClass(has("oneLineDescription"))}
             placeholder="Describe your company in one sentence (max 200 characters)"
           />
-          <p className="text-xs text-gray-500 mt-1">
-            {formData.oneLineDescription.length}/200 characters
-          </p>
+          <div className="flex justify-between mt-1">
+            <FieldError
+              show={has("oneLineDescription")}
+              message="At least 10 characters required"
+            />
+            <p className="text-xs text-gray-500">
+              {formData.oneLineDescription.length}/200 characters
+            </p>
+          </div>
         </div>
-
         <div className="md:col-span-2">
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Detailed Description <span className="text-red-500">*</span>
           </label>
           <textarea
-            required
             maxLength={1000}
             value={formData.detailedDescription}
             onChange={(e) => updateField("detailedDescription", e.target.value)}
             rows={4}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+            className={inputClass(has("detailedDescription"))}
             placeholder="What does your company do? What problem do you solve? (max 1000 characters)"
           />
-          <p className="text-xs text-gray-500 mt-1">
-            {formData.detailedDescription.length}/1000 characters
-          </p>
+          <div className="flex justify-between mt-1">
+            {has("detailedDescription") ? (
+              <p className="text-xs text-red-600">
+                Minimum 50 characters required
+              </p>
+            ) : descTooShort ? (
+              <p className="text-xs text-amber-600">
+                Minimum 50 characters required ({50 - descLen} more needed)
+              </p>
+            ) : descLen >= 50 ? (
+              <p className="text-xs text-green-600">✓ Minimum met</p>
+            ) : (
+              <p className="text-xs text-gray-500">Minimum 50 characters</p>
+            )}
+            <p className="text-xs text-gray-500">{descLen}/1000 characters</p>
+          </div>
         </div>
-
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Sector <span className="text-red-500">*</span>
           </label>
-          <CustomSelect
-            value={formData.sector}
-            onChange={(value) => updateField("sector", value)}
-            options={sectorOptions}
-          />
+          <div
+            className={has("sector") ? "ring-2 ring-red-400 rounded-lg" : ""}
+          >
+            <CustomSelect
+              value={formData.sector}
+              onChange={(value) => updateField("sector", value)}
+              options={sectorOptions}
+            />
+          </div>
+          <FieldError show={has("sector")} message="Sector is required" />
         </div>
-
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Business Model <span className="text-red-500">*</span>
           </label>
-          <CustomSelect
-            value={formData.businessModel}
-            onChange={(value) => updateField("businessModel", value)}
-            options={businessModelOptions}
+          <div
+            className={
+              has("businessModel") ? "ring-2 ring-red-400 rounded-lg" : ""
+            }
+          >
+            <CustomSelect
+              value={formData.businessModel}
+              onChange={(value) => updateField("businessModel", value)}
+              options={businessModelOptions}
+            />
+          </div>
+          <FieldError
+            show={has("businessModel")}
+            message="Business model is required"
           />
         </div>
-
         <div className="md:col-span-2">
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Founder LinkedIn
@@ -872,11 +1124,10 @@ function Step2Team({
             type="url"
             value={formData.founderLinkedIn}
             onChange={(e) => updateField("founderLinkedIn", e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+            className={inputClass(false)}
             placeholder="https://linkedin.com/in/yourprofile"
           />
         </div>
-
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Years of Relevant Experience
@@ -886,11 +1137,10 @@ function Step2Team({
             min="0"
             value={formData.yearsExperience}
             onChange={(e) => updateField("yearsExperience", e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+            className={inputClass(false)}
             placeholder="Years in this industry"
           />
         </div>
-
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Key Executive Roles (if any)
@@ -899,7 +1149,7 @@ function Step2Team({
             type="text"
             value={formData.keyExecutives}
             onChange={(e) => updateField("keyExecutives", e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+            className={inputClass(false)}
             placeholder="e.g., CTO from Google, CFO from Stripe"
           />
         </div>
@@ -909,15 +1159,14 @@ function Step2Team({
 }
 
 // ============================================================================
-// STEP 3: FOUNDER VERIFICATION (NEW!)
+// STEP 3: FOUNDER VERIFICATION
 // ============================================================================
 function Step3FounderVerification({
   formData,
   updateField,
-}: {
-  formData: FormData;
-  updateField: (field: keyof FormData, value: any) => void;
-}) {
+  errors,
+}: StepProps) {
+  const has = (f: string) => errors.includes(f);
   return (
     <div className="space-y-6">
       <div>
@@ -929,7 +1178,6 @@ function Step3FounderVerification({
           founder's details
         </p>
       </div>
-
       <div className="grid md:grid-cols-2 gap-6">
         <div className="md:col-span-2">
           <label className="block text-sm font-semibold text-gray-900 mb-2">
@@ -937,42 +1185,45 @@ function Step3FounderVerification({
           </label>
           <input
             type="text"
-            required
             value={formData.founderFullName}
             onChange={(e) => updateField("founderFullName", e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+            className={inputClass(has("founderFullName"))}
             placeholder="As it appears on government ID"
           />
+          <FieldError
+            show={has("founderFullName")}
+            message="Full name is required"
+          />
         </div>
-
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Email Address <span className="text-red-500">*</span>
           </label>
           <input
             type="email"
-            required
             value={formData.founderEmail}
             onChange={(e) => updateField("founderEmail", e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+            className={inputClass(has("founderEmail"))}
             placeholder="founder@company.com"
           />
+          <FieldError show={has("founderEmail")} message="Email is required" />
         </div>
-
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Phone Number <span className="text-red-500">*</span>
           </label>
           <input
             type="tel"
-            required
             value={formData.founderPhone}
             onChange={(e) => updateField("founderPhone", e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+            className={inputClass(has("founderPhone"))}
             placeholder="+234 xxx xxx xxxx"
           />
+          <FieldError
+            show={has("founderPhone")}
+            message="Phone number is required"
+          />
         </div>
-
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             National Identity Number (NIN){" "}
@@ -980,15 +1231,14 @@ function Step3FounderVerification({
           </label>
           <input
             type="text"
-            required
             value={formData.founderNIN}
             onChange={(e) => updateField("founderNIN", e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+            className={inputClass(has("founderNIN"))}
             placeholder="11-digit NIN"
             maxLength={11}
           />
+          <FieldError show={has("founderNIN")} message="NIN is required" />
         </div>
-
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Bank Verification Number (BVN){" "}
@@ -996,40 +1246,50 @@ function Step3FounderVerification({
           </label>
           <input
             type="text"
-            required
             value={formData.founderBVN}
             onChange={(e) => updateField("founderBVN", e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+            className={inputClass(has("founderBVN"))}
             placeholder="11-digit BVN"
             maxLength={11}
           />
+          <FieldError show={has("founderBVN")} message="BVN is required" />
         </div>
-
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             ID Type <span className="text-red-500">*</span>
           </label>
-          <CustomSelect
-            value={formData.founderIDType}
-            onChange={(value) => updateField("founderIDType", value)}
-            options={idTypeOptions}
+          <div
+            className={
+              has("founderIDType") ? "ring-2 ring-red-400 rounded-lg" : ""
+            }
+          >
+            <CustomSelect
+              value={formData.founderIDType}
+              onChange={(value) => updateField("founderIDType", value)}
+              options={idTypeOptions}
+            />
+          </div>
+          <FieldError
+            show={has("founderIDType")}
+            message="ID type is required"
           />
         </div>
-
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             ID Number <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
-            required
             value={formData.founderIDNumber}
             onChange={(e) => updateField("founderIDNumber", e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+            className={inputClass(has("founderIDNumber"))}
             placeholder="ID number"
           />
+          <FieldError
+            show={has("founderIDNumber")}
+            message="ID number is required"
+          />
         </div>
-
         <div className="md:col-span-2 p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <p className="text-sm text-blue-900">
             <strong>Privacy Note:</strong> Your personal information is
@@ -1041,35 +1301,39 @@ function Step3FounderVerification({
     </div>
   );
 }
+
 // ============================================================================
 // STEP 4: TRACTION
 // ============================================================================
-function Step4Traction({
-  formData,
-  updateField,
-}: {
-  formData: FormData;
-  updateField: (field: keyof FormData, value: any) => void;
-}) {
+function Step4Traction({ formData, updateField, errors }: StepProps) {
+  const has = (f: string) => errors.includes(f);
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-primary-950 mb-2">Traction</h2>
         <p className="text-gray-600">Show us your business performance</p>
       </div>
-
       <div className="grid md:grid-cols-2 gap-6">
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Revenue Status <span className="text-red-500">*</span>
           </label>
-          <CustomSelect
-            value={formData.revenueStatus}
-            onChange={(value) => updateField("revenueStatus", value)}
-            options={revenueStatusOptions}
+          <div
+            className={
+              has("revenueStatus") ? "ring-2 ring-red-400 rounded-lg" : ""
+            }
+          >
+            <CustomSelect
+              value={formData.revenueStatus}
+              onChange={(value) => updateField("revenueStatus", value)}
+              options={revenueStatusOptions}
+            />
+          </div>
+          <FieldError
+            show={has("revenueStatus")}
+            message="Revenue status is required"
           />
         </div>
-
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Revenue Range (if applicable)
@@ -1085,7 +1349,6 @@ function Step4Traction({
             }
           />
         </div>
-
         <div className="md:col-span-2">
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Revenue Type
@@ -1096,7 +1359,6 @@ function Step4Traction({
             options={revenueTypeOptions}
           />
         </div>
-
         <div className="md:col-span-2">
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Top 3 Metrics <span className="text-red-500">*</span>
@@ -1104,35 +1366,48 @@ function Step4Traction({
           <p className="text-sm text-gray-600 mb-3">
             What are your key performance indicators?
           </p>
-
           <div className="space-y-3">
-            <input
-              type="text"
-              required
-              value={formData.topMetric1}
-              onChange={(e) => updateField("topMetric1", e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
-              placeholder="Metric 1: e.g., 10,000 active users"
-            />
-            <input
-              type="text"
-              required
-              value={formData.topMetric2}
-              onChange={(e) => updateField("topMetric2", e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
-              placeholder="Metric 2: e.g., 25% MoM growth"
-            />
-            <input
-              type="text"
-              required
-              value={formData.topMetric3}
-              onChange={(e) => updateField("topMetric3", e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
-              placeholder="Metric 3: e.g., $500k ARR"
-            />
+            <div>
+              <input
+                type="text"
+                value={formData.topMetric1}
+                onChange={(e) => updateField("topMetric1", e.target.value)}
+                className={inputClass(has("topMetric1"))}
+                placeholder="Metric 1: e.g., 10,000 active users"
+              />
+              <FieldError
+                show={has("topMetric1")}
+                message="Metric 1 is required"
+              />
+            </div>
+            <div>
+              <input
+                type="text"
+                value={formData.topMetric2}
+                onChange={(e) => updateField("topMetric2", e.target.value)}
+                className={inputClass(has("topMetric2"))}
+                placeholder="Metric 2: e.g., 25% MoM growth"
+              />
+              <FieldError
+                show={has("topMetric2")}
+                message="Metric 2 is required"
+              />
+            </div>
+            <div>
+              <input
+                type="text"
+                value={formData.topMetric3}
+                onChange={(e) => updateField("topMetric3", e.target.value)}
+                className={inputClass(has("topMetric3"))}
+                placeholder="Metric 3: e.g., $500k ARR"
+              />
+              <FieldError
+                show={has("topMetric3")}
+                message="Metric 3 is required"
+              />
+            </div>
           </div>
         </div>
-
         <div className="md:col-span-2">
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Major Customers
@@ -1141,11 +1416,10 @@ function Step4Traction({
             value={formData.majorCustomers}
             onChange={(e) => updateField("majorCustomers", e.target.value)}
             rows={2}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+            className={inputClass(false)}
             placeholder="List key customers or customer types (comma-separated)"
           />
         </div>
-
         <div className="md:col-span-2">
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Geographic Footprint
@@ -1154,7 +1428,7 @@ function Step4Traction({
             type="text"
             value={formData.geographicFootprint}
             onChange={(e) => updateField("geographicFootprint", e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+            className={inputClass(false)}
             placeholder="e.g., Lagos, Abuja, Accra"
           />
         </div>
@@ -1166,13 +1440,8 @@ function Step4Traction({
 // ============================================================================
 // STEP 5: CAPITAL & HISTORY
 // ============================================================================
-function Step5Capital({
-  formData,
-  updateField,
-}: {
-  formData: FormData;
-  updateField: (field: keyof FormData, value: any) => void;
-}) {
+function Step5Capital({ formData, updateField, errors }: StepProps) {
+  const has = (f: string) => errors.includes(f);
   return (
     <div className="space-y-6">
       <div>
@@ -1183,7 +1452,6 @@ function Step5Capital({
           Tell us about your funding history and cap table
         </p>
       </div>
-
       <div className="grid md:grid-cols-2 gap-6">
         <div className="md:col-span-2">
           <label className="flex items-center gap-2">
@@ -1198,7 +1466,6 @@ function Step5Capital({
             </span>
           </label>
         </div>
-
         {formData.hasRaisedBefore && (
           <div className="md:col-span-2">
             <label className="block text-sm font-semibold text-gray-900 mb-2">
@@ -1208,12 +1475,11 @@ function Step5Capital({
               value={formData.previousRaises}
               onChange={(e) => updateField("previousRaises", e.target.value)}
               rows={3}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+              className={inputClass(false)}
               placeholder="e.g., $500k seed in 2022 via SAFE, $1M Series A in 2023"
             />
           </div>
         )}
-
         <div className="md:col-span-2">
           <p className="text-sm font-semibold text-gray-900 mb-3">
             Cap Table Summary <span className="text-red-500">*</span>
@@ -1225,7 +1491,6 @@ function Step5Capital({
               </label>
               <input
                 type="number"
-                required
                 min="0"
                 max="100"
                 step="0.01"
@@ -1233,8 +1498,12 @@ function Step5Capital({
                 onChange={(e) =>
                   updateField("founderOwnedPercent", e.target.value)
                 }
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+                className={inputClass(has("founderOwnedPercent"))}
                 placeholder="75"
+              />
+              <FieldError
+                show={has("founderOwnedPercent")}
+                message="Required"
               />
             </div>
             <div>
@@ -1243,7 +1512,6 @@ function Step5Capital({
               </label>
               <input
                 type="number"
-                required
                 min="0"
                 max="100"
                 step="0.01"
@@ -1251,8 +1519,12 @@ function Step5Capital({
                 onChange={(e) =>
                   updateField("externalInvestorsPercent", e.target.value)
                 }
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+                className={inputClass(has("externalInvestorsPercent"))}
                 placeholder="20"
+              />
+              <FieldError
+                show={has("externalInvestorsPercent")}
+                message="Required"
               />
             </div>
             <div>
@@ -1264,13 +1536,12 @@ function Step5Capital({
                 step="0.01"
                 value={formData.esopPercent}
                 onChange={(e) => updateField("esopPercent", e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+                className={inputClass(false)}
                 placeholder="5"
               />
             </div>
           </div>
         </div>
-
         <div className="md:col-span-2">
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Existing Debt Obligations
@@ -1279,11 +1550,10 @@ function Step5Capital({
             value={formData.existingDebt}
             onChange={(e) => updateField("existingDebt", e.target.value)}
             rows={2}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+            className={inputClass(false)}
             placeholder="Any outstanding loans, credit lines, or debt? Leave blank if none."
           />
         </div>
-
         <div className="md:col-span-2">
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Convertible Instruments Outstanding
@@ -1294,11 +1564,10 @@ function Step5Capital({
               updateField("convertibleInstruments", e.target.value)
             }
             rows={2}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+            className={inputClass(false)}
             placeholder="Any SAFEs, convertible notes, or other convertible instruments? Leave blank if none."
           />
         </div>
-
         <div className="md:col-span-2">
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Investor Side Letters
@@ -1307,7 +1576,7 @@ function Step5Capital({
             value={formData.investorSideLetters}
             onChange={(e) => updateField("investorSideLetters", e.target.value)}
             rows={2}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+            className={inputClass(false)}
             placeholder="Any special agreements with existing investors? Leave blank if none."
           />
         </div>
@@ -1319,13 +1588,8 @@ function Step5Capital({
 // ============================================================================
 // STEP 6: RISKS
 // ============================================================================
-function Step6Risks({
-  formData,
-  updateField,
-}: {
-  formData: FormData;
-  updateField: (field: keyof FormData, value: any) => void;
-}) {
+function Step6Risks({ formData, updateField, errors }: StepProps) {
+  const has = (f: string) => errors.includes(f);
   return (
     <div className="space-y-6">
       <div>
@@ -1334,7 +1598,6 @@ function Step6Risks({
           Be honest about the challenges and risks
         </p>
       </div>
-
       <div className="space-y-6">
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">
@@ -1343,47 +1606,44 @@ function Step6Risks({
           <p className="text-sm text-gray-600 mb-3">
             What are the biggest risks to your business?
           </p>
-
           <div className="space-y-3">
             <div>
               <label className="block text-xs text-gray-600 mb-1">Risk 1</label>
               <textarea
-                required
                 value={formData.topRisk1}
                 onChange={(e) => updateField("topRisk1", e.target.value)}
                 rows={2}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+                className={inputClass(has("topRisk1"))}
                 placeholder="Describe your biggest risk"
               />
+              <FieldError show={has("topRisk1")} message="Risk 1 is required" />
             </div>
             <div>
               <label className="block text-xs text-gray-600 mb-1">Risk 2</label>
               <textarea
-                required
                 value={formData.topRisk2}
                 onChange={(e) => updateField("topRisk2", e.target.value)}
                 rows={2}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+                className={inputClass(has("topRisk2"))}
                 placeholder="Describe your second biggest risk"
               />
+              <FieldError show={has("topRisk2")} message="Risk 2 is required" />
             </div>
             <div>
               <label className="block text-xs text-gray-600 mb-1">Risk 3</label>
               <textarea
-                required
                 value={formData.topRisk3}
                 onChange={(e) => updateField("topRisk3", e.target.value)}
                 rows={2}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+                className={inputClass(has("topRisk3"))}
                 placeholder="Describe your third biggest risk"
               />
+              <FieldError show={has("topRisk3")} message="Risk 3 is required" />
             </div>
           </div>
         </div>
-
         <div className="space-y-4 p-6 bg-gray-50 rounded-lg">
           <p className="font-semibold text-gray-900">Key Risk Factors</p>
-
           <div>
             <label className="flex items-start gap-3">
               <input
@@ -1415,7 +1675,6 @@ function Step6Risks({
               />
             )}
           </div>
-
           <div>
             <label className="flex items-start gap-3">
               <input
@@ -1434,7 +1693,6 @@ function Step6Risks({
               </div>
             </label>
           </div>
-
           <div>
             <label className="flex items-start gap-3">
               <input
@@ -1456,7 +1714,6 @@ function Step6Risks({
             </label>
           </div>
         </div>
-
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Key Concentration Risk
@@ -1470,7 +1727,7 @@ function Step6Risks({
               updateField("keyConcentrationRisk", e.target.value)
             }
             rows={2}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+            className={inputClass(false)}
             placeholder="If yes, explain. If no, write 'No concentration risk'."
           />
         </div>
@@ -1482,13 +1739,8 @@ function Step6Risks({
 // ============================================================================
 // STEP 7: FUNDRAISING INTENT
 // ============================================================================
-function Step7Fundraising({
-  formData,
-  updateField,
-}: {
-  formData: FormData;
-  updateField: (field: keyof FormData, value: any) => void;
-}) {
+function Step7Fundraising({ formData, updateField, errors }: StepProps) {
+  const has = (f: string) => errors.includes(f);
   return (
     <div className="space-y-6">
       <div>
@@ -1497,30 +1749,47 @@ function Step7Fundraising({
         </h2>
         <p className="text-gray-600">What are you looking to raise?</p>
       </div>
-
       <div className="grid md:grid-cols-2 gap-6">
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Preferred Lane <span className="text-red-500">*</span>
           </label>
-          <CustomSelect
-            value={formData.preferredLane}
-            onChange={(value) => updateField("preferredLane", value)}
-            options={laneOptions}
+          <div
+            className={
+              has("preferredLane") ? "ring-2 ring-red-400 rounded-lg" : ""
+            }
+          >
+            <CustomSelect
+              value={formData.preferredLane}
+              onChange={(value) => updateField("preferredLane", value)}
+              options={laneOptions}
+            />
+          </div>
+          <FieldError
+            show={has("preferredLane")}
+            message="Preferred lane is required"
           />
         </div>
-
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Preferred Instrument <span className="text-red-500">*</span>
           </label>
-          <CustomSelect
-            value={formData.preferredInstrument}
-            onChange={(value) => updateField("preferredInstrument", value)}
-            options={instrumentOptions}
+          <div
+            className={
+              has("preferredInstrument") ? "ring-2 ring-red-400 rounded-lg" : ""
+            }
+          >
+            <CustomSelect
+              value={formData.preferredInstrument}
+              onChange={(value) => updateField("preferredInstrument", value)}
+              options={instrumentOptions}
+            />
+          </div>
+          <FieldError
+            show={has("preferredInstrument")}
+            message="Preferred instrument is required"
           />
         </div>
-
         <div className="md:col-span-2">
           <p className="text-sm font-semibold text-gray-900 mb-3">
             Target Raise Range <span className="text-red-500">*</span>
@@ -1532,12 +1801,15 @@ function Step7Fundraising({
               </label>
               <input
                 type="number"
-                required
                 min="0"
                 value={formData.targetRaiseMin}
                 onChange={(e) => updateField("targetRaiseMin", e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+                className={inputClass(has("targetRaiseMin"))}
                 placeholder="100000"
+              />
+              <FieldError
+                show={has("targetRaiseMin")}
+                message="Minimum amount is required"
               />
             </div>
             <div>
@@ -1546,31 +1818,35 @@ function Step7Fundraising({
               </label>
               <input
                 type="number"
-                required
                 min="0"
                 value={formData.targetRaiseMax}
                 onChange={(e) => updateField("targetRaiseMax", e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+                className={inputClass(has("targetRaiseMax"))}
                 placeholder="500000"
+              />
+              <FieldError
+                show={has("targetRaiseMax")}
+                message="Maximum amount is required"
               />
             </div>
           </div>
         </div>
-
         <div className="md:col-span-2">
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Primary Use of Funds <span className="text-red-500">*</span>
           </label>
           <textarea
-            required
             value={formData.primaryUseOfFunds}
             onChange={(e) => updateField("primaryUseOfFunds", e.target.value)}
             rows={3}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+            className={inputClass(has("primaryUseOfFunds"))}
             placeholder="How will you deploy the capital? Be specific."
           />
+          <FieldError
+            show={has("primaryUseOfFunds")}
+            message="Use of funds is required"
+          />
         </div>
-
         {formData.preferredLane === "VENTURES" && (
           <div className="md:col-span-2">
             <label className="block text-sm font-semibold text-gray-900 mb-2">
@@ -1580,12 +1856,11 @@ function Step7Fundraising({
               type="text"
               value={formData.proposedValuation}
               onChange={(e) => updateField("proposedValuation", e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+              className={inputClass(false)}
               placeholder="e.g., $5M post-money or $10M cap"
             />
           </div>
         )}
-
         {formData.preferredLane === "YIELD" && (
           <div className="md:col-span-2">
             <label className="block text-sm font-semibold text-gray-900 mb-2">
@@ -1597,12 +1872,11 @@ function Step7Fundraising({
               onChange={(e) =>
                 updateField("proposedRevenueShare", e.target.value)
               }
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+              className={inputClass(false)}
               placeholder="e.g., 5% of monthly revenue until 2x return"
             />
           </div>
         )}
-
         <div className="md:col-span-2">
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Expected Timeline to Deploy Funds
@@ -1621,13 +1895,8 @@ function Step7Fundraising({
 // ============================================================================
 // STEP 8: LEGAL REPRESENTATIONS
 // ============================================================================
-function Step8Legal({
-  formData,
-  updateField,
-}: {
-  formData: FormData;
-  updateField: (field: keyof FormData, value: any) => void;
-}) {
+function Step8Legal({ formData, updateField, errors }: StepProps) {
+  const has = (f: string) => errors.includes(f);
   return (
     <div className="space-y-6">
       <div>
@@ -1640,10 +1909,17 @@ function Step8Legal({
       </div>
 
       <div className="space-y-4 p-6 bg-gray-50 rounded-lg">
-        <div className="flex items-start gap-3">
+        {errors.length > 0 && (
+          <div className="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg text-sm font-medium">
+            ⚠ You must accept all acknowledgements to proceed
+          </div>
+        )}
+
+        <div
+          className={`flex items-start gap-3 p-3 rounded-lg ${has("acknowledgePlacement") ? "bg-red-50 border border-red-300" : ""}`}
+        >
           <input
             type="checkbox"
-            required
             checked={formData.acknowledgePlacement}
             onChange={(e) =>
               updateField("acknowledgePlacement", e.target.checked)
@@ -1661,10 +1937,11 @@ function Step8Legal({
           </div>
         </div>
 
-        <div className="flex items-start gap-3">
+        <div
+          className={`flex items-start gap-3 p-3 rounded-lg ${has("acknowledgeNoSolicitation") ? "bg-red-50 border border-red-300" : ""}`}
+        >
           <input
             type="checkbox"
-            required
             checked={formData.acknowledgeNoSolicitation}
             onChange={(e) =>
               updateField("acknowledgeNoSolicitation", e.target.checked)
@@ -1682,10 +1959,11 @@ function Step8Legal({
           </div>
         </div>
 
-        <div className="flex items-start gap-3">
+        <div
+          className={`flex items-start gap-3 p-3 rounded-lg ${has("acknowledgeAccuracy") ? "bg-red-50 border border-red-300" : ""}`}
+        >
           <input
             type="checkbox"
-            required
             checked={formData.acknowledgeAccuracy}
             onChange={(e) =>
               updateField("acknowledgeAccuracy", e.target.checked)
@@ -1703,10 +1981,11 @@ function Step8Legal({
           </div>
         </div>
 
-        <div className="flex items-start gap-3">
+        <div
+          className={`flex items-start gap-3 p-3 rounded-lg ${has("acknowledgeEquity") ? "bg-red-50 border border-red-300" : ""}`}
+        >
           <input
             type="checkbox"
-            required
             checked={formData.acknowledgeEquity}
             onChange={(e) => updateField("acknowledgeEquity", e.target.checked)}
             className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-2 focus:ring-primary-600 mt-1"
@@ -1722,10 +2001,11 @@ function Step8Legal({
           </div>
         </div>
 
-        <div className="flex items-start gap-3">
+        <div
+          className={`flex items-start gap-3 p-3 rounded-lg ${has("acknowledgeNoGuarantee") ? "bg-red-50 border border-red-300" : ""}`}
+        >
           <input
             type="checkbox"
-            required
             checked={formData.acknowledgeNoGuarantee}
             onChange={(e) =>
               updateField("acknowledgeNoGuarantee", e.target.checked)
@@ -1771,9 +2051,7 @@ function Step9Review({ formData }: { formData: FormData }) {
           Please review your information before submitting
         </p>
       </div>
-
       <div className="space-y-6">
-        {/* Company Identity */}
         <div className="p-6 bg-gray-50 rounded-lg">
           <h3 className="font-semibold text-gray-900 mb-3">Company Identity</h3>
           <dl className="grid md:grid-cols-2 gap-3 text-sm">
@@ -1803,8 +2081,6 @@ function Step9Review({ formData }: { formData: FormData }) {
             </div>
           </dl>
         </div>
-
-        {/* Team & Overview */}
         <div className="p-6 bg-gray-50 rounded-lg">
           <h3 className="font-semibold text-gray-900 mb-3">Team & Overview</h3>
           <dl className="grid md:grid-cols-2 gap-3 text-sm">
@@ -1840,8 +2116,6 @@ function Step9Review({ formData }: { formData: FormData }) {
             </div>
           </dl>
         </div>
-
-        {/* Fundraising */}
         <div className="p-6 bg-gray-50 rounded-lg">
           <h3 className="font-semibold text-gray-900 mb-3">
             Fundraising Intent
@@ -1868,7 +2142,6 @@ function Step9Review({ formData }: { formData: FormData }) {
             </div>
           </dl>
         </div>
-
         <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
           <p className="text-sm text-yellow-900">
             <strong>Next Steps:</strong> After submission, our team will review

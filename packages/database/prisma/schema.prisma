@@ -190,6 +190,7 @@ model Company {
   companyAddress         String
   operatingCountries     String[]
   website                String?
+  logoUrl              String?
   officialEmailDomain    String
 
   // Internal only
