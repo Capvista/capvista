@@ -8,9 +8,8 @@ import Link from "next/link";
 export default function InvestorDashboard() {
   const { user, loading, signOut } = useAuth();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<
-    "overview" | "opportunities" | "watchlist" | "portfolio"
-  >("overview");
+  const [activeTab, setActiveTab] = useState;
+  "overview" | "opportunities" | "watchlist" | ("portfolio" > "overview");
 
   useEffect(() => {
     if (!loading && !user) {
@@ -261,6 +260,36 @@ export default function InvestorDashboard() {
 
 // Overview Tab Component
 function OverviewTab({ user, router }: { user: any; router: any }) {
+  const { accessToken } = useAuth();
+  const [profileStatus, setProfileStatus] = useState(
+    "loading" as "loading" | "incomplete" | "pending" | "approved",
+  );
+
+  useEffect(() => {
+    const checkProfile = async () => {
+      try {
+        const API_URL =
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+        const res = await fetch(`${API_URL}/api/investors/profile`, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        const result = await res.json();
+        if (result.success && result.data) {
+          setProfileStatus(
+            result.data.verificationStatus === "APPROVED"
+              ? "approved"
+              : "pending",
+          );
+        } else {
+          setProfileStatus("incomplete");
+        }
+      } catch {
+        setProfileStatus("incomplete");
+      }
+    };
+    if (accessToken) checkProfile();
+  }, [accessToken]);
+
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
@@ -401,38 +430,96 @@ function OverviewTab({ user, router }: { user: any; router: any }) {
             </div>
           </button>
 
-          <button
-            onClick={() => router.push("/dashboard/investor/complete-profile")}
-            className="flex items-center gap-4 p-6 rounded-xl border-2 border-gray-200 hover:border-primary-900 transition-all group"
-          >
-            <div
-              className="w-12 h-12 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: "rgba(200, 162, 77, 0.1)" }}
+          {profileStatus === "loading" ? (
+            <div className="flex items-center gap-4 p-6 rounded-xl border-2 border-gray-200">
+              <div className="w-12 h-12 rounded-lg bg-gray-100 animate-pulse" />
+              <div>
+                <div className="h-4 w-32 bg-gray-100 rounded animate-pulse mb-2" />
+                <div className="h-3 w-48 bg-gray-100 rounded animate-pulse" />
+              </div>
+            </div>
+          ) : profileStatus === "incomplete" ? (
+            <button
+              onClick={() =>
+                router.push("/dashboard/investor/complete-profile")
+              }
+              className="flex items-center gap-4 p-6 rounded-xl border-2 border-amber-300 bg-amber-50 hover:border-amber-400 transition-all group"
             >
-              <svg
-                className="w-6 h-6"
-                style={{ color: "#C8A24D" }}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                />
-              </svg>
+              <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-amber-100">
+                <svg
+                  className="w-6 h-6 text-amber-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
+                  />
+                </svg>
+              </div>
+              <div className="text-left">
+                <h3 className="font-semibold text-amber-900">
+                  Complete Profile
+                </h3>
+                <p className="text-sm text-amber-700">
+                  Required before you can invest
+                </p>
+              </div>
+            </button>
+          ) : profileStatus === "pending" ? (
+            <div className="flex items-center gap-4 p-6 rounded-xl border-2 border-blue-200 bg-blue-50">
+              <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-blue-100">
+                <svg
+                  className="w-6 h-6 text-blue-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <div className="text-left">
+                <h3 className="font-semibold text-blue-900">Profile Pending</h3>
+                <p className="text-sm text-blue-700">
+                  Your investor profile is being reviewed
+                </p>
+              </div>
             </div>
-            <div className="text-left">
-              <h3 className="font-semibold text-primary-950 group-hover:text-primary-900 transition-colors">
-                Complete Profile
-              </h3>
-              <p className="text-sm text-gray-600">
-                Verify your investor status
-              </p>
+          ) : (
+            <div className="flex items-center gap-4 p-6 rounded-xl border-2 border-green-200 bg-green-50">
+              <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-green-100">
+                <svg
+                  className="w-6 h-6 text-green-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <div className="text-left">
+                <h3 className="font-semibold text-green-900">
+                  Profile Complete
+                </h3>
+                <p className="text-sm text-green-700">
+                  You're verified and ready to invest
+                </p>
+              </div>
             </div>
-          </button>
+          )}
         </div>
       </div>
 
