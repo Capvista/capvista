@@ -781,7 +781,7 @@ export default function CompleteInvestorProfile() {
 
       const result = await response.json();
       if (result.success) {
-        router.push("/dashboard/investor");
+        router.push("/dashboard/investor/submission-success");
       } else {
         alert(`Error: ${result.error?.message || "Unknown error"}`);
       }
