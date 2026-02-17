@@ -275,7 +275,7 @@ function OverviewTab({ user, router }: { user: any; router: any }) {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
         const result = await res.json();
-        if (result.success && result.data) {
+        if (result.success && result.data && result.data.investorType) {
           setProfileStatus(
             result.data.verificationStatus === "APPROVED"
               ? "approved"

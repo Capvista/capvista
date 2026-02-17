@@ -95,7 +95,7 @@ router.post("/register", async (req: Request, res: Response) => {
         const investorProfile = await tx.investorProfile.create({
           data: {
             userId: user.id,
-            accreditationStatus: "PENDING",
+            verificationStatus: "PENDING",
             investmentFocus: [],
             preferredLanes: [],
           },
