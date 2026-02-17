@@ -155,6 +155,23 @@ model InvestorProfile {
   // Compliance status
   verificationStatus String @default("PENDING")
 
+  // New fields from 7-step flow
+  taxResidency                  String?
+  investorTitle                 String?
+  yearsInvesting                String?
+  illiquidityComfort            Int?        // 1-5 scale
+  canAbsorbTotalLoss            String?     // "yes" or "no"
+  politicallyExposed            Boolean     @default(false)
+  politicallyExposedDetails     String?
+  regulatoryRestrictions        Boolean     @default(false)
+  regulatoryRestrictionsDetails String?
+  holdingPeriod                 String?
+  acknowledgeNotAdvisor         Boolean     @default(false)
+  accreditationCertified        Boolean     @default(false)
+  accreditationExpiresAt        DateTime?
+  eSignatureTimestamp           DateTime?
+  eSignatureIp                  String?
+
   // Relationships
   investments    Investment[]
   capvistaEquity CapvistaHoldingsEquity[]

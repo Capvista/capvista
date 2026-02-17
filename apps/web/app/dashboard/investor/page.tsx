@@ -8,8 +8,9 @@ import Link from "next/link";
 export default function InvestorDashboard() {
   const { user, loading, signOut } = useAuth();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState;
-  "overview" | "opportunities" | "watchlist" | ("portfolio" > "overview");
+  const [activeTab, setActiveTab] = useState(
+    "overview" as "overview" | "opportunities" | "watchlist" | "portfolio",
+  );
 
   useEffect(() => {
     if (!loading && !user) {

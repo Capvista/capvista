@@ -1,0 +1,16 @@
+-- AlterTable
+ALTER TABLE "InvestorProfile" ADD COLUMN "taxResidency" TEXT,
+ADD COLUMN "investorTitle" TEXT,
+ADD COLUMN "yearsInvesting" TEXT,
+ADD COLUMN "illiquidityComfort" INTEGER,
+ADD COLUMN "canAbsorbTotalLoss" TEXT,
+ADD COLUMN "politicallyExposed" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN "politicallyExposedDetails" TEXT,
+ADD COLUMN "regulatoryRestrictions" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN "regulatoryRestrictionsDetails" TEXT,
+ADD COLUMN "holdingPeriod" TEXT,
+ADD COLUMN "acknowledgeNotAdvisor" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN "accreditationCertified" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN "accreditationExpiresAt" TIMESTAMP(3),
+ADD COLUMN "eSignatureTimestamp" TIMESTAMP(3),
+ADD COLUMN "eSignatureIp" TEXT;
