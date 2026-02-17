@@ -112,18 +112,30 @@ const countryOptions = [
   { value: "Angola", region: "africa_other" as const, label: "Angola" },
   { value: "Benin", region: "africa_other" as const, label: "Benin" },
   { value: "Botswana", region: "africa_other" as const, label: "Botswana" },
-  { value: "Burkina Faso", region: "africa_other" as const, label: "Burkina Faso" },
+  {
+    value: "Burkina Faso",
+    region: "africa_other" as const,
+    label: "Burkina Faso",
+  },
   { value: "Burundi", region: "africa_other" as const, label: "Burundi" },
   { value: "Cabo Verde", region: "africa_other" as const, label: "Cabo Verde" },
   { value: "Cameroon", region: "africa_other" as const, label: "Cameroon" },
-  { value: "Central African Republic", region: "africa_other" as const, label: "Central African Republic" },
+  {
+    value: "Central African Republic",
+    region: "africa_other" as const,
+    label: "Central African Republic",
+  },
   { value: "Chad", region: "africa_other" as const, label: "Chad" },
   { value: "Comoros", region: "africa_other" as const, label: "Comoros" },
   { value: "Congo", region: "africa_other" as const, label: "Congo" },
   { value: "DR Congo", region: "africa_other" as const, label: "DR Congo" },
   { value: "Djibouti", region: "africa_other" as const, label: "Djibouti" },
   { value: "Egypt", region: "africa_other" as const, label: "Egypt" },
-  { value: "Equatorial Guinea", region: "africa_other" as const, label: "Equatorial Guinea" },
+  {
+    value: "Equatorial Guinea",
+    region: "africa_other" as const,
+    label: "Equatorial Guinea",
+  },
   { value: "Eritrea", region: "africa_other" as const, label: "Eritrea" },
   { value: "Eswatini", region: "africa_other" as const, label: "Eswatini" },
   { value: "Ethiopia", region: "africa_other" as const, label: "Ethiopia" },
@@ -131,8 +143,16 @@ const countryOptions = [
   { value: "Gambia", region: "africa_other" as const, label: "Gambia" },
   { value: "Ghana", region: "africa_other" as const, label: "Ghana" },
   { value: "Guinea", region: "africa_other" as const, label: "Guinea" },
-  { value: "Guinea-Bissau", region: "africa_other" as const, label: "Guinea-Bissau" },
-  { value: "Ivory Coast", region: "africa_other" as const, label: "Ivory Coast" },
+  {
+    value: "Guinea-Bissau",
+    region: "africa_other" as const,
+    label: "Guinea-Bissau",
+  },
+  {
+    value: "Ivory Coast",
+    region: "africa_other" as const,
+    label: "Ivory Coast",
+  },
   { value: "Kenya", region: "africa_other" as const, label: "Kenya" },
   { value: "Lesotho", region: "africa_other" as const, label: "Lesotho" },
   { value: "Liberia", region: "africa_other" as const, label: "Liberia" },
@@ -147,13 +167,29 @@ const countryOptions = [
   { value: "Namibia", region: "africa_other" as const, label: "Namibia" },
   { value: "Niger", region: "africa_other" as const, label: "Niger" },
   { value: "Rwanda", region: "africa_other" as const, label: "Rwanda" },
-  { value: "São Tomé and Príncipe", region: "africa_other" as const, label: "São Tomé and Príncipe" },
+  {
+    value: "São Tomé and Príncipe",
+    region: "africa_other" as const,
+    label: "São Tomé and Príncipe",
+  },
   { value: "Senegal", region: "africa_other" as const, label: "Senegal" },
   { value: "Seychelles", region: "africa_other" as const, label: "Seychelles" },
-  { value: "Sierra Leone", region: "africa_other" as const, label: "Sierra Leone" },
+  {
+    value: "Sierra Leone",
+    region: "africa_other" as const,
+    label: "Sierra Leone",
+  },
   { value: "Somalia", region: "africa_other" as const, label: "Somalia" },
-  { value: "South Africa", region: "africa_other" as const, label: "South Africa" },
-  { value: "South Sudan", region: "africa_other" as const, label: "South Sudan" },
+  {
+    value: "South Africa",
+    region: "africa_other" as const,
+    label: "South Africa",
+  },
+  {
+    value: "South Sudan",
+    region: "africa_other" as const,
+    label: "South Sudan",
+  },
   { value: "Sudan", region: "africa_other" as const, label: "Sudan" },
   { value: "Tanzania", region: "africa_other" as const, label: "Tanzania" },
   { value: "Togo", region: "africa_other" as const, label: "Togo" },
@@ -199,13 +235,21 @@ const countryOptions = [
   { value: "Armenia", region: "other" as const, label: "Armenia" },
   { value: "Azerbaijan", region: "other" as const, label: "Azerbaijan" },
   { value: "Belarus", region: "other" as const, label: "Belarus" },
-  { value: "Bosnia and Herzegovina", region: "other" as const, label: "Bosnia and Herzegovina" },
+  {
+    value: "Bosnia and Herzegovina",
+    region: "other" as const,
+    label: "Bosnia and Herzegovina",
+  },
   { value: "Georgia", region: "other" as const, label: "Georgia" },
   { value: "Kosovo", region: "other" as const, label: "Kosovo" },
   { value: "Moldova", region: "other" as const, label: "Moldova" },
   { value: "Monaco", region: "other" as const, label: "Monaco" },
   { value: "Montenegro", region: "other" as const, label: "Montenegro" },
-  { value: "North Macedonia", region: "other" as const, label: "North Macedonia" },
+  {
+    value: "North Macedonia",
+    region: "other" as const,
+    label: "North Macedonia",
+  },
   { value: "Russia", region: "other" as const, label: "Russia" },
   { value: "San Marino", region: "other" as const, label: "San Marino" },
   { value: "Serbia", region: "other" as const, label: "Serbia" },
@@ -213,7 +257,11 @@ const countryOptions = [
   { value: "Ukraine", region: "other" as const, label: "Ukraine" },
   { value: "Vatican City", region: "other" as const, label: "Vatican City" },
   // --- Americas ---
-  { value: "Antigua and Barbuda", region: "other" as const, label: "Antigua and Barbuda" },
+  {
+    value: "Antigua and Barbuda",
+    region: "other" as const,
+    label: "Antigua and Barbuda",
+  },
   { value: "Argentina", region: "other" as const, label: "Argentina" },
   { value: "Bahamas", region: "other" as const, label: "Bahamas" },
   { value: "Barbados", region: "other" as const, label: "Barbados" },
@@ -226,7 +274,11 @@ const countryOptions = [
   { value: "Costa Rica", region: "other" as const, label: "Costa Rica" },
   { value: "Cuba", region: "other" as const, label: "Cuba" },
   { value: "Dominica", region: "other" as const, label: "Dominica" },
-  { value: "Dominican Republic", region: "other" as const, label: "Dominican Republic" },
+  {
+    value: "Dominican Republic",
+    region: "other" as const,
+    label: "Dominican Republic",
+  },
   { value: "Ecuador", region: "other" as const, label: "Ecuador" },
   { value: "El Salvador", region: "other" as const, label: "El Salvador" },
   { value: "Grenada", region: "other" as const, label: "Grenada" },
@@ -240,11 +292,23 @@ const countryOptions = [
   { value: "Panama", region: "other" as const, label: "Panama" },
   { value: "Paraguay", region: "other" as const, label: "Paraguay" },
   { value: "Peru", region: "other" as const, label: "Peru" },
-  { value: "Saint Kitts and Nevis", region: "other" as const, label: "Saint Kitts and Nevis" },
+  {
+    value: "Saint Kitts and Nevis",
+    region: "other" as const,
+    label: "Saint Kitts and Nevis",
+  },
   { value: "Saint Lucia", region: "other" as const, label: "Saint Lucia" },
-  { value: "Saint Vincent and the Grenadines", region: "other" as const, label: "Saint Vincent and the Grenadines" },
+  {
+    value: "Saint Vincent and the Grenadines",
+    region: "other" as const,
+    label: "Saint Vincent and the Grenadines",
+  },
   { value: "Suriname", region: "other" as const, label: "Suriname" },
-  { value: "Trinidad and Tobago", region: "other" as const, label: "Trinidad and Tobago" },
+  {
+    value: "Trinidad and Tobago",
+    region: "other" as const,
+    label: "Trinidad and Tobago",
+  },
   { value: "Uruguay", region: "other" as const, label: "Uruguay" },
   { value: "Venezuela", region: "other" as const, label: "Venezuela" },
   // --- Middle East ---
@@ -299,14 +363,26 @@ const countryOptions = [
   { value: "Australia", region: "other" as const, label: "Australia" },
   { value: "Fiji", region: "other" as const, label: "Fiji" },
   { value: "Kiribati", region: "other" as const, label: "Kiribati" },
-  { value: "Marshall Islands", region: "other" as const, label: "Marshall Islands" },
+  {
+    value: "Marshall Islands",
+    region: "other" as const,
+    label: "Marshall Islands",
+  },
   { value: "Micronesia", region: "other" as const, label: "Micronesia" },
   { value: "Nauru", region: "other" as const, label: "Nauru" },
   { value: "New Zealand", region: "other" as const, label: "New Zealand" },
   { value: "Palau", region: "other" as const, label: "Palau" },
-  { value: "Papua New Guinea", region: "other" as const, label: "Papua New Guinea" },
+  {
+    value: "Papua New Guinea",
+    region: "other" as const,
+    label: "Papua New Guinea",
+  },
   { value: "Samoa", region: "other" as const, label: "Samoa" },
-  { value: "Solomon Islands", region: "other" as const, label: "Solomon Islands" },
+  {
+    value: "Solomon Islands",
+    region: "other" as const,
+    label: "Solomon Islands",
+  },
   { value: "Tonga", region: "other" as const, label: "Tonga" },
   { value: "Tuvalu", region: "other" as const, label: "Tuvalu" },
   { value: "Vanuatu", region: "other" as const, label: "Vanuatu" },
@@ -510,8 +586,6 @@ export default function CompleteInvestorProfile() {
   const [currentStep, setCurrentStep] = useState(0);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
-  const [showSsn, setShowSsn] = useState(false);
-
   useEffect(() => {
     if (!loading && !user) router.push("/login");
   }, [user, loading, router]);
@@ -978,6 +1052,7 @@ function Step1Identity({
 }) {
   const region = getRegion(formData.countryOfResidence);
   const idTypes = idTypesByRegion[region];
+  const [showSsn, setShowSsn] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -1262,12 +1337,32 @@ function Step1Identity({
                 aria-label={showSsn ? "Hide SSN" : "Show SSN"}
               >
                 {showSsn ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
                     <line x1="1" y1="1" x2="23" y2="23" />
                   </svg>
                 ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                     <circle cx="12" cy="12" r="3" />
                   </svg>
