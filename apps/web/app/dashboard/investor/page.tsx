@@ -34,10 +34,8 @@ export default function InvestorDashboard() {
 
   if (!user) return null;
 
-  const userInitial =
-    user.user_metadata?.first_name?.charAt(0).toUpperCase() || "U";
-  const userFullName =
-    `${user.user_metadata?.first_name || ""} ${user.user_metadata?.last_name || ""}`.trim();
+  const userInitial = user.firstName?.charAt(0).toUpperCase() || "U";
+  const userFullName = `${user.firstName || ""} ${user.lastName || ""}`.trim();
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#F6F8FA" }}>
@@ -268,7 +266,7 @@ function OverviewTab({ user, router }: { user: any; router: any }) {
       {/* Welcome Section */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
         <h1 className="text-3xl font-bold text-primary-950 mb-2">
-          Welcome back, {user.user_metadata?.first_name}
+          Welcome back, {user.firstName}{" "}
         </h1>
         <p className="text-slate-light">Here's your investment overview</p>
       </div>
@@ -404,7 +402,7 @@ function OverviewTab({ user, router }: { user: any; router: any }) {
           </button>
 
           <button
-            onClick={() => {}}
+            onClick={() => router.push("/dashboard/investor/complete-profile")}
             className="flex items-center gap-4 p-6 rounded-xl border-2 border-gray-200 hover:border-primary-900 transition-all group"
           >
             <div

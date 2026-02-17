@@ -4,13 +4,7 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { createClient } from "@supabase/supabase-js";
 import CustomSelect from "@/components/CustomSelect";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-);
 
 type Company = {
   id: string;
@@ -18,12 +12,14 @@ type Company = {
   tradingName: string;
   oneLineDescription: string;
   sector: string;
+  subsector?: string;
   stage: string;
   preferredLane: string;
   preferredInstrument: string;
   targetRaiseRange: string;
   currentMonitoringStatus: string;
   createdAt: string;
+  logoUrl?: string;
   deals: Array<{
     id: string;
     name: string;
@@ -33,31 +29,147 @@ type Company = {
   }>;
 };
 
-// Filter options
-const sectorOptions = [
+// ============================================================================
+// SECTOR & SUBSECTOR DATA
+// ============================================================================
+
+const sectorFilterOptions = [
   { value: "all", label: "Sector" },
-  { value: "FINTECH", label: "Fintech" },
-  { value: "LOGISTICS", label: "Logistics" },
-  { value: "ENERGY", label: "Energy" },
-  { value: "CONSUMER_FMCG", label: "Consumer / FMCG" },
-  { value: "HEALTH", label: "Health" },
-  { value: "AGRI_FOOD", label: "Agri / Food" },
-  { value: "REAL_ESTATE", label: "Real Estate" },
-  { value: "INFRASTRUCTURE", label: "Infrastructure" },
+  { value: "FINTECH", label: "Financial Services" },
+  { value: "ENERGY", label: "Energy & Climate" },
+  { value: "LOGISTICS", label: "Logistics & Mobility" },
+  { value: "AGRI_FOOD", label: "Agriculture & Food" },
+  { value: "TECHNOLOGY", label: "Technology & Software" },
   { value: "SAAS_TECH", label: "SaaS / Tech" },
-  { value: "MANUFACTURING", label: "Manufacturing" },
+  { value: "HEALTH", label: "Healthcare & Life Sciences" },
+  { value: "CONSUMER_FMCG", label: "Consumer & Retail" },
+  { value: "REAL_ESTATE", label: "Real Estate" },
+  { value: "INFRASTRUCTURE", label: "Infrastructure & Real Assets" },
+  { value: "MANUFACTURING", label: "Manufacturing & Industrial" },
 ];
 
-const subsectorOptions = [
-  { value: "all", label: "Subsector" },
-  { value: "PAYMENTS", label: "Payments" },
-  { value: "LENDING", label: "Lending" },
-  { value: "INSURTECH", label: "Insurtech" },
-  { value: "WEALTHTECH", label: "Wealthtech" },
-  { value: "BLOCKCHAIN", label: "Blockchain" },
-];
+const subsectorMap: Record<string, { value: string; label: string }[]> = {
+  FINTECH: [
+    { value: "PAYMENTS_REMITTANCE", label: "Payments & Remittance" },
+    { value: "LENDING_CREDIT", label: "Lending & Credit" },
+    { value: "INSURTECH", label: "Insurtech" },
+    { value: "WEALTH_ASSET_MGMT", label: "Wealth & Asset Management" },
+    { value: "DIGITAL_BANKING", label: "Digital Banking" },
+    { value: "EMBEDDED_FINANCE", label: "Embedded Finance" },
+    { value: "FX_CROSS_BORDER", label: "FX & Cross-Border Infrastructure" },
+    { value: "CAPITAL_MARKETS", label: "Capital Markets Infrastructure" },
+  ],
+  ENERGY: [
+    { value: "SOLAR_DISTRIBUTED", label: "Solar & Distributed Energy" },
+    { value: "MINI_GRID", label: "Mini-Grid Systems" },
+    { value: "ENERGY_STORAGE", label: "Energy Storage" },
+    { value: "OIL_GAS_SERVICES", label: "Oil & Gas Services" },
+    { value: "CLEAN_ENERGY_INFRA", label: "Clean Energy Infrastructure" },
+    { value: "CLIMATE_TECH", label: "Climate Technology" },
+    { value: "CARBON_MARKETS", label: "Carbon & Environmental Markets" },
+  ],
+  LOGISTICS: [
+    { value: "FREIGHT_SUPPLY_CHAIN", label: "Freight & Supply Chain" },
+    { value: "COLD_CHAIN", label: "Cold Chain Infrastructure" },
+    { value: "FLEET_MGMT", label: "Fleet Management" },
+    { value: "LAST_MILE", label: "Last-Mile Delivery" },
+    { value: "MARITIME_PORT", label: "Maritime & Port Services" },
+    { value: "AVIATION", label: "Aviation Services" },
+    { value: "MOBILITY_PLATFORMS", label: "Mobility Platforms" },
+  ],
+  AGRI_FOOD: [
+    { value: "PRIMARY_AGRICULTURE", label: "Primary Agriculture" },
+    { value: "AGRI_PROCESSING", label: "Agri-Processing" },
+    { value: "FARM_INPUTS", label: "Farm Inputs & Distribution" },
+    { value: "COLD_STORAGE", label: "Cold Storage" },
+    { value: "EXPORT_COMMODITIES", label: "Export Commodities" },
+    { value: "LIVESTOCK_PROTEIN", label: "Livestock & Protein" },
+    { value: "FOOD_DISTRIBUTION", label: "Food Distribution Infrastructure" },
+  ],
+  TECHNOLOGY: [
+    { value: "ENTERPRISE_SAAS", label: "Enterprise SaaS" },
+    { value: "AI_ML", label: "AI & Machine Learning" },
+    { value: "DEVELOPER_TOOLS", label: "Developer Tools" },
+    { value: "CYBERSECURITY", label: "Cybersecurity" },
+    { value: "CLOUD_INFRA", label: "Cloud & Infrastructure Software" },
+    { value: "DATA_ANALYTICS", label: "Data & Analytics" },
+    { value: "VERTICAL_PLATFORMS", label: "Vertical Software Platforms" },
+  ],
+  SAAS_TECH: [
+    { value: "ENTERPRISE_SAAS", label: "Enterprise SaaS" },
+    { value: "AI_ML", label: "AI & Machine Learning" },
+    { value: "DEVELOPER_TOOLS", label: "Developer Tools" },
+    { value: "CYBERSECURITY", label: "Cybersecurity" },
+    { value: "CLOUD_INFRA", label: "Cloud & Infrastructure Software" },
+    { value: "DATA_ANALYTICS", label: "Data & Analytics" },
+    { value: "VERTICAL_PLATFORMS", label: "Vertical Software Platforms" },
+  ],
+  HEALTH: [
+    { value: "DIAGNOSTICS", label: "Diagnostics" },
+    { value: "TELEMEDICINE", label: "Telemedicine" },
+    { value: "PHARMA_DISTRIBUTION", label: "Pharmaceutical Distribution" },
+    { value: "MEDICAL_DEVICES", label: "Medical Devices" },
+    { value: "BIOTECH", label: "Biotech" },
+    { value: "HEALTHCARE_INFRA", label: "Healthcare Infrastructure" },
+  ],
+  CONSUMER_FMCG: [
+    { value: "FMCG", label: "FMCG" },
+    { value: "ECOMMERCE", label: "E-commerce" },
+    { value: "DTC_BRANDS", label: "Direct-to-Consumer Brands" },
+    { value: "RETAIL_INFRA", label: "Retail Infrastructure" },
+    { value: "MARKETPLACES", label: "Marketplaces" },
+    { value: "CONSUMER_SERVICES", label: "Consumer Services" },
+  ],
+  REAL_ESTATE: [
+    { value: "RE_DEVELOPMENT", label: "Real Estate Development" },
+    { value: "INDUSTRIAL_WAREHOUSING", label: "Industrial Warehousing" },
+    { value: "DATA_CENTERS", label: "Data Centers" },
+    { value: "TELECOM_INFRA", label: "Telecommunications Infrastructure" },
+    { value: "UTILITIES", label: "Utilities" },
+    { value: "TRANSPORT_INFRA", label: "Transportation Infrastructure" },
+  ],
+  INFRASTRUCTURE: [
+    { value: "RE_DEVELOPMENT", label: "Real Estate Development" },
+    { value: "INDUSTRIAL_WAREHOUSING", label: "Industrial Warehousing" },
+    { value: "DATA_CENTERS", label: "Data Centers" },
+    { value: "TELECOM_INFRA", label: "Telecommunications Infrastructure" },
+    { value: "UTILITIES", label: "Utilities" },
+    { value: "TRANSPORT_INFRA", label: "Transportation Infrastructure" },
+  ],
+  MANUFACTURING: [
+    { value: "LIGHT_MANUFACTURING", label: "Light Manufacturing" },
+    { value: "HEAVY_INDUSTRY", label: "Heavy Industry" },
+    { value: "PACKAGING_MATERIALS", label: "Packaging & Materials" },
+    { value: "CONSTRUCTION_SUPPLY", label: "Construction Supply" },
+    { value: "EQUIPMENT_LEASING", label: "Equipment Leasing" },
+    { value: "INDUSTRIAL_PROCESSING", label: "Industrial Processing" },
+  ],
+};
 
-const stageOptions = [
+// All subsectors flattened for the "all sectors" filter
+const allSubsectorOptions = Object.values(subsectorMap)
+  .flat()
+  .filter((v, i, a) => a.findIndex((t) => t.value === v.value) === i);
+
+const sectorLabels: Record<string, string> = {
+  FINTECH: "Financial Services",
+  ENERGY: "Energy & Climate",
+  LOGISTICS: "Logistics & Mobility",
+  AGRI_FOOD: "Agriculture & Food",
+  TECHNOLOGY: "Technology & Software",
+  SAAS_TECH: "SaaS / Tech",
+  HEALTH: "Healthcare & Life Sciences",
+  CONSUMER_FMCG: "Consumer & Retail",
+  REAL_ESTATE: "Real Estate",
+  INFRASTRUCTURE: "Infrastructure & Real Assets",
+  MANUFACTURING: "Manufacturing & Industrial",
+};
+
+const subsectorLabels: Record<string, string> = Object.fromEntries(
+  allSubsectorOptions.map((o) => [o.value, o.label]),
+);
+
+const stageFilterOptions = [
   { value: "all", label: "Stage" },
   { value: "PRE_REVENUE", label: "Pre-revenue" },
   { value: "EARLY_REVENUE", label: "Early Revenue" },
@@ -65,30 +177,60 @@ const stageOptions = [
   { value: "PROFITABLE", label: "Profitable" },
 ];
 
-const laneOptions = [
+const laneFilterOptions = [
   { value: "all", label: "Lane" },
   { value: "YIELD", label: "Yield Lane" },
   { value: "VENTURES", label: "Ventures Lane" },
 ];
 
+const stageLabels: Record<string, string> = {
+  PRE_REVENUE: "Pre-revenue",
+  EARLY_REVENUE: "Early Revenue",
+  GROWTH: "Growth",
+  PROFITABLE: "Profitable",
+};
+
+const laneLabels: Record<string, string> = {
+  YIELD: "Yield",
+  VENTURES: "Ventures",
+};
+
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+
 export default function BrowseCompanies() {
-  const { user, loading } = useAuth();
+  const { user, accessToken, loading } = useAuth();
   const router = useRouter();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [filteredCompanies, setFilteredCompanies] = useState<Company[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<"card" | "list">("card");
+  const [viewMode, setViewMode] = useState<"card" | "list">("list");
+  const [watchlist, setWatchlist] = useState<Set<string>>(new Set());
 
-  // Quick Filters
   const [quickFilter, setQuickFilter] = useState<string>("all");
-
-  // Filters
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [sectorFilter, setSectorFilter] = useState<string>("all");
   const [subsectorFilter, setSubsectorFilter] = useState<string>("all");
   const [stageFilter, setStageFilter] = useState<string>("all");
   const [laneFilter, setLaneFilter] = useState<string>("all");
+
+  // Build dynamic subsector options based on sector filter
+  const subsectorFilterOptions = (() => {
+    if (sectorFilter !== "all" && subsectorMap[sectorFilter]) {
+      return [
+        { value: "all", label: "Subsector" },
+        ...subsectorMap[sectorFilter],
+      ];
+    }
+    return [{ value: "all", label: "Select a sector first" }];
+  })();
+
+  // Reset subsector when sector changes
+  useEffect(() => {
+    setSubsectorFilter("all");
+  }, [sectorFilter]);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -97,9 +239,7 @@ export default function BrowseCompanies() {
   }, [user, loading, router]);
 
   useEffect(() => {
-    if (user) {
-      fetchCompanies();
-    }
+    if (user) fetchCompanies();
   }, [user]);
 
   useEffect(() => {
@@ -112,28 +252,18 @@ export default function BrowseCompanies() {
     laneFilter,
     quickFilter,
     companies,
+    watchlist,
   ]);
 
   const fetchCompanies = async () => {
     try {
       setIsLoading(true);
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!session) {
-        setError("Not authenticated");
-        return;
-      }
-
-      const response = await fetch("http://localhost:4000/api/companies", {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
+      const API_URL =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+      const response = await fetch(`${API_URL}/api/companies`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
       });
-
       const result = await response.json();
-
       if (result.success) {
         setCompanies(result.data);
         setFilteredCompanies(result.data);
@@ -148,18 +278,33 @@ export default function BrowseCompanies() {
     }
   };
 
+  const toggleWatchlist = (companyId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setWatchlist((prev) => {
+      const next = new Set(prev);
+      if (next.has(companyId)) {
+        next.delete(companyId);
+      } else {
+        next.add(companyId);
+      }
+      return next;
+    });
+  };
+
   const applyFilters = () => {
     let filtered = [...companies];
 
-    // Quick filters
     if (quickFilter === "recent") {
       filtered.sort(
         (a, b) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       );
     }
+    if (quickFilter === "watchlist") {
+      filtered = filtered.filter((c) => watchlist.has(c.id));
+    }
 
-    // Search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
@@ -170,21 +315,14 @@ export default function BrowseCompanies() {
       );
     }
 
-    if (sectorFilter !== "all") {
+    if (sectorFilter !== "all")
       filtered = filtered.filter((c) => c.sector === sectorFilter);
-    }
-
-    if (subsectorFilter !== "all") {
-      // Subsector logic can be added when we have subsector data
-    }
-
-    if (stageFilter !== "all") {
+    if (subsectorFilter !== "all")
+      filtered = filtered.filter((c) => c.subsector === subsectorFilter);
+    if (stageFilter !== "all")
       filtered = filtered.filter((c) => c.stage === stageFilter);
-    }
-
-    if (laneFilter !== "all") {
+    if (laneFilter !== "all")
       filtered = filtered.filter((c) => c.preferredLane === laneFilter);
-    }
 
     setFilteredCompanies(filtered);
   };
@@ -247,7 +385,6 @@ export default function BrowseCompanies() {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="container py-8">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-primary-950 mb-2">
@@ -258,12 +395,8 @@ export default function BrowseCompanies() {
         {/* Quick Filter Pills */}
         <div className="flex flex-wrap gap-3 mb-6">
           <button
-            onClick={() => setQuickFilter("all")}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-              quickFilter === "all"
-                ? "bg-gray-900 text-white"
-                : "bg-white text-gray-700 border border-gray-300 hover:border-gray-400"
-            }`}
+            onClick={() => setQuickFilter("watchlist")}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${quickFilter === "watchlist" ? "bg-gray-900 text-white" : "bg-white text-gray-700 border border-gray-300 hover:border-gray-400"}`}
           >
             <svg
               className="w-4 h-4 inline mr-1.5 -mt-0.5"
@@ -278,34 +411,25 @@ export default function BrowseCompanies() {
                 d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
               />
             </svg>
-            Watchlist
+            Watchlist{watchlist.size > 0 ? ` (${watchlist.size})` : ""}
+          </button>
+          <button
+            onClick={() => setQuickFilter("all")}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${quickFilter === "all" ? "bg-gray-900 text-white" : "bg-white text-gray-700 border border-gray-300 hover:border-gray-400"}`}
+          >
+            All Companies
           </button>
           <button
             onClick={() => setQuickFilter("recent")}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-              quickFilter === "recent"
-                ? "bg-gray-900 text-white"
-                : "bg-white text-gray-700 border border-gray-300 hover:border-gray-400"
-            }`}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${quickFilter === "recent" ? "bg-gray-900 text-white" : "bg-white text-gray-700 border border-gray-300 hover:border-gray-400"}`}
           >
             Recently Added
           </button>
-          <button
-            onClick={() => setQuickFilter("most_viewed")}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-              quickFilter === "most_viewed"
-                ? "bg-gray-900 text-white"
-                : "bg-white text-gray-700 border border-gray-300 hover:border-gray-400"
-            }`}
-          >
-            Most Viewed
-          </button>
         </div>
 
-        {/* Search & Filters - Borderless */}
+        {/* Search & Filters */}
         <div className="mb-6">
           <div className="flex flex-wrap gap-3 items-center">
-            {/* Search Bar */}
             <div className="relative flex-1 min-w-[200px]">
               <svg
                 className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
@@ -328,56 +452,40 @@ export default function BrowseCompanies() {
                 className="w-full pl-12 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none h-11"
               />
             </div>
-
-            {/* Sector Dropdown */}
             <CustomSelect
               value={sectorFilter}
               onChange={setSectorFilter}
-              options={sectorOptions}
-              className="min-w-[140px]"
+              options={sectorFilterOptions}
+              className="min-w-[160px]"
             />
-
-            {/* Subsector Dropdown */}
             <CustomSelect
               value={subsectorFilter}
               onChange={setSubsectorFilter}
-              options={subsectorOptions}
-              className="min-w-[140px]"
+              options={subsectorFilterOptions}
+              className="min-w-[180px]"
             />
-
-            {/* Stage Dropdown */}
             <CustomSelect
               value={stageFilter}
               onChange={setStageFilter}
-              options={stageOptions}
-              className="min-w-[140px]"
+              options={stageFilterOptions}
+              className="min-w-[130px]"
             />
-
-            {/* Lane Dropdown */}
             <CustomSelect
               value={laneFilter}
               onChange={setLaneFilter}
-              options={laneOptions}
-              className="min-w-[140px]"
+              options={laneFilterOptions}
+              className="min-w-[130px]"
             />
-
-            {/* Reset Button */}
             <button
               onClick={clearFilters}
               className="px-6 py-2.5 bg-white border border-gray-300 rounded-lg font-medium text-gray-700 hover:border-gray-400 transition-all h-11"
             >
               Reset
             </button>
-
-            {/* View Mode Toggle */}
             <div className="flex items-center gap-1 bg-white border border-gray-300 rounded-lg p-1">
               <button
                 onClick={() => setViewMode("list")}
-                className={`p-2 rounded transition-all ${
-                  viewMode === "list"
-                    ? "bg-gray-900 text-white"
-                    : "text-gray-600 hover:bg-gray-100"
-                }`}
+                className={`p-2 rounded transition-all ${viewMode === "list" ? "bg-gray-900 text-white" : "text-gray-600 hover:bg-gray-100"}`}
               >
                 <svg
                   className="w-5 h-5"
@@ -395,11 +503,7 @@ export default function BrowseCompanies() {
               </button>
               <button
                 onClick={() => setViewMode("card")}
-                className={`p-2 rounded transition-all ${
-                  viewMode === "card"
-                    ? "bg-gray-900 text-white"
-                    : "text-gray-600 hover:bg-gray-100"
-                }`}
+                className={`p-2 rounded transition-all ${viewMode === "card" ? "bg-gray-900 text-white" : "text-gray-600 hover:bg-gray-100"}`}
               >
                 <svg
                   className="w-5 h-5"
@@ -429,7 +533,7 @@ export default function BrowseCompanies() {
           </div>
         )}
 
-        {/* Companies Grid/List */}
+        {/* Content */}
         {isLoading ? (
           <div className="text-center py-12">
             <div className="w-16 h-16 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -485,133 +589,229 @@ export default function BrowseCompanies() {
               </svg>
             </div>
             <h3 className="text-lg font-semibold text-primary-950 mb-2">
-              {companies.length === 0
-                ? "No Companies Listed Yet"
-                : "No Companies Match Your Filters"}
+              {quickFilter === "watchlist"
+                ? "No Saved Companies"
+                : companies.length === 0
+                  ? "No Companies Listed Yet"
+                  : "No Companies Match Your Filters"}
             </h3>
             <p className="text-gray-600 mb-6">
-              {companies.length === 0
-                ? "Check back soon for verified investment opportunities"
-                : "Try adjusting your filters to see more companies"}
+              {quickFilter === "watchlist"
+                ? "Save companies to your watchlist by clicking the bookmark icon"
+                : companies.length === 0
+                  ? "Check back soon for verified investment opportunities"
+                  : "Try adjusting your filters to see more companies"}
             </p>
-            {filteredCompanies.length === 0 && companies.length > 0 && (
+            {(companies.length > 0 || quickFilter === "watchlist") && (
               <button
                 onClick={clearFilters}
                 className="px-6 py-3 rounded-lg font-semibold transition-all border-2 border-gray-300 text-gray-700 hover:border-gray-400"
               >
-                Clear Filters
+                {quickFilter === "watchlist"
+                  ? "Browse All Companies"
+                  : "Clear Filters"}
               </button>
             )}
           </div>
+        ) : viewMode === "list" ? (
+          /* ============ TABLE VIEW ============ */
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="grid grid-cols-12 gap-4 px-6 py-4 border-b border-gray-200 bg-gray-50">
+              <div className="col-span-1">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide"></p>
+              </div>
+              <div className="col-span-3">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  Company
+                </p>
+              </div>
+              <div className="col-span-3">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  Sector & Subsector
+                </p>
+              </div>
+              <div className="col-span-2">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  Round
+                </p>
+              </div>
+              <div className="col-span-2">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  Lane
+                </p>
+              </div>
+              <div className="col-span-1">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide"></p>
+              </div>
+            </div>
+
+            {filteredCompanies.map((company, index) => (
+              <Link
+                key={company.id}
+                href={`/dashboard/investor/companies/${company.id}`}
+              >
+                <div
+                  className={`grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-gray-50 transition-colors cursor-pointer group ${index < filteredCompanies.length - 1 ? "border-b border-gray-100" : ""}`}
+                >
+                  {/* Watchlist Bookmark */}
+                  <div className="col-span-1">
+                    <button
+                      onClick={(e) => toggleWatchlist(company.id, e)}
+                      className="p-1.5 rounded-md hover:bg-gray-100 transition-colors"
+                    >
+                      {watchlist.has(company.id) ? (
+                        <svg
+                          className="w-5 h-5 text-yellow-500"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                        </svg>
+                      ) : (
+                        <svg
+                          className="w-5 h-5 text-gray-300 hover:text-gray-500"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+                          />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Company: Logo + Name */}
+                  <div className="col-span-3 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 border border-gray-200 flex items-center justify-center">
+                      {company.logoUrl ? (
+                        <img
+                          src={company.logoUrl}
+                          alt={company.legalName}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-sm font-bold text-gray-400">
+                          {(company.tradingName || company.legalName)
+                            .charAt(0)
+                            .toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-semibold text-gray-900 group-hover:text-primary-900 transition-colors truncate">
+                        {company.tradingName || company.legalName}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Sector & Subsector */}
+                  <div className="col-span-3">
+                    <p className="text-sm font-medium text-gray-900">
+                      {sectorLabels[company.sector] || company.sector}
+                    </p>
+                    {company.subsector && (
+                      <p className="text-xs text-gray-500">
+                        {subsectorLabels[company.subsector] ||
+                          company.subsector}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Round */}
+                  <div className="col-span-2">
+                    <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                      {stageLabels[company.stage] || company.stage}
+                    </span>
+                  </div>
+
+                  {/* Lane */}
+                  <div className="col-span-2">
+                    {company.preferredLane ? (
+                      <span
+                        className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${company.preferredLane === "YIELD" ? "bg-blue-50 text-blue-700" : "bg-purple-50 text-purple-700"}`}
+                      >
+                        {laneLabels[company.preferredLane] ||
+                          company.preferredLane}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-gray-400">—</span>
+                    )}
+                  </div>
+
+                  {/* Arrow */}
+                  <div className="col-span-1 text-right">
+                    <svg
+                      className="w-5 h-5 text-gray-300 group-hover:text-gray-600 transition-colors inline"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
         ) : (
-          <>
-            {viewMode === "card" ? (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredCompanies.map((company) => (
-                  <CompanyCard key={company.id} company={company} />
-                ))}
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {filteredCompanies.map((company) => (
-                  <CompanyListItem key={company.id} company={company} />
-                ))}
-              </div>
-            )}
-          </>
+          /* ============ CARD VIEW ============ */
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredCompanies.map((company) => (
+              <CompanyCard
+                key={company.id}
+                company={company}
+                watchlist={watchlist}
+                toggleWatchlist={toggleWatchlist}
+              />
+            ))}
+          </div>
         )}
       </main>
     </div>
   );
 }
 
-// Company Card Component (Grid View)
-function CompanyCard({ company }: { company: Company }) {
-  const formatSector = (sector: string) => {
-    return sector
-      .replace(/_/g, " ")
-      .toLowerCase()
-      .replace(/\b\w/g, (l) => l.toUpperCase());
-  };
-
-  const formatStage = (stage: string) => {
-    return stage
-      .replace(/_/g, " ")
-      .toLowerCase()
-      .replace(/\b\w/g, (l) => l.toUpperCase());
-  };
-
-  const getLaneBadgeColor = (lane: string) => {
-    if (lane === "YIELD") return "bg-blue-100 text-blue-700";
-    if (lane === "VENTURES") return "bg-purple-100 text-purple-700";
-    return "bg-gray-100 text-gray-700";
-  };
-
+// ============================================================================
+// Company Card Component
+// ============================================================================
+function CompanyCard({
+  company,
+  watchlist,
+  toggleWatchlist,
+}: {
+  company: Company;
+  watchlist: Set<string>;
+  toggleWatchlist: (id: string, e: React.MouseEvent) => void;
+}) {
   return (
     <Link href={`/dashboard/investor/companies/${company.id}`}>
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-primary-300 transition-all cursor-pointer group">
-        {/* Lane Badge */}
-        {company.preferredLane && (
-          <div className="mb-4">
-            <span
-              className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getLaneBadgeColor(company.preferredLane)}`}
-            >
-              {company.preferredLane === "YIELD"
-                ? "Yield Lane"
-                : "Ventures Lane"}
-            </span>
-          </div>
-        )}
-
-        {/* Company Name */}
-        <h3 className="text-xl font-bold text-primary-950 mb-2 group-hover:text-primary-900 transition-colors">
-          {company.tradingName || company.legalName}
-        </h3>
-
-        {/* Description */}
-        <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-          {company.oneLineDescription}
-        </p>
-
-        {/* Meta Info */}
-        <div className="flex flex-wrap gap-2 mb-4">
-          <span className="inline-block px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
-            {formatSector(company.sector)}
-          </span>
-          <span className="inline-block px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
-            {formatStage(company.stage)}
-          </span>
-        </div>
-
-        {/* Target Raise */}
-        {company.targetRaiseRange && (
-          <div className="pt-4 border-t border-gray-200">
-            <p className="text-xs text-gray-500 mb-1">Target Raise</p>
-            <p className="text-sm font-semibold text-gray-900">
-              {company.targetRaiseRange}
-            </p>
-          </div>
-        )}
-
-        {/* Active Deals */}
-        {company.deals && company.deals.length > 0 && (
-          <div className="mt-3 pt-3 border-t border-gray-200">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-green-500"></div>
-              <p className="text-xs font-semibold text-green-700">
-                {company.deals.length} active{" "}
-                {company.deals.length === 1 ? "deal" : "deals"}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* View Details Link */}
-        <div className="mt-4">
-          <div className="flex items-center text-primary-600 group-hover:text-primary-700 text-sm font-semibold">
-            View Details
+      <div className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md hover:border-gray-300 transition-all cursor-pointer group relative flex flex-col h-full">
+        {/* Bookmark - top right */}
+        <button
+          onClick={(e) => toggleWatchlist(company.id, e)}
+          className="absolute top-4 right-4 p-1 rounded hover:bg-gray-100 transition-colors z-10"
+        >
+          {watchlist.has(company.id) ? (
             <svg
-              className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform"
+              className="w-5 h-5 text-yellow-500"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+            </svg>
+          ) : (
+            <svg
+              className="w-5 h-5 text-gray-300 group-hover:text-gray-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -620,97 +820,95 @@ function CompanyCard({ company }: { company: Company }) {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M9 5l7 7-7 7"
+                d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
               />
             </svg>
+          )}
+        </button>
+
+        {/* Logo + Name */}
+        <div className="flex items-center gap-3 mb-1 pr-8">
+          <div className="w-11 h-11 rounded-lg overflow-hidden flex-shrink-0 bg-gray-900 border border-gray-200 flex items-center justify-center">
+            {company.logoUrl ? (
+              <img
+                src={company.logoUrl}
+                alt={company.legalName}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <span className="text-base font-bold text-white">
+                {(company.tradingName || company.legalName)
+                  .charAt(0)
+                  .toUpperCase()}
+              </span>
+            )}
           </div>
-        </div>
-      </div>
-    </Link>
-  );
-}
-
-// Company List Item Component (List View)
-function CompanyListItem({ company }: { company: Company }) {
-  const formatSector = (sector: string) => {
-    return sector
-      .replace(/_/g, " ")
-      .toLowerCase()
-      .replace(/\b\w/g, (l) => l.toUpperCase());
-  };
-
-  const formatStage = (stage: string) => {
-    return stage
-      .replace(/_/g, " ")
-      .toLowerCase()
-      .replace(/\b\w/g, (l) => l.toUpperCase());
-  };
-
-  const getLaneBadgeColor = (lane: string) => {
-    if (lane === "YIELD") return "bg-blue-100 text-blue-700";
-    if (lane === "VENTURES") return "bg-purple-100 text-purple-700";
-    return "bg-gray-100 text-gray-700";
-  };
-
-  return (
-    <Link href={`/dashboard/investor/companies/${company.id}`}>
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-primary-300 transition-all cursor-pointer group">
-        <div className="flex items-start justify-between gap-6">
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-3">
-              {/* Lane Badge */}
-              {company.preferredLane && (
-                <span
-                  className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getLaneBadgeColor(company.preferredLane)}`}
-                >
-                  {company.preferredLane === "YIELD"
-                    ? "Yield Lane"
-                    : "Ventures Lane"}
-                </span>
-              )}
-
-              {/* Meta Info */}
-              <span className="inline-block px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
-                {formatSector(company.sector)}
-              </span>
-              <span className="inline-block px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
-                {formatStage(company.stage)}
-              </span>
-            </div>
-
-            {/* Company Name */}
-            <h3 className="text-xl font-bold text-primary-950 mb-2 group-hover:text-primary-900 transition-colors">
+          <div className="min-w-0">
+            <h3 className="text-base font-bold text-gray-900 group-hover:text-primary-900 transition-colors truncate">
               {company.tradingName || company.legalName}
             </h3>
-
-            {/* Description */}
-            <p className="text-sm text-gray-600 mb-4">
-              {company.oneLineDescription}
+            <p className="text-xs text-gray-500">
+              {sectorLabels[company.sector] || company.sector}
+              {company.subsector && (
+                <>
+                  {" "}
+                  / {subsectorLabels[company.subsector] || company.subsector}
+                </>
+              )}
             </p>
+          </div>
+        </div>
 
-            {/* Active Deals */}
-            {company.deals && company.deals.length > 0 && (
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                <p className="text-xs font-semibold text-green-700">
-                  {company.deals.length} active{" "}
-                  {company.deals.length === 1 ? "deal" : "deals"}
-                </p>
-              </div>
-            )}
+        {/* Divider */}
+        <div className="border-t border-gray-100 my-3"></div>
+
+        {/* Description */}
+        <p className="text-sm text-gray-600 mb-3 line-clamp-2 leading-relaxed">
+          {company.oneLineDescription}
+        </p>
+
+        {/* Info rows */}
+        <div className="space-y-3 flex-1">
+          <div>
+            <p className="text-xs text-gray-400 mb-0.5">Round</p>
+            <p className="text-sm font-semibold text-gray-900">
+              {stageLabels[company.stage] || company.stage}
+            </p>
           </div>
 
-          {/* Target Raise */}
-          <div className="text-right">
-            {company.targetRaiseRange && (
-              <div>
-                <p className="text-xs text-gray-500 mb-1">Target Raise</p>
-                <p className="text-lg font-semibold text-gray-900">
-                  {company.targetRaiseRange}
-                </p>
-              </div>
-            )}
-          </div>
+          {company.targetRaiseRange && (
+            <div>
+              <p className="text-xs text-gray-400 mb-0.5">Target Raise</p>
+              <p className="text-sm font-semibold text-gray-900">
+                {company.targetRaiseRange}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
+          {company.preferredLane ? (
+            <span
+              className={`inline-block px-2.5 py-1 rounded text-xs font-semibold ${company.preferredLane === "YIELD" ? "bg-blue-50 text-blue-700" : "bg-purple-50 text-purple-700"}`}
+            >
+              {laneLabels[company.preferredLane] || company.preferredLane}
+            </span>
+          ) : (
+            <span />
+          )}
+
+          {company.deals && company.deals.length > 0 ? (
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-green-500"></div>
+              <p className="text-xs font-medium text-green-700">
+                {company.deals.length} active{" "}
+                {company.deals.length === 1 ? "deal" : "deals"}
+              </p>
+            </div>
+          ) : (
+            <span />
+          )}
         </div>
       </div>
     </Link>

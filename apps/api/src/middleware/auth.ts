@@ -4,7 +4,6 @@ import jwt from "jsonwebtoken";
 const JWT_SECRET =
   process.env.JWT_SECRET || "capvista-dev-secret-change-in-production";
 
-// Extend Express Request type to include user
 declare global {
   namespace Express {
     interface Request {
@@ -16,7 +15,6 @@ declare global {
   }
 }
 
-// Middleware to verify JWT token
 export const requireAuth = async (
   req: Request,
   res: Response,
@@ -24,7 +22,6 @@ export const requireAuth = async (
 ) => {
   try {
     const authHeader = req.headers.authorization;
-
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({
         success: false,
@@ -34,32 +31,24 @@ export const requireAuth = async (
         },
       });
     }
-
     const token = authHeader.substring(7);
-
     const decoded = jwt.verify(token, JWT_SECRET) as {
       userId: string;
       role: "INVESTOR" | "FOUNDER" | "ADMIN";
     };
-
     req.user = {
       id: decoded.userId,
       role: decoded.role,
     };
-
     next();
   } catch (error) {
     return res.status(401).json({
       success: false,
-      error: {
-        code: "INVALID_TOKEN",
-        message: "Invalid or expired token",
-      },
+      error: { code: "INVALID_TOKEN", message: "Invalid or expired token" },
     });
   }
 };
 
-// Middleware to require specific role
 export const requireRole = (
   ...roles: Array<"INVESTOR" | "FOUNDER" | "ADMIN">
 ) => {
@@ -67,23 +56,15 @@ export const requireRole = (
     if (!req.user) {
       return res.status(401).json({
         success: false,
-        error: {
-          code: "UNAUTHORIZED",
-          message: "Authentication required",
-        },
+        error: { code: "UNAUTHORIZED", message: "Authentication required" },
       });
     }
-
     if (!roles.includes(req.user.role)) {
       return res.status(403).json({
         success: false,
-        error: {
-          code: "FORBIDDEN",
-          message: "Insufficient permissions",
-        },
+        error: { code: "FORBIDDEN", message: "Insufficient permissions" },
       });
     }
-
     next();
   };
 };

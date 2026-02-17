@@ -10,6 +10,7 @@ import helmet from "helmet";
 import companiesRoutes from "./routes/companies";
 import usersRoutes from "./routes/users";
 import authRoutes from "./routes/auth";
+import investorsRoutes from "./routes/investors";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -19,6 +20,7 @@ app.use(helmet()); // Security headers
 app.use(cors()); // Enable CORS
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
+app.use("/api/investors", investorsRoutes);
 
 // Request logging middleware (development only)
 if (process.env.NODE_ENV === "development") {

@@ -21,7 +21,6 @@ enum UserRole {
   ADMIN
 }
 
-// Base user table — minimal, auto-synced from Supabase auth.users via trigger
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -34,11 +33,9 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  // Profile references (exactly one will be populated based on role)
   founderProfile  FounderProfile?
   investorProfile InvestorProfile?
 
-  // Shared relationships
   verificationRecords VerificationRecord[]
   adminActions        AdminAction[]
 
@@ -58,24 +55,20 @@ model FounderProfile {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Founder-specific fields
   bio             String?  @db.Text
   linkedinUrl     String?
   yearsExperience Int?
-  title           String?  // e.g. "CEO", "CTO"
+  title           String?
 
-  // Identity verification (internal only — never exposed to investors)
   nin                String?
   bvn                String?
   ninVerified        Boolean   @default(false)
   bvnVerified        Boolean   @default(false)
   identityVerifiedAt DateTime?
 
-  // Onboarding status
   onboardingCompleted   Boolean   @default(false)
   onboardingCompletedAt DateTime?
 
-  // Relationships
   companiesOwned   Company[]        @relation("CompanyOwner")
   companiesFounded CompanyFounder[]
 
@@ -86,21 +79,6 @@ model FounderProfile {
 // INVESTOR PROFILE
 // ============================================================================
 
-enum InvestorType {
-  INDIVIDUAL
-  INSTITUTIONAL
-  FAMILY_OFFICE
-  FUND
-  ANGEL
-}
-
-enum AccreditationStatus {
-  PENDING
-  VERIFIED
-  EXPIRED
-  REJECTED
-}
-
 model InvestorProfile {
   id     String @id @default(cuid())
   userId String @unique
@@ -109,23 +87,73 @@ model InvestorProfile {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Investor-specific fields
-  investorType     InvestorType?
-  firmName         String?
-  aum              Decimal?  @db.Decimal(15, 2)
+  // Step 1: Investor Profile
+  investorType String?
+  firmName     String?
+  aum          String?
+
+  // Step 2: Investment Preferences
   investmentFocus  String[]
   preferredLanes   String[]
-  minimumCheckSize Decimal?  @db.Decimal(12, 2)
-  maximumCheckSize Decimal?  @db.Decimal(12, 2)
+  minimumCheckSize Float?
+  maximumCheckSize Float?
 
-  // Risk acknowledgement (required before investing)
+  // Step 3: Suitability & Experience
+  riskTolerance           String?
+  liquidityNeeds          String?
+  investmentHorizon       String?
+  generalExperience       String?
+  privateMarketExperience String?
+  sourceOfFunds           String[]
+  accreditationBasis      String?
+
+  // Affiliations
+  brokerAffiliated     Boolean @default(false)
+  brokerDetails        String?
+  seniorOfficer        Boolean @default(false)
+  seniorOfficerCompany String?
+
+  // Trusted Contact
+  trustedContactName         String?
+  trustedContactEmail        String?
+  trustedContactPhone        String?
+  trustedContactRelationship String?
+
+  // Step 4: Identity / KYC
+  countryOfResidence String?
+  fullName           String?
+  dateOfBirth        DateTime?
+  citizenship        String?
+  phone              String?
+  residentialAddress String?
+  city               String?
+  stateProvince      String?
+  postalCode         String?
+
+  // Country-specific IDs
+  nin            String?
+  bvn            String?
+  ssn            String?
+  niNumber       String?
+  passportNumber String?
+  idType         String?
+  idNumber       String?
+
+  // Step 5: Risk Acknowledgements
+  riskAcknowledged            Boolean @default(false)
+  acknowledgePrivatePlacement Boolean @default(false)
+  acknowledgeIlliquidity      Boolean @default(false)
+  acknowledgeLossRisk         Boolean @default(false)
+  acknowledgeNoGuarantee      Boolean @default(false)
+  acknowledgeAccreditedStatus Boolean @default(false)
+
+  // Legacy fields
   riskAcknowledgedAt DateTime?
   riskAcknowledgedIp String?
+  kycDocumentUrl     String?
 
-  // Accreditation / KYC
-  accreditationStatus AccreditationStatus @default(PENDING)
-  accreditedAt        DateTime?
-  kycDocumentUrl      String?
+  // Compliance status
+  verificationStatus String @default("PENDING")
 
   // Relationships
   investments    Investment[]
@@ -133,7 +161,7 @@ model InvestorProfile {
 
   @@index([userId])
   @@index([investorType])
-  @@index([accreditationStatus])
+  @@index([verificationStatus])
 }
 
 // ============================================================================
@@ -151,6 +179,8 @@ enum BusinessModel {
   B2B
   B2C
   B2B2C
+  B2G
+  Marketplace
 }
 
 enum RevenueModel {
@@ -160,6 +190,7 @@ enum RevenueModel {
 }
 
 enum Sector {
+  TECHNOLOGY
   FINTECH
   LOGISTICS
   ENERGY
@@ -177,38 +208,33 @@ model Company {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Owner — references FounderProfile (not User)
   ownerId String
   owner   FounderProfile @relation("CompanyOwner", fields: [ownerId], references: [id])
 
-  // 1️⃣ Identity (Foundational)
   legalName              String
   tradingName            String?
   countryOfIncorporation String   @default("Nigeria")
-  incorporationNumber    String   @unique // CAC number
+  incorporationNumber    String   @unique
   incorporationDate      DateTime
   companyAddress         String
   operatingCountries     String[]
   website                String?
-  logoUrl              String?
+  logoUrl                String?
   officialEmailDomain    String
 
-  // Internal only
   cacVerificationStatus   String?
   sanctionsWatchlistCheck String?
 
-  // 2️⃣ Founders & Team
-  teamSize String? // Enum: founders_only, 1-5, 6-20, 21-50, 50+
+  teamSize String?
 
-  // 3️⃣ Company Overview
   oneLineDescription  String
   detailedDescription String        @db.Text
   sector              Sector
+  subsector           String?
   businessModel       BusinessModel
   revenueModel        RevenueModel
   stage               CompanyStage
 
-  // 4️⃣ Traction & Operations
   revenueStatus             String?
   revenueRange              String?
   primaryRevenueSource      String?
@@ -219,14 +245,12 @@ model Company {
   bankAccountVerified       Boolean  @default(false)
   revenueVerificationMethod String?
 
-  // 5️⃣ Capital & History
   hasRaisedBefore          Boolean  @default(false)
   previousRaises           Json?
   founderOwnedPercent      Decimal? @db.Decimal(5, 2)
   externalInvestorsPercent Decimal? @db.Decimal(5, 2)
   notableInvestors         String[]
 
-  // 6️⃣ Risk & Reality
   topRisks                String[]
   materialThreats         String?
   singleSupplier          Boolean  @default(false)
@@ -234,22 +258,18 @@ model Company {
   regulationDependent     Boolean  @default(false)
   infrastructureDependent Boolean  @default(false)
 
-  // 7️⃣ Fundraising Intent
   preferredLane       DealLane?
   preferredInstrument InstrumentType?
   targetRaiseRange    String?
   primaryUseOfFunds   String?
 
-  // 8️⃣ Platform Equity Acknowledgement
   equityAcknowledgementAccepted  Boolean   @default(false)
   equityAcknowledgementTimestamp DateTime?
   equityAcknowledgementIp        String?
   equityIssuedToCapvistaHoldings Boolean   @default(false)
 
-  // Monitoring
   currentMonitoringStatus MonitoringMode @default(NORMAL)
 
-  // Relationships
   founders            CompanyFounder[]
   verificationRecords VerificationRecord[]
   deals               Deal[]
@@ -265,15 +285,14 @@ model Company {
 model CompanyFounder {
   id        String   @id @default(cuid())
   companyId String
-  founderId String   // References FounderProfile.id (not User.id)
-  role      String   // CEO, CTO, etc.
+  founderId String
+  role      String
   bio       String   @db.Text
   linkedinUrl     String?
   yearsExperience Int?
   isPrimary       Boolean  @default(false)
   createdAt       DateTime @default(now())
 
-  // Internal only
   nin String?
   bvn String?
 
@@ -295,11 +314,11 @@ enum DealLane {
 }
 
 enum InstrumentType {
-  REVENUE_SHARE_NOTE         // Yield
-  ASSET_BACKED_PARTICIPATION // Yield
-  CONVERTIBLE_NOTE           // Ventures
-  SAFE                       // Ventures
-  SPV_EQUITY                 // Ventures
+  REVENUE_SHARE_NOTE
+  ASSET_BACKED_PARTICIPATION
+  CONVERTIBLE_NOTE
+  SAFE
+  SPV_EQUITY
 }
 
 enum DealStatus {
@@ -317,34 +336,27 @@ model Deal {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Basic info
   name           String
   lane           DealLane
   instrumentType InstrumentType
   status         DealStatus     @default(DRAFT)
 
-  // Raise details
   targetAmount      Decimal @db.Decimal(12, 2)
   minimumInvestment Decimal @db.Decimal(12, 2)
   raisedAmount      Decimal @db.Decimal(12, 2) @default(0)
 
-  // Terms (stored as JSON for flexibility per instrument)
   terms Json
 
-  // Timeline
   openedAt DateTime?
   closedAt DateTime?
   duration Int?
 
-  // Documents
   pitchDeckUrl     String?
   financialDocsUrl String?
   termsSheetUrl    String?
 
-  // Monitoring
   currentMonitoringStatus MonitoringMode @default(NORMAL)
 
-  // Relationships
   company            Company            @relation(fields: [companyId], references: [id])
   investments        Investment[]
   monitoringStatuses MonitoringStatus[]
@@ -369,27 +381,22 @@ enum InvestmentStatus {
 
 model Investment {
   id         String   @id @default(cuid())
-  investorId String   // References InvestorProfile.id (not User.id)
+  investorId String
   dealId     String
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  // Amounts
   commitmentAmount Decimal @db.Decimal(12, 2)
   fundedAmount     Decimal @db.Decimal(12, 2) @default(0)
 
-  // Status
   status InvestmentStatus @default(COMMITTED)
 
-  // Timeline
   committedAt DateTime @default(now())
   fundedAt    DateTime?
 
-  // Returns tracking
   totalReturned Decimal @db.Decimal(12, 2) @default(0)
   currentValue  Decimal @db.Decimal(12, 2) @default(0)
 
-  // Relationships
   investor           InvestorProfile     @relation(fields: [investorId], references: [id])
   deal               Deal                @relation(fields: [dealId], references: [id])
   escrowTransactions EscrowTransaction[]
@@ -426,11 +433,9 @@ model VerificationRecord {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Subject (either user or company)
   userId    String?
   companyId String?
 
-  // Verification details
   type            VerificationType
   status          VerificationStatus @default(PENDING)
   documentUrl     String?
@@ -438,13 +443,10 @@ model VerificationRecord {
   verifiedBy      String?
   rejectionReason String?
 
-  // Metadata
   metadata Json?
 
-  // Immutable — never delete, only supersede
   supersededBy String?
 
-  // Relationships
   user    User?    @relation(fields: [userId], references: [id])
   company Company? @relation(fields: [companyId], references: [id])
 
@@ -594,7 +596,7 @@ model AdminAction {
 model CapvistaHoldingsEquity {
   id         String   @id @default(cuid())
   companyId  String   @unique
-  investorId String   // References InvestorProfile.id
+  investorId String
   createdAt  DateTime @default(now())
 
   equityPercentage        Decimal  @default(1.0000) @db.Decimal(5, 4)

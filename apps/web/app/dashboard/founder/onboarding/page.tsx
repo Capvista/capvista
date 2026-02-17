@@ -3,448 +3,501 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import CustomSelect from "@/components/CustomSelect";
 import { useAuth } from "@/lib/contexts/AuthContext";
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-);
 
 type FormData = {
-  logoFile: File | null;
-  logoPreview: string;
-  legalName: string;
-  tradingName: string;
-  incorporationNumber: string;
-  incorporationDate: string;
-  countryOfIncorporation: string;
-  operatingCountries: string[];
-  companyAddress: string;
-  website: string;
-  officialEmailDomain: string;
-  regulatoryLicenses: string;
-  teamSize: string;
-  oneLineDescription: string;
-  detailedDescription: string;
-  sector: string;
-  businessModel: string;
-  stage: string;
-  founderLinkedIn: string;
-  yearsExperience: string;
-  keyExecutives: string;
-  founderFullName: string;
-  founderEmail: string;
-  founderPhone: string;
-  founderNIN: string;
-  founderBVN: string;
-  founderIDType: string;
-  founderIDNumber: string;
-  revenueStatus: string;
-  revenueRange: string;
-  revenueType: string;
-  topMetric1: string;
-  topMetric2: string;
-  topMetric3: string;
-  majorCustomers: string;
-  geographicFootprint: string;
-  hasRaisedBefore: boolean;
-  previousRaises: string;
-  founderOwnedPercent: string;
-  externalInvestorsPercent: string;
-  esopPercent: string;
-  existingDebt: string;
-  convertibleInstruments: string;
-  investorSideLetters: string;
-  topRisk1: string;
-  topRisk2: string;
-  topRisk3: string;
-  regulationDependent: boolean;
-  regulatoryDependencies: string;
-  fxExposure: boolean;
-  singleSupplier: boolean;
-  keyConcentrationRisk: string;
-  preferredLane: string;
-  preferredInstrument: string;
-  targetRaiseMin: string;
-  targetRaiseMax: string;
-  primaryUseOfFunds: string;
-  proposedValuation: string;
-  proposedRevenueShare: string;
-  deploymentTimeline: string;
-  acknowledgePlacement: boolean;
-  acknowledgeNoSolicitation: boolean;
-  acknowledgeAccuracy: boolean;
-  acknowledgeEquity: boolean;
+  // Step 1: Investor Profile
+  investorType: string;
+  firmName: string;
+  aum: string;
+  // Step 2: Investment Preferences
+  investmentFocus: string[];
+  preferredLanes: string[];
+  minimumCheckSize: string;
+  maximumCheckSize: string;
+  // Step 3: Suitability & Experience
+  riskTolerance: string;
+  liquidityNeeds: string;
+  investmentHorizon: string;
+  generalExperience: string;
+  privateMarketExperience: string;
+  sourceOfFunds: string[];
+  accreditationBasis: string;
+  // Affiliations
+  brokerAffiliated: boolean;
+  brokerDetails: string;
+  seniorOfficer: boolean;
+  seniorOfficerCompany: string;
+  // Trusted Contact
+  trustedContactName: string;
+  trustedContactEmail: string;
+  trustedContactPhone: string;
+  trustedContactRelationship: string;
+  // Step 4: Identity Verification (country-aware)
+  countryOfResidence: string;
+  fullName: string;
+  dateOfBirth: string;
+  citizenship: string;
+  email: string;
+  phone: string;
+  residentialAddress: string;
+  city: string;
+  stateProvince: string;
+  postalCode: string;
+  // Country-specific IDs
+  nin: string; // Nigeria
+  bvn: string; // Nigeria
+  ssn: string; // USA
+  niNumber: string; // UK
+  passportNumber: string; // Universal
+  idType: string;
+  idNumber: string;
+  // Step 5: Risk Acknowledgement
+  acknowledgePrivatePlacement: boolean;
+  acknowledgeIlliquidity: boolean;
+  acknowledgeLossRisk: boolean;
   acknowledgeNoGuarantee: boolean;
+  acknowledgeAccreditedStatus: boolean;
 };
 
 const STEPS = [
-  "Company Identity",
-  "Team & Overview",
-  "Founder Verification",
-  "Traction",
-  "Capital & History",
-  "Risks",
-  "Fundraising Intent",
-  "Legal Representations",
+  "Investor Profile",
+  "Investment Preferences",
+  "Suitability & Experience",
+  "Identity Verification",
+  "Risk Acknowledgement",
   "Review & Submit",
 ];
 
-const countryOptions = [
-  { value: "Nigeria", label: "Nigeria" },
-  { value: "Kenya", label: "Kenya" },
-  { value: "Ghana", label: "Ghana" },
-  { value: "South Africa", label: "South Africa" },
-  { value: "Egypt", label: "Egypt" },
-  { value: "Morocco", label: "Morocco" },
-  { value: "Algeria", label: "Algeria" },
-  { value: "Tunisia", label: "Tunisia" },
-  { value: "Libya", label: "Libya" },
-  { value: "Sudan", label: "Sudan" },
-  { value: "Ethiopia", label: "Ethiopia" },
-  { value: "Eritrea", label: "Eritrea" },
-  { value: "Djibouti", label: "Djibouti" },
-  { value: "Somalia", label: "Somalia" },
-  { value: "Tanzania", label: "Tanzania" },
-  { value: "Uganda", label: "Uganda" },
-  { value: "Rwanda", label: "Rwanda" },
-  { value: "Burundi", label: "Burundi" },
-  { value: "Zambia", label: "Zambia" },
-  { value: "Zimbabwe", label: "Zimbabwe" },
-  { value: "Malawi", label: "Malawi" },
-  { value: "Mozambique", label: "Mozambique" },
-  { value: "Botswana", label: "Botswana" },
-  { value: "Namibia", label: "Namibia" },
-  { value: "Angola", label: "Angola" },
-  { value: "Lesotho", label: "Lesotho" },
-  { value: "Eswatini", label: "Eswatini" },
-  { value: "Mauritius", label: "Mauritius" },
-  { value: "Seychelles", label: "Seychelles" },
-  { value: "Madagascar", label: "Madagascar" },
-  { value: "Comoros", label: "Comoros" },
-  { value: "Senegal", label: "Senegal" },
-  { value: "Gambia", label: "Gambia" },
-  { value: "Guinea-Bissau", label: "Guinea-Bissau" },
-  { value: "Guinea", label: "Guinea" },
-  { value: "Sierra Leone", label: "Sierra Leone" },
-  { value: "Liberia", label: "Liberia" },
-  { value: "Ivory Coast", label: "Ivory Coast" },
-  { value: "Burkina Faso", label: "Burkina Faso" },
-  { value: "Mali", label: "Mali" },
-  { value: "Mauritania", label: "Mauritania" },
-  { value: "Niger", label: "Niger" },
-  { value: "Chad", label: "Chad" },
-  { value: "Cameroon", label: "Cameroon" },
-  { value: "Central African Republic", label: "Central African Republic" },
-  { value: "Equatorial Guinea", label: "Equatorial Guinea" },
-  { value: "Gabon", label: "Gabon" },
-  { value: "Republic of the Congo", label: "Republic of the Congo" },
-  {
-    value: "Democratic Republic of the Congo",
-    label: "Democratic Republic of the Congo",
-  },
-  { value: "Benin", label: "Benin" },
-  { value: "Togo", label: "Togo" },
-  { value: "Cape Verde", label: "Cape Verde" },
-  { value: "Sao Tome and Principe", label: "Sao Tome and Principe" },
-];
-
-const teamSizeOptions = [
-  { value: "", label: "Select team size" },
-  { value: "founders_only", label: "Founders only" },
-  { value: "1-5", label: "1-5 employees" },
-  { value: "6-20", label: "6-20 employees" },
-  { value: "21-50", label: "21-50 employees" },
-  { value: "50+", label: "50+ employees" },
-];
-
-const stageOptions = [
-  { value: "", label: "Select stage" },
-  { value: "PRE_REVENUE", label: "Pre-revenue" },
-  { value: "EARLY_REVENUE", label: "Early revenue" },
-  { value: "GROWTH", label: "Growth" },
-  { value: "PROFITABLE", label: "Profitable" },
+const investorTypeOptions = [
+  { value: "", label: "Select investor type" },
+  { value: "INDIVIDUAL", label: "Individual Investor" },
+  { value: "ANGEL", label: "Angel Investor" },
+  { value: "FAMILY_OFFICE", label: "Family Office" },
+  { value: "INSTITUTIONAL", label: "Institutional Investor" },
+  { value: "FUND", label: "Fund / VC" },
 ];
 
 const sectorOptions = [
-  { value: "", label: "Select sector" },
-  { value: "FINTECH", label: "Fintech" },
-  { value: "LOGISTICS", label: "Logistics" },
-  { value: "ENERGY", label: "Energy" },
+  { value: "FINTECH", label: "FinTech" },
+  { value: "LOGISTICS", label: "Logistics & Mobility" },
+  { value: "ENERGY", label: "Energy & Utilities" },
   { value: "CONSUMER_FMCG", label: "Consumer / FMCG" },
-  { value: "HEALTH", label: "Health" },
+  { value: "HEALTH", label: "Health & Biotech" },
   { value: "AGRI_FOOD", label: "Agri / Food" },
   { value: "REAL_ESTATE", label: "Real Estate" },
   { value: "INFRASTRUCTURE", label: "Infrastructure" },
   { value: "SAAS_TECH", label: "SaaS / Tech" },
-  { value: "AI", label: "AI / Machine Learning" },
+  { value: "TECHNOLOGY", label: "Technology" },
   { value: "MANUFACTURING", label: "Manufacturing" },
 ];
 
-const businessModelOptions = [
-  { value: "", label: "Select business model" },
-  { value: "B2B", label: "B2B" },
-  { value: "B2C", label: "B2C" },
-  { value: "B2B2C", label: "B2B2C" },
-];
-
-const idTypeOptions = [
-  { value: "", label: "Select ID type" },
-  { value: "DRIVERS_LICENSE", label: "Driver's License" },
-  { value: "PASSPORT", label: "Passport" },
-];
-
-const revenueStatusOptions = [
-  { value: "", label: "Select revenue status" },
-  { value: "no_revenue", label: "No revenue" },
-  { value: "monthly", label: "Monthly revenue" },
-  { value: "annual", label: "Annual revenue" },
-];
-
-const revenueRangeOptions = [
-  { value: "", label: "Select range" },
-  { value: "0-50k", label: "$0 - $50k" },
-  { value: "50k-200k", label: "$50k - $200k" },
-  { value: "200k-500k", label: "$200k - $500k" },
-  { value: "500k-1m", label: "$500k - $1M" },
-  { value: "1m-5m", label: "$1M - $5M" },
-  { value: "5m+", label: "$5M+" },
-];
-
-const revenueTypeOptions = [
-  { value: "", label: "Select revenue type" },
-  { value: "contracts", label: "Contracts" },
-  { value: "consumers", label: "Consumers" },
-  { value: "assets", label: "Assets" },
-  { value: "subscription", label: "Subscription" },
-  { value: "enterprise", label: "Enterprise" },
-];
-
 const laneOptions = [
-  { value: "", label: "Select lane" },
-  { value: "YIELD", label: "Yield (Revenue/Asset-based)" },
-  { value: "VENTURES", label: "Ventures (Equity)" },
+  {
+    value: "YIELD",
+    label: "Revenue/asset-backed instruments with predictable returns",
+  },
+  { value: "VENTURES", label: "Equity-based instruments with growth upside" },
 ];
 
-const instrumentOptions = [
-  { value: "", label: "Select instrument" },
-  { value: "REVENUE_SHARE_NOTE", label: "Revenue Share Note" },
-  { value: "ASSET_BACKED_PARTICIPATION", label: "Asset-Backed Participation" },
-  { value: "CONVERTIBLE_NOTE", label: "Convertible Note" },
-  { value: "SAFE", label: "SAFE" },
-  { value: "SPV_EQUITY", label: "SPV Equity" },
+const aumOptions = [
+  { value: "", label: "Select range" },
+  { value: "under_100k", label: "Under $100,000" },
+  { value: "100k_500k", label: "$100,000 – $500,000" },
+  { value: "500k_1m", label: "$500,000 – $1,000,000" },
+  { value: "1m_5m", label: "$1,000,000 – $5,000,000" },
+  { value: "5m_10m", label: "$5,000,000 – $10,000,000" },
+  { value: "10m_plus", label: "$10,000,000+" },
 ];
 
-const deploymentTimelineOptions = [
-  { value: "", label: "Select timeline" },
-  { value: "immediate", label: "Immediate (1-3 months)" },
-  { value: "short", label: "Short-term (3-6 months)" },
-  { value: "medium", label: "Medium-term (6-12 months)" },
-  { value: "long", label: "Long-term (12+ months)" },
+const checkSizeOptions = [
+  { value: "", label: "Select amount" },
+  { value: "5000", label: "$5,000" },
+  { value: "10000", label: "$10,000" },
+  { value: "25000", label: "$25,000" },
+  { value: "50000", label: "$50,000" },
+  { value: "100000", label: "$100,000" },
+  { value: "250000", label: "$250,000" },
+  { value: "500000", label: "$500,000" },
+  { value: "1000000", label: "$1,000,000+" },
 ];
 
-// ============================================================================
-// VALIDATION LOGIC PER STEP
-// ============================================================================
-function validateStep(step: number, formData: FormData): string[] {
-  const errors: string[] = [];
+const riskToleranceOptions = [
+  { value: "", label: "Select your risk tolerance" },
+  {
+    value: "conservative",
+    label: "Conservative — I prioritize capital preservation over returns",
+  },
+  {
+    value: "moderate",
+    label: "Moderate — I seek balanced returns with manageable risk",
+  },
+  {
+    value: "higher",
+    label:
+      "Higher — I want to maximize returns and am comfortable with volatility and loss of principal",
+  },
+  {
+    value: "aggressive",
+    label:
+      "Aggressive — I pursue maximum growth and accept high risk, including total loss",
+  },
+];
 
-  switch (step) {
-    case 0: // Company Identity
-      if (!formData.logoFile) errors.push("logoFile");
-      if (!formData.legalName.trim()) errors.push("legalName");
-      if (!formData.incorporationNumber.trim())
-        errors.push("incorporationNumber");
-      if (!formData.incorporationDate) errors.push("incorporationDate");
-      if (!formData.countryOfIncorporation)
-        errors.push("countryOfIncorporation");
-      if (
-        !formData.operatingCountries.length ||
-        !formData.operatingCountries[0]?.trim()
-      )
-        errors.push("operatingCountries");
-      if (!formData.companyAddress.trim()) errors.push("companyAddress");
-      if (!formData.officialEmailDomain.trim())
-        errors.push("officialEmailDomain");
-      break;
+const liquidityOptions = [
+  { value: "", label: "Select liquidity needs" },
+  {
+    value: "yes_immediate",
+    label: "Yes — I may need to access these funds within 12 months",
+  },
+  {
+    value: "yes_medium",
+    label: "Possibly — I might need partial liquidity in 1–3 years",
+  },
+  {
+    value: "no",
+    label:
+      "No — I don't anticipate needing to quickly turn this investment into cash",
+  },
+];
 
-    case 1: // Team & Overview
-      if (!formData.teamSize) errors.push("teamSize");
-      if (!formData.stage) errors.push("stage");
-      if (
-        !formData.oneLineDescription.trim() ||
-        formData.oneLineDescription.trim().length < 10
-      )
-        errors.push("oneLineDescription");
-      if (
-        !formData.detailedDescription.trim() ||
-        formData.detailedDescription.trim().length < 50
-      )
-        errors.push("detailedDescription");
-      if (!formData.sector) errors.push("sector");
-      if (!formData.businessModel) errors.push("businessModel");
-      break;
+const horizonOptions = [
+  { value: "", label: "Select investment horizon" },
+  { value: "short", label: "Short-term — Less than 2 years" },
+  { value: "medium", label: "Medium-term — 2–5 years" },
+  {
+    value: "long",
+    label: "Long-term — 5+ years, I can hold for multiple years",
+  },
+  {
+    value: "no_preference",
+    label: "No preference — Depends on the opportunity",
+  },
+];
 
-    case 2: // Founder Verification
-      if (!formData.founderFullName.trim()) errors.push("founderFullName");
-      if (!formData.founderEmail.trim()) errors.push("founderEmail");
-      if (!formData.founderPhone.trim()) errors.push("founderPhone");
-      if (!formData.founderNIN.trim()) errors.push("founderNIN");
-      if (!formData.founderBVN.trim()) errors.push("founderBVN");
-      if (!formData.founderIDType) errors.push("founderIDType");
-      if (!formData.founderIDNumber.trim()) errors.push("founderIDNumber");
-      break;
+const experienceOptions = [
+  { value: "", label: "Select experience level" },
+  { value: "none", label: "None — I'm new to investing" },
+  {
+    value: "limited",
+    label: "Limited — I have some experience with public markets",
+  },
+  {
+    value: "moderate",
+    label: "Moderate — I actively invest and understand risk/return",
+  },
+  {
+    value: "extensive",
+    label:
+      "Extensive — I have years of investment experience across multiple asset classes",
+  },
+];
 
-    case 3: // Traction
-      if (!formData.revenueStatus) errors.push("revenueStatus");
-      if (!formData.topMetric1.trim()) errors.push("topMetric1");
-      if (!formData.topMetric2.trim()) errors.push("topMetric2");
-      if (!formData.topMetric3.trim()) errors.push("topMetric3");
-      break;
+const privateExperienceOptions = [
+  { value: "", label: "Select private market experience" },
+  {
+    value: "none",
+    label: "None — This would be my first private market investment",
+  },
+  {
+    value: "some",
+    label: "Some — I've made 1–3 private investments (LP, VC, angel)",
+  },
+  {
+    value: "experienced",
+    label: "Experienced — I've made 4–10 private investments",
+  },
+  {
+    value: "very_experienced",
+    label: "Very experienced — 10+ private investments",
+  },
+];
 
-    case 4: // Capital & History
-      if (!formData.founderOwnedPercent) errors.push("founderOwnedPercent");
-      if (!formData.externalInvestorsPercent)
-        errors.push("externalInvestorsPercent");
-      break;
+const sourceOfFundsOptions = [
+  { value: "earnings", label: "Income from earnings / salary" },
+  { value: "business", label: "Business ownership / profits" },
+  { value: "investments", label: "Investment returns / dividends" },
+  { value: "inheritance", label: "Inheritance" },
+  { value: "savings", label: "Personal savings" },
+  { value: "pension", label: "Pension / retirement funds" },
+  { value: "property", label: "Property sale" },
+  { value: "other", label: "Other" },
+];
 
-    case 5: // Risks
-      if (!formData.topRisk1.trim()) errors.push("topRisk1");
-      if (!formData.topRisk2.trim()) errors.push("topRisk2");
-      if (!formData.topRisk3.trim()) errors.push("topRisk3");
-      break;
+const accreditationOptions = [
+  { value: "", label: "Select basis for accreditation" },
+  {
+    value: "income",
+    label:
+      "Annual income exceeds $200,000 (or $300,000 jointly) for the past 2 years",
+  },
+  {
+    value: "net_worth",
+    label: "Net worth exceeds $1,000,000 (excluding primary residence)",
+  },
+  {
+    value: "professional",
+    label: "Licensed securities professional (Series 7, 65, 82)",
+  },
+  { value: "entity", label: "Entity with $5M+ in assets" },
+  { value: "knowledgeable", label: "Knowledgeable employee of a private fund" },
+  {
+    value: "not_accredited",
+    label: "I do not meet accredited investor criteria",
+  },
+  {
+    value: "non_us",
+    label: "Non-US investor — accreditation criteria varies by jurisdiction",
+  },
+];
 
-    case 6: // Fundraising Intent
-      if (!formData.preferredLane) errors.push("preferredLane");
-      if (!formData.preferredInstrument) errors.push("preferredInstrument");
-      if (!formData.targetRaiseMin) errors.push("targetRaiseMin");
-      if (!formData.targetRaiseMax) errors.push("targetRaiseMax");
-      if (!formData.primaryUseOfFunds.trim()) errors.push("primaryUseOfFunds");
-      break;
+// Country groupings for KYC
+type CountryRegion = "nigeria" | "us" | "uk" | "eu" | "africa_other" | "other";
 
-    case 7: // Legal Representations
-      if (!formData.acknowledgePlacement) errors.push("acknowledgePlacement");
-      if (!formData.acknowledgeNoSolicitation)
-        errors.push("acknowledgeNoSolicitation");
-      if (!formData.acknowledgeAccuracy) errors.push("acknowledgeAccuracy");
-      if (!formData.acknowledgeEquity) errors.push("acknowledgeEquity");
-      if (!formData.acknowledgeNoGuarantee)
-        errors.push("acknowledgeNoGuarantee");
-      break;
-  }
+const countryOptions = [
+  { value: "Nigeria", region: "nigeria" as CountryRegion, label: "Nigeria" },
+  {
+    value: "United States",
+    region: "us" as CountryRegion,
+    label: "United States",
+  },
+  {
+    value: "United Kingdom",
+    region: "uk" as CountryRegion,
+    label: "United Kingdom",
+  },
+  { value: "Ghana", region: "africa_other" as CountryRegion, label: "Ghana" },
+  { value: "Kenya", region: "africa_other" as CountryRegion, label: "Kenya" },
+  {
+    value: "South Africa",
+    region: "africa_other" as CountryRegion,
+    label: "South Africa",
+  },
+  { value: "Rwanda", region: "africa_other" as CountryRegion, label: "Rwanda" },
+  { value: "Egypt", region: "africa_other" as CountryRegion, label: "Egypt" },
+  {
+    value: "Tanzania",
+    region: "africa_other" as CountryRegion,
+    label: "Tanzania",
+  },
+  { value: "Uganda", region: "africa_other" as CountryRegion, label: "Uganda" },
+  {
+    value: "Ethiopia",
+    region: "africa_other" as CountryRegion,
+    label: "Ethiopia",
+  },
+  {
+    value: "Senegal",
+    region: "africa_other" as CountryRegion,
+    label: "Senegal",
+  },
+  {
+    value: "Morocco",
+    region: "africa_other" as CountryRegion,
+    label: "Morocco",
+  },
+  {
+    value: "Mauritius",
+    region: "africa_other" as CountryRegion,
+    label: "Mauritius",
+  },
+  { value: "Germany", region: "eu" as CountryRegion, label: "Germany" },
+  { value: "France", region: "eu" as CountryRegion, label: "France" },
+  { value: "Netherlands", region: "eu" as CountryRegion, label: "Netherlands" },
+  { value: "Canada", region: "other" as CountryRegion, label: "Canada" },
+  {
+    value: "UAE",
+    region: "other" as CountryRegion,
+    label: "United Arab Emirates",
+  },
+  { value: "Singapore", region: "other" as CountryRegion, label: "Singapore" },
+  { value: "India", region: "other" as CountryRegion, label: "India" },
+  { value: "Australia", region: "other" as CountryRegion, label: "Australia" },
+  { value: "Other", region: "other" as CountryRegion, label: "Other" },
+];
 
-  return errors;
+function getRegion(country: string): CountryRegion {
+  const found = countryOptions.find((c) => c.value === country);
+  return found?.region || "other";
 }
 
-// Helper: input border class based on error
-function inputClass(hasError: boolean) {
-  return `w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none ${
-    hasError ? "border-red-400 bg-red-50" : "border-gray-300"
-  }`;
-}
+const idTypesByRegion: Record<
+  CountryRegion,
+  { value: string; label: string }[]
+> = {
+  nigeria: [
+    { value: "NATIONAL_ID", label: "National ID Card (NIMC)" },
+    { value: "PASSPORT", label: "International Passport" },
+    { value: "DRIVERS_LICENSE", label: "Driver's License" },
+    { value: "VOTERS_CARD", label: "Voter's Card" },
+  ],
+  us: [
+    { value: "DRIVERS_LICENSE", label: "Driver's License" },
+    { value: "PASSPORT", label: "US Passport" },
+    { value: "STATE_ID", label: "State ID Card" },
+  ],
+  uk: [
+    { value: "PASSPORT", label: "UK Passport" },
+    { value: "DRIVERS_LICENSE", label: "UK Driving Licence" },
+    { value: "BRP", label: "Biometric Residence Permit" },
+  ],
+  eu: [
+    { value: "NATIONAL_ID", label: "National ID Card" },
+    { value: "PASSPORT", label: "Passport" },
+    { value: "DRIVERS_LICENSE", label: "Driving Licence" },
+  ],
+  africa_other: [
+    { value: "NATIONAL_ID", label: "National ID Card" },
+    { value: "PASSPORT", label: "International Passport" },
+    { value: "DRIVERS_LICENSE", label: "Driver's License" },
+  ],
+  other: [
+    { value: "PASSPORT", label: "Passport" },
+    { value: "NATIONAL_ID", label: "National ID Card" },
+    { value: "DRIVERS_LICENSE", label: "Driver's License" },
+  ],
+};
 
-// Helper: error message
-function FieldError({ show, message }: { show: boolean; message: string }) {
-  if (!show) return null;
-  return <p className="text-xs text-red-600 mt-1">{message}</p>;
-}
-
-export default function CompanyOnboarding() {
+export default function InvestorOnboarding() {
   const router = useRouter();
   const { user, accessToken, loading } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!loading && !user) {
-      console.error("No user found, redirecting to login");
-      router.push("/login");
-    }
+    if (!loading && !user) router.push("/login");
   }, [user, loading, router]);
 
   const [formData, setFormData] = useState<FormData>({
-    logoFile: null,
-    logoPreview: "",
-    legalName: "",
-    tradingName: "",
-    incorporationNumber: "",
-    incorporationDate: "",
-    countryOfIncorporation: "Nigeria",
-    operatingCountries: [],
-    companyAddress: "",
-    website: "",
-    officialEmailDomain: "",
-    regulatoryLicenses: "",
-    teamSize: "",
-    oneLineDescription: "",
-    detailedDescription: "",
-    sector: "",
-    businessModel: "",
-    stage: "",
-    founderLinkedIn: "",
-    yearsExperience: "",
-    keyExecutives: "",
-    founderFullName: "",
-    founderEmail: "",
-    founderPhone: "",
-    founderNIN: "",
-    founderBVN: "",
-    founderIDType: "",
-    founderIDNumber: "",
-    revenueStatus: "",
-    revenueRange: "",
-    revenueType: "",
-    topMetric1: "",
-    topMetric2: "",
-    topMetric3: "",
-    majorCustomers: "",
-    geographicFootprint: "",
-    hasRaisedBefore: false,
-    previousRaises: "",
-    founderOwnedPercent: "",
-    externalInvestorsPercent: "",
-    esopPercent: "",
-    existingDebt: "",
-    convertibleInstruments: "",
-    investorSideLetters: "",
-    topRisk1: "",
-    topRisk2: "",
-    topRisk3: "",
-    regulationDependent: false,
-    regulatoryDependencies: "",
-    fxExposure: false,
-    singleSupplier: false,
-    keyConcentrationRisk: "",
-    preferredLane: "",
-    preferredInstrument: "",
-    targetRaiseMin: "",
-    targetRaiseMax: "",
-    primaryUseOfFunds: "",
-    proposedValuation: "",
-    proposedRevenueShare: "",
-    deploymentTimeline: "",
-    acknowledgePlacement: false,
-    acknowledgeNoSolicitation: false,
-    acknowledgeAccuracy: false,
-    acknowledgeEquity: false,
+    investorType: "",
+    firmName: "",
+    aum: "",
+    investmentFocus: [],
+    preferredLanes: [],
+    minimumCheckSize: "",
+    maximumCheckSize: "",
+    riskTolerance: "",
+    liquidityNeeds: "",
+    investmentHorizon: "",
+    generalExperience: "",
+    privateMarketExperience: "",
+    sourceOfFunds: [],
+    accreditationBasis: "",
+    brokerAffiliated: false,
+    brokerDetails: "",
+    seniorOfficer: false,
+    seniorOfficerCompany: "",
+    trustedContactName: "",
+    trustedContactEmail: "",
+    trustedContactPhone: "",
+    trustedContactRelationship: "",
+    countryOfResidence: "Nigeria",
+    fullName: "",
+    dateOfBirth: "",
+    citizenship: "",
+    email: "",
+    phone: "",
+    residentialAddress: "",
+    city: "",
+    stateProvince: "",
+    postalCode: "",
+    nin: "",
+    bvn: "",
+    ssn: "",
+    niNumber: "",
+    passportNumber: "",
+    idType: "",
+    idNumber: "",
+    acknowledgePrivatePlacement: false,
+    acknowledgeIlliquidity: false,
+    acknowledgeLossRisk: false,
     acknowledgeNoGuarantee: false,
+    acknowledgeAccreditedStatus: false,
   });
+
+  useEffect(() => {
+    if (user) {
+      setFormData((prev) => ({
+        ...prev,
+        fullName: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+        email: user.email || "",
+      }));
+    }
+  }, [user]);
 
   const updateField = (field: keyof FormData, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    setValidationErrors([]);
+  };
+
+  const toggleArrayField = (
+    field: "investmentFocus" | "preferredLanes" | "sourceOfFunds",
+    value: string,
+  ) => {
+    setFormData((prev) => {
+      const current = prev[field] as string[];
+      return {
+        ...prev,
+        [field]: current.includes(value)
+          ? current.filter((v) => v !== value)
+          : [...current, value],
+      };
+    });
   };
 
   const nextStep = () => {
-    const errors = validateStep(currentStep, formData);
-    if (errors.length > 0) {
-      setValidationErrors(errors);
-      window.scrollTo(0, 0);
+    const missing: string[] = [];
+
+    if (currentStep === 0) {
+      if (!formData.investorType) missing.push("investorType");
+      if (
+        ["INSTITUTIONAL", "FAMILY_OFFICE", "FUND"].includes(
+          formData.investorType,
+        ) &&
+        !formData.firmName
+      )
+        missing.push("firmName");
+    }
+    if (currentStep === 1) {
+      if (formData.investmentFocus.length === 0)
+        missing.push("investmentFocus");
+      if (formData.preferredLanes.length === 0) missing.push("preferredLanes");
+    }
+    if (currentStep === 2) {
+      if (!formData.riskTolerance) missing.push("riskTolerance");
+      if (!formData.generalExperience) missing.push("generalExperience");
+      if (formData.sourceOfFunds.length === 0) missing.push("sourceOfFunds");
+    }
+    if (currentStep === 3) {
+      if (!formData.fullName) missing.push("fullName");
+      if (!formData.phone) missing.push("phone");
+      if (!formData.dateOfBirth) missing.push("dateOfBirth");
+      if (!formData.residentialAddress) missing.push("residentialAddress");
+      if (!formData.city) missing.push("city");
+      if (!formData.idType) missing.push("idType");
+      if (!formData.idNumber) missing.push("idNumber");
+      const region = getRegion(formData.countryOfResidence);
+      if (region === "nigeria" && !formData.nin) missing.push("nin");
+      if (region === "us" && !formData.ssn) missing.push("ssn");
+    }
+    if (currentStep === 4) {
+      if (!formData.acknowledgePrivatePlacement)
+        missing.push("acknowledgePrivatePlacement");
+      if (!formData.acknowledgeIlliquidity)
+        missing.push("acknowledgeIlliquidity");
+      if (!formData.acknowledgeLossRisk) missing.push("acknowledgeLossRisk");
+      if (!formData.acknowledgeNoGuarantee)
+        missing.push("acknowledgeNoGuarantee");
+      if (!formData.acknowledgeAccreditedStatus)
+        missing.push("acknowledgeAccreditedStatus");
+    }
+
+    if (missing.length > 0) {
+      setValidationErrors(missing);
       return;
     }
     setValidationErrors([]);
-
     if (currentStep < STEPS.length - 1) {
       setCurrentStep((prev) => prev + 1);
       window.scrollTo(0, 0);
@@ -452,7 +505,6 @@ export default function CompanyOnboarding() {
   };
 
   const prevStep = () => {
-    setValidationErrors([]);
     if (currentStep > 0) {
       setCurrentStep((prev) => prev - 1);
       window.scrollTo(0, 0);
@@ -461,115 +513,56 @@ export default function CompanyOnboarding() {
 
   const handleSubmit = async () => {
     try {
+      setSubmitting(true);
       if (!accessToken) {
-        alert("Your session has expired. Please log in again.");
+        alert("Session expired. Please log in again.");
         router.push("/login");
         return;
       }
 
-      console.log("✅ Submitting for user:", user?.email);
-
       const payload = {
-        logoUrl,
-        legalName: formData.legalName,
-        tradingName: formData.tradingName || undefined,
-        incorporationNumber: formData.incorporationNumber,
-        incorporationDate: new Date(formData.incorporationDate).toISOString(),
-        countryOfIncorporation: formData.countryOfIncorporation,
-        operatingCountries: formData.operatingCountries,
-        companyAddress: formData.companyAddress,
-        website: formData.website || undefined,
-        officialEmailDomain: formData.officialEmailDomain,
-        teamSize: formData.teamSize,
-        oneLineDescription: formData.oneLineDescription,
-        detailedDescription: formData.detailedDescription,
-        sector: formData.sector,
-        businessModel: formData.businessModel,
-        revenueModel: "TRANSACTIONAL",
-        stage: formData.stage,
-        revenueStatus: formData.revenueStatus,
-        revenueRange: formData.revenueRange,
-        primaryRevenueSource: formData.revenueType,
-        keyMetrics: {
-          metric1: formData.topMetric1,
-          metric2: formData.topMetric2,
-          metric3: formData.topMetric3,
-        },
-        majorCustomers: formData.majorCustomers
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean),
-        geographicFootprint: formData.geographicFootprint,
-        hasRaisedBefore: formData.hasRaisedBefore,
-        previousRaises: formData.previousRaises || undefined,
-        founderOwnedPercent:
-          parseFloat(formData.founderOwnedPercent) || undefined,
-        externalInvestorsPercent:
-          parseFloat(formData.externalInvestorsPercent) || undefined,
-        notableInvestors: [],
-        topRisks: [formData.topRisk1, formData.topRisk2, formData.topRisk3],
-        materialThreats: `${formData.existingDebt ? "Debt: " + formData.existingDebt + ". " : ""}${formData.convertibleInstruments ? "Convertibles: " + formData.convertibleInstruments : ""}`,
-        singleSupplier: formData.singleSupplier,
-        fxExposure: formData.fxExposure,
-        regulationDependent: formData.regulationDependent,
-        regulatoryDependencies: formData.regulatoryDependencies || undefined,
-        infrastructureDependent: false,
-        preferredLane: formData.preferredLane,
-        preferredInstrument: formData.preferredInstrument,
-        targetRaiseRange: `$${formData.targetRaiseMin} - $${formData.targetRaiseMax}`,
-        primaryUseOfFunds: formData.primaryUseOfFunds,
+        investorType: formData.investorType,
+        firmName: formData.firmName || undefined,
+        aum: formData.aum ? parseFloat(formData.aum) || undefined : undefined,
+        investmentFocus: formData.investmentFocus,
+        preferredLanes: formData.preferredLanes,
+        minimumCheckSize: formData.minimumCheckSize
+          ? parseFloat(formData.minimumCheckSize)
+          : undefined,
+        maximumCheckSize: formData.maximumCheckSize
+          ? parseFloat(formData.maximumCheckSize)
+          : undefined,
+        phone: formData.phone,
+        riskAcknowledged: true,
       };
 
-      // Upload logo to Supabase Storage
-      let logoUrl = "";
-      if (formData.logoFile) {
-        const fileExt = formData.logoFile.name.split(".").pop();
-        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from("company-logos")
-          .upload(fileName, formData.logoFile);
-
-        if (uploadError) {
-          console.error("❌ Logo upload error:", uploadError);
-          alert("Failed to upload logo. Please try again.");
-          return;
-        }
-
-        const { data: urlData } = supabase.storage
-          .from("company-logos")
-          .getPublicUrl(fileName);
-
-        logoUrl = urlData.publicUrl;
-        console.log("✅ Logo uploaded:", logoUrl);
-      }
-
-      console.log("📤 Sending payload to API...");
-
-      const response = await fetch("http://localhost:4000/api/companies", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
+      const response = await fetch(
+        "http://localhost:4000/api/investors/profile",
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify(payload),
         },
-        body: JSON.stringify(payload),
-      });
+      );
 
-      console.log("📥 API response status:", response.status);
       const result = await response.json();
-      console.log("📥 API response body:", result);
-
       if (result.success) {
-        router.push("/dashboard/founder/submission-success");
+        router.push("/dashboard/investor");
       } else {
-        console.error("❌ API error:", result.error);
         alert(`Error: ${result.error?.message || "Unknown error"}`);
       }
     } catch (error) {
-      console.error("❌ Submission error:", error);
-      alert("Failed to submit company. Please try again.");
+      console.error("Submission error:", error);
+      alert("Failed to submit. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
   };
+
+  const has = (field: string) => validationErrors.includes(field);
 
   if (loading) {
     return (
@@ -577,17 +570,12 @@ export default function CompanyOnboarding() {
         className="min-h-screen flex items-center justify-center"
         style={{ backgroundColor: "#F6F8FA" }}
       >
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate">Loading...</p>
-        </div>
+        <div className="w-16 h-16 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
       </div>
     );
   }
 
   if (!user) return null;
-
-  const hasErr = (field: string) => validationErrors.includes(field);
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#F6F8FA" }}>
@@ -595,7 +583,7 @@ export default function CompanyOnboarding() {
         <div className="container">
           <div className="flex items-center justify-between py-4">
             <Link
-              href="/dashboard/founder"
+              href="/dashboard/investor"
               className="flex items-center space-x-2"
             >
               <div
@@ -614,7 +602,7 @@ export default function CompanyOnboarding() {
               </span>
             </Link>
             <Link
-              href="/dashboard/founder"
+              href="/dashboard/investor"
               className="text-sm text-gray-600 hover:text-gray-900"
             >
               Save & Exit
@@ -651,69 +639,45 @@ export default function CompanyOnboarding() {
 
       <main className="container py-8">
         <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-          {validationErrors.length > 0 && (
-            <div className="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg text-sm font-medium mb-6">
-              ⚠ Please fill in all required fields before proceeding
-            </div>
-          )}
-
           {currentStep === 0 && (
-            <Step1Identity
+            <Step1Profile
               formData={formData}
               updateField={updateField}
-              errors={validationErrors}
+              has={has}
             />
           )}
           {currentStep === 1 && (
-            <Step2Team
+            <Step2Preferences
               formData={formData}
               updateField={updateField}
-              errors={validationErrors}
+              toggleArrayField={toggleArrayField}
+              has={has}
             />
           )}
           {currentStep === 2 && (
-            <Step3FounderVerification
+            <Step3Suitability
               formData={formData}
               updateField={updateField}
-              errors={validationErrors}
+              toggleArrayField={toggleArrayField}
+              has={has}
             />
           )}
           {currentStep === 3 && (
-            <Step4Traction
+            <Step4Identity
               formData={formData}
               updateField={updateField}
-              errors={validationErrors}
+              has={has}
             />
           )}
           {currentStep === 4 && (
-            <Step5Capital
+            <Step5Risk
               formData={formData}
               updateField={updateField}
-              errors={validationErrors}
+              has={has}
+              validationErrors={validationErrors}
             />
           )}
-          {currentStep === 5 && (
-            <Step6Risks
-              formData={formData}
-              updateField={updateField}
-              errors={validationErrors}
-            />
-          )}
-          {currentStep === 6 && (
-            <Step7Fundraising
-              formData={formData}
-              updateField={updateField}
-              errors={validationErrors}
-            />
-          )}
-          {currentStep === 7 && (
-            <Step8Legal
-              formData={formData}
-              updateField={updateField}
-              errors={validationErrors}
-            />
-          )}
-          {currentStep === 8 && <Step9Review formData={formData} />}
+          {currentStep === 5 && <Step6Review formData={formData} />}
 
           <div className="flex items-center justify-between mt-8 pt-8 border-t border-gray-200">
             <button
@@ -723,7 +687,6 @@ export default function CompanyOnboarding() {
             >
               Previous
             </button>
-
             {currentStep < STEPS.length - 1 ? (
               <button
                 onClick={nextStep}
@@ -735,10 +698,11 @@ export default function CompanyOnboarding() {
             ) : (
               <button
                 onClick={handleSubmit}
-                className="px-6 py-3 rounded-lg font-semibold transition-all"
+                disabled={submitting}
+                className="px-6 py-3 rounded-lg font-semibold transition-all disabled:opacity-50"
                 style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
               >
-                Submit Company
+                {submitting ? "Submitting..." : "Complete Onboarding"}
               </button>
             )}
           </div>
@@ -749,409 +713,94 @@ export default function CompanyOnboarding() {
 }
 
 // ============================================================================
-// Shared prop type for steps with validation
+// STEP 1: INVESTOR PROFILE
 // ============================================================================
-type StepProps = {
+function Step1Profile({
+  formData,
+  updateField,
+  has,
+}: {
   formData: FormData;
-  updateField: (field: keyof FormData, value: any) => void;
-  errors: string[];
-};
-
-// ============================================================================
-// STEP 1: COMPANY IDENTITY
-// ============================================================================
-function Step1Identity({ formData, updateField, errors }: StepProps) {
-  const has = (f: string) => errors.includes(f);
+  updateField: (f: keyof FormData, v: any) => void;
+  has: (f: string) => boolean;
+}) {
+  const needsFirm = ["INSTITUTIONAL", "FAMILY_OFFICE", "FUND"].includes(
+    formData.investorType,
+  );
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-primary-950 mb-2">
-          Company Identity
+          Investor Profile
         </h2>
-        <p className="text-gray-600">Basic information about your company</p>
+        <p className="text-gray-600">
+          Tell us about yourself so we can tailor your experience
+        </p>
       </div>
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="md:col-span-2">
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Company Logo <span className="text-red-500">*</span>
-          </label>
-          <div className="flex items-center gap-6">
-            <div className="w-24 h-24 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50">
-              {formData.logoPreview ? (
-                <img
-                  src={formData.logoPreview}
-                  alt="Logo preview"
-                  className="w-full h-full object-cover rounded-xl"
-                />
-              ) : (
-                <svg
-                  className="w-8 h-8 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
-              )}
-            </div>
-            <div>
-              <label className="inline-block px-4 py-2 rounded-lg font-semibold text-sm cursor-pointer transition-all border-2 border-gray-300 text-gray-700 hover:border-gray-400">
-                {formData.logoPreview ? "Change Logo" : "Upload Logo"}
-                <input
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp"
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      if (file.size > 2 * 1024 * 1024) {
-                        alert("Logo must be under 2MB");
-                        return;
-                      }
-                      updateField("logoFile", file);
-                      updateField("logoPreview", URL.createObjectURL(file));
-                    }
-                  }}
-                />
-              </label>
-              <p className="text-xs text-gray-500 mt-2">
-                PNG, JPG, or WebP. Max 2MB.
-              </p>
-              {has("logoFile") && (
-                <p className="text-xs text-red-600 mt-1">
-                  Company logo is required
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-        <div className="md:col-span-2">
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Legal Name <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            value={formData.legalName}
-            onChange={(e) => updateField("legalName", e.target.value)}
-            className={inputClass(has("legalName"))}
-            placeholder="As registered with CAC"
-          />
-          <FieldError
-            show={has("legalName")}
-            message="Legal name is required"
-          />
-        </div>
-        <div className="md:col-span-2">
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Trading Name (if different)
-          </label>
-          <input
-            type="text"
-            value={formData.tradingName}
-            onChange={(e) => updateField("tradingName", e.target.value)}
-            className={inputClass(false)}
-            placeholder="DBA or brand name"
-          />
-        </div>
+      <div className="space-y-6">
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">
-            CAC Registration Number <span className="text-red-500">*</span>
+            Investor Type <span className="text-red-500">*</span>
           </label>
-          <input
-            type="text"
-            value={formData.incorporationNumber}
-            onChange={(e) => updateField("incorporationNumber", e.target.value)}
-            className={inputClass(has("incorporationNumber"))}
-            placeholder="RC123456"
-          />
-          <FieldError
-            show={has("incorporationNumber")}
-            message="CAC number is required"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Incorporation Date <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="date"
-            value={formData.incorporationDate}
-            onChange={(e) => updateField("incorporationDate", e.target.value)}
-            className={inputClass(has("incorporationDate"))}
-          />
-          <FieldError
-            show={has("incorporationDate")}
-            message="Incorporation date is required"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Country of Incorporation <span className="text-red-500">*</span>
-          </label>
-          <CustomSelect
-            value={formData.countryOfIncorporation}
-            onChange={(value) => updateField("countryOfIncorporation", value)}
-            options={countryOptions}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Operating Countries <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            value={formData.operatingCountries.join(", ")}
-            onChange={(e) =>
-              updateField(
-                "operatingCountries",
-                e.target.value.split(",").map((s) => s.trim()),
-              )
-            }
-            className={inputClass(has("operatingCountries"))}
-            placeholder="Nigeria, Ghana, Kenya"
-          />
-          <FieldError
-            show={has("operatingCountries")}
-            message="At least one operating country is required"
-          />
-          {!has("operatingCountries") && (
-            <p className="text-xs text-gray-500 mt-1">
-              Separate multiple countries with commas
+          <select
+            value={formData.investorType}
+            onChange={(e) => updateField("investorType", e.target.value)}
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none ${has("investorType") ? "border-red-400 ring-2 ring-red-200" : "border-gray-300"}`}
+          >
+            {investorTypeOptions.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+          {has("investorType") && (
+            <p className="text-xs text-red-500 mt-1">
+              Please select your investor type
             </p>
           )}
         </div>
-        <div className="md:col-span-2">
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Company Address <span className="text-red-500">*</span>
-          </label>
-          <textarea
-            value={formData.companyAddress}
-            onChange={(e) => updateField("companyAddress", e.target.value)}
-            rows={3}
-            className={inputClass(has("companyAddress"))}
-            placeholder="Full registered address"
-          />
-          <FieldError
-            show={has("companyAddress")}
-            message="Company address is required"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Website
-          </label>
-          <input
-            type="url"
-            value={formData.website}
-            onChange={(e) => updateField("website", e.target.value)}
-            className={inputClass(false)}
-            placeholder="https://yourcompany.com"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Official Email Domain <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            value={formData.officialEmailDomain}
-            onChange={(e) => updateField("officialEmailDomain", e.target.value)}
-            className={inputClass(has("officialEmailDomain"))}
-            placeholder="company.com"
-          />
-          <FieldError
-            show={has("officialEmailDomain")}
-            message="Email domain is required"
-          />
-        </div>
-        <div className="md:col-span-2">
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Regulatory Licenses (if applicable)
-          </label>
-          <textarea
-            value={formData.regulatoryLicenses}
-            onChange={(e) => updateField("regulatoryLicenses", e.target.value)}
-            rows={2}
-            className={inputClass(false)}
-            placeholder="e.g., CBN banking license, FCCPC approval, etc."
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
-// ============================================================================
-// STEP 2: TEAM & OVERVIEW
-// ============================================================================
-function Step2Team({ formData, updateField, errors }: StepProps) {
-  const has = (f: string) => errors.includes(f);
-  const descLen = formData.detailedDescription.length;
-  const descTooShort = descLen > 0 && descLen < 50;
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-primary-950 mb-2">
-          Team & Overview
-        </h2>
-        <p className="text-gray-600">Tell us about your team and what you do</p>
-      </div>
-      <div className="grid md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Team Size <span className="text-red-500">*</span>
-          </label>
-          <div
-            className={has("teamSize") ? "ring-2 ring-red-400 rounded-lg" : ""}
-          >
-            <CustomSelect
-              value={formData.teamSize}
-              onChange={(value) => updateField("teamSize", value)}
-              options={teamSizeOptions}
+        {needsFirm && (
+          <div>
+            <label className="block text-sm font-semibold text-gray-900 mb-2">
+              Firm / Organization Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={formData.firmName}
+              onChange={(e) => updateField("firmName", e.target.value)}
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none ${has("firmName") ? "border-red-400 ring-2 ring-red-200" : "border-gray-300"}`}
+              placeholder="Your firm or organization name"
             />
-          </div>
-          <FieldError show={has("teamSize")} message="Team size is required" />
-        </div>
-        <div>
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Stage <span className="text-red-500">*</span>
-          </label>
-          <div className={has("stage") ? "ring-2 ring-red-400 rounded-lg" : ""}>
-            <CustomSelect
-              value={formData.stage}
-              onChange={(value) => updateField("stage", value)}
-              options={stageOptions}
-            />
-          </div>
-          <FieldError show={has("stage")} message="Stage is required" />
-        </div>
-        <div className="md:col-span-2">
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
-            One-Line Description <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            maxLength={200}
-            value={formData.oneLineDescription}
-            onChange={(e) => updateField("oneLineDescription", e.target.value)}
-            className={inputClass(has("oneLineDescription"))}
-            placeholder="Describe your company in one sentence (max 200 characters)"
-          />
-          <div className="flex justify-between mt-1">
-            <FieldError
-              show={has("oneLineDescription")}
-              message="At least 10 characters required"
-            />
-            <p className="text-xs text-gray-500">
-              {formData.oneLineDescription.length}/200 characters
-            </p>
-          </div>
-        </div>
-        <div className="md:col-span-2">
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Detailed Description <span className="text-red-500">*</span>
-          </label>
-          <textarea
-            maxLength={1000}
-            value={formData.detailedDescription}
-            onChange={(e) => updateField("detailedDescription", e.target.value)}
-            rows={4}
-            className={inputClass(has("detailedDescription"))}
-            placeholder="What does your company do? What problem do you solve? (max 1000 characters)"
-          />
-          <div className="flex justify-between mt-1">
-            {has("detailedDescription") ? (
-              <p className="text-xs text-red-600">
-                Minimum 50 characters required
-              </p>
-            ) : descTooShort ? (
-              <p className="text-xs text-amber-600">
-                Minimum 50 characters required ({50 - descLen} more needed)
-              </p>
-            ) : descLen >= 50 ? (
-              <p className="text-xs text-green-600">✓ Minimum met</p>
-            ) : (
-              <p className="text-xs text-gray-500">Minimum 50 characters</p>
+            {has("firmName") && (
+              <p className="text-xs text-red-500 mt-1">Firm name is required</p>
             )}
-            <p className="text-xs text-gray-500">{descLen}/1000 characters</p>
           </div>
-        </div>
+        )}
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Sector <span className="text-red-500">*</span>
+            Assets Under Management (AUM)
           </label>
-          <div
-            className={has("sector") ? "ring-2 ring-red-400 rounded-lg" : ""}
+          <select
+            value={formData.aum}
+            onChange={(e) => updateField("aum", e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
           >
-            <CustomSelect
-              value={formData.sector}
-              onChange={(value) => updateField("sector", value)}
-              options={sectorOptions}
-            />
-          </div>
-          <FieldError show={has("sector")} message="Sector is required" />
+            {aumOptions.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-gray-500 mt-1">
+            This helps us suggest appropriate deal sizes
+          </p>
         </div>
-        <div>
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Business Model <span className="text-red-500">*</span>
-          </label>
-          <div
-            className={
-              has("businessModel") ? "ring-2 ring-red-400 rounded-lg" : ""
-            }
-          >
-            <CustomSelect
-              value={formData.businessModel}
-              onChange={(value) => updateField("businessModel", value)}
-              options={businessModelOptions}
-            />
-          </div>
-          <FieldError
-            show={has("businessModel")}
-            message="Business model is required"
-          />
-        </div>
-        <div className="md:col-span-2">
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Founder LinkedIn
-          </label>
-          <input
-            type="url"
-            value={formData.founderLinkedIn}
-            onChange={(e) => updateField("founderLinkedIn", e.target.value)}
-            className={inputClass(false)}
-            placeholder="https://linkedin.com/in/yourprofile"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Years of Relevant Experience
-          </label>
-          <input
-            type="number"
-            min="0"
-            value={formData.yearsExperience}
-            onChange={(e) => updateField("yearsExperience", e.target.value)}
-            className={inputClass(false)}
-            placeholder="Years in this industry"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Key Executive Roles (if any)
-          </label>
-          <input
-            type="text"
-            value={formData.keyExecutives}
-            onChange={(e) => updateField("keyExecutives", e.target.value)}
-            className={inputClass(false)}
-            placeholder="e.g., CTO from Google, CFO from Stripe"
-          />
+        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-sm text-blue-900">
+            <strong>Why we ask:</strong> Capvista is a private placement
+            platform. We tailor deal flow and access based on your investor
+            profile for regulatory compliance.
+          </p>
         </div>
       </div>
     </div>
@@ -1159,878 +808,783 @@ function Step2Team({ formData, updateField, errors }: StepProps) {
 }
 
 // ============================================================================
-// STEP 3: FOUNDER VERIFICATION
+// STEP 2: INVESTMENT PREFERENCES
 // ============================================================================
-function Step3FounderVerification({
+function Step2Preferences({
   formData,
   updateField,
-  errors,
-}: StepProps) {
-  const has = (f: string) => errors.includes(f);
+  toggleArrayField,
+  has,
+}: {
+  formData: FormData;
+  updateField: (f: keyof FormData, v: any) => void;
+  toggleArrayField: (
+    f: "investmentFocus" | "preferredLanes" | "sourceOfFunds",
+    v: string,
+  ) => void;
+  has: (f: string) => boolean;
+}) {
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-primary-950 mb-2">
-          Founder Verification
+          Investment Preferences
         </h2>
         <p className="text-gray-600">
-          For compliance and verification purposes, we need the primary
-          founder's details
+          Select the sectors and deal types that interest you
         </p>
       </div>
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="md:col-span-2">
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Full Name <span className="text-red-500">*</span>
+      <div className="space-y-6">
+        <div>
+          <label className="block text-sm font-semibold text-gray-900 mb-3">
+            Sectors of Interest <span className="text-red-500">*</span>
           </label>
-          <input
-            type="text"
-            value={formData.founderFullName}
-            onChange={(e) => updateField("founderFullName", e.target.value)}
-            className={inputClass(has("founderFullName"))}
-            placeholder="As it appears on government ID"
-          />
-          <FieldError
-            show={has("founderFullName")}
-            message="Full name is required"
-          />
+          {has("investmentFocus") && (
+            <p className="text-xs text-red-500 mb-2">
+              Select at least one sector
+            </p>
+          )}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {sectorOptions.map((s) => (
+              <button
+                key={s.value}
+                type="button"
+                onClick={() => toggleArrayField("investmentFocus", s.value)}
+                className={`px-4 py-3 rounded-lg border-2 text-sm font-medium text-left transition-all ${formData.investmentFocus.includes(s.value) ? "border-primary-950 bg-primary-950 text-white" : has("investmentFocus") ? "border-red-300 bg-red-50 text-gray-700" : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"}`}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-gray-500 mt-2">Select all that apply</p>
+        </div>
+        <div>
+          <label className="block text-sm font-semibold text-gray-900 mb-3">
+            Preferred Investment Lanes <span className="text-red-500">*</span>
+          </label>
+          {has("preferredLanes") && (
+            <p className="text-xs text-red-500 mb-2">
+              Select at least one lane
+            </p>
+          )}
+          <div className="space-y-3">
+            {laneOptions.map((l) => (
+              <button
+                key={l.value}
+                type="button"
+                onClick={() => toggleArrayField("preferredLanes", l.value)}
+                className={`w-full px-5 py-4 rounded-lg border-2 text-left transition-all ${formData.preferredLanes.includes(l.value) ? "border-primary-950 bg-primary-950/5" : has("preferredLanes") ? "border-red-300 bg-red-50" : "border-gray-200 bg-white hover:border-gray-400"}`}
+              >
+                <p
+                  className={`font-semibold text-sm ${formData.preferredLanes.includes(l.value) ? "text-primary-950" : "text-gray-900"}`}
+                >
+                  {l.value === "YIELD" ? "Yield Lane" : "Ventures Lane"}
+                </p>
+                <p className="text-xs text-gray-600 mt-1">{l.label}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="grid md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-semibold text-gray-900 mb-2">
+              Minimum Check Size
+            </label>
+            <select
+              value={formData.minimumCheckSize}
+              onChange={(e) => updateField("minimumCheckSize", e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+            >
+              {checkSizeOptions.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-900 mb-2">
+              Maximum Check Size
+            </label>
+            <select
+              value={formData.maximumCheckSize}
+              onChange={(e) => updateField("maximumCheckSize", e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+            >
+              {checkSizeOptions.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// STEP 3: SUITABILITY & EXPERIENCE
+// ============================================================================
+function Step3Suitability({
+  formData,
+  updateField,
+  toggleArrayField,
+  has,
+}: {
+  formData: FormData;
+  updateField: (f: keyof FormData, v: any) => void;
+  toggleArrayField: (
+    f: "investmentFocus" | "preferredLanes" | "sourceOfFunds",
+    v: string,
+  ) => void;
+  has: (f: string) => boolean;
+}) {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold text-primary-950 mb-2">
+          Suitability & Experience
+        </h2>
+        <p className="text-gray-600">
+          Help us understand your investment experience and risk profile
+        </p>
+      </div>
+
+      {/* Suitability */}
+      <div className="space-y-5 p-6 bg-gray-50 rounded-lg">
+        <p className="font-semibold text-gray-900">Suitability</p>
+        <div>
+          <label className="block text-sm font-semibold text-gray-900 mb-2">
+            Risk Tolerance <span className="text-red-500">*</span>
+          </label>
+          <select
+            value={formData.riskTolerance}
+            onChange={(e) => updateField("riskTolerance", e.target.value)}
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none ${has("riskTolerance") ? "border-red-400 ring-2 ring-red-200" : "border-gray-300"}`}
+          >
+            {riskToleranceOptions.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+          {has("riskTolerance") && (
+            <p className="text-xs text-red-500 mt-1">Required</p>
+          )}
         </div>
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Email Address <span className="text-red-500">*</span>
+            Liquidity Needs
+          </label>
+          <select
+            value={formData.liquidityNeeds}
+            onChange={(e) => updateField("liquidityNeeds", e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+          >
+            {liquidityOptions.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-semibold text-gray-900 mb-2">
+            Investment Horizon
+          </label>
+          <select
+            value={formData.investmentHorizon}
+            onChange={(e) => updateField("investmentHorizon", e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+          >
+            {horizonOptions.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-semibold text-gray-900 mb-2">
+            General Investment Experience{" "}
+            <span className="text-red-500">*</span>
+          </label>
+          <select
+            value={formData.generalExperience}
+            onChange={(e) => updateField("generalExperience", e.target.value)}
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none ${has("generalExperience") ? "border-red-400 ring-2 ring-red-200" : "border-gray-300"}`}
+          >
+            {experienceOptions.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+          {has("generalExperience") && (
+            <p className="text-xs text-red-500 mt-1">Required</p>
+          )}
+        </div>
+        <div>
+          <label className="block text-sm font-semibold text-gray-900 mb-2">
+            Private Company Investments (LP, VC, angel)
+          </label>
+          <select
+            value={formData.privateMarketExperience}
+            onChange={(e) =>
+              updateField("privateMarketExperience", e.target.value)
+            }
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+          >
+            {privateExperienceOptions.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Accreditation & Source of Funds */}
+      <div className="space-y-5 p-6 bg-gray-50 rounded-lg">
+        <p className="font-semibold text-gray-900">Accreditation</p>
+        <div>
+          <label className="block text-sm font-semibold text-gray-900 mb-2">
+            Accreditation Basis
+          </label>
+          <select
+            value={formData.accreditationBasis}
+            onChange={(e) => updateField("accreditationBasis", e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+          >
+            {accreditationOptions.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-semibold text-gray-900 mb-3">
+            Source of Funds <span className="text-red-500">*</span>
+          </label>
+          {has("sourceOfFunds") && (
+            <p className="text-xs text-red-500 mb-2">
+              Select at least one source
+            </p>
+          )}
+          <div className="grid grid-cols-2 gap-2">
+            {sourceOfFundsOptions.map((s) => (
+              <button
+                key={s.value}
+                type="button"
+                onClick={() => toggleArrayField("sourceOfFunds", s.value)}
+                className={`px-3 py-2.5 rounded-lg border text-xs font-medium text-left transition-all ${formData.sourceOfFunds.includes(s.value) ? "border-primary-950 bg-primary-950 text-white" : has("sourceOfFunds") ? "border-red-300 bg-red-50 text-gray-700" : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"}`}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Affiliations */}
+      <div className="space-y-5 p-6 bg-gray-50 rounded-lg">
+        <p className="font-semibold text-gray-900">Affiliations</p>
+        <div>
+          <label className="flex items-start gap-3">
+            <input
+              type="checkbox"
+              checked={formData.brokerAffiliated}
+              onChange={(e) =>
+                updateField("brokerAffiliated", e.target.checked)
+              }
+              className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-2 focus:ring-primary-600 mt-0.5"
+            />
+            <div>
+              <span className="text-sm font-semibold text-gray-900 block">
+                Broker-dealer affiliation
+              </span>
+              <span className="text-xs text-gray-600">
+                Are you or any immediate family member affiliated with a
+                broker-dealer, stock exchange, or financial regulatory
+                authority?
+              </span>
+            </div>
+          </label>
+          {formData.brokerAffiliated && (
+            <input
+              type="text"
+              value={formData.brokerDetails}
+              onChange={(e) => updateField("brokerDetails", e.target.value)}
+              className="w-full mt-2 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+              placeholder="Broker-dealer name and your relationship"
+            />
+          )}
+        </div>
+        <div>
+          <label className="flex items-start gap-3">
+            <input
+              type="checkbox"
+              checked={formData.seniorOfficer}
+              onChange={(e) => updateField("seniorOfficer", e.target.checked)}
+              className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-2 focus:ring-primary-600 mt-0.5"
+            />
+            <div>
+              <span className="text-sm font-semibold text-gray-900 block">
+                Senior officer / director / 10%+ shareholder
+              </span>
+              <span className="text-xs text-gray-600">
+                Are you a senior officer, director, or 10%+ shareholder of any
+                private or public company?
+              </span>
+            </div>
+          </label>
+          {formData.seniorOfficer && (
+            <input
+              type="text"
+              value={formData.seniorOfficerCompany}
+              onChange={(e) =>
+                updateField("seniorOfficerCompany", e.target.value)
+              }
+              className="w-full mt-2 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+              placeholder="Company name"
+            />
+          )}
+        </div>
+      </div>
+
+      {/* Trusted Contact */}
+      <div className="space-y-4 p-6 bg-gray-50 rounded-lg">
+        <div>
+          <p className="font-semibold text-gray-900">Trusted Contact</p>
+          <p className="text-xs text-gray-600 mt-1">
+            A person we may contact in limited circumstances, such as concerns
+            about your account activity. This person will not have authority
+            over your account.
+          </p>
+        </div>
+        <div className="grid md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs text-gray-600 mb-1">Name</label>
+            <input
+              type="text"
+              value={formData.trustedContactName}
+              onChange={(e) =>
+                updateField("trustedContactName", e.target.value)
+              }
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+              placeholder="Full name"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-600 mb-1">Email</label>
+            <input
+              type="email"
+              value={formData.trustedContactEmail}
+              onChange={(e) =>
+                updateField("trustedContactEmail", e.target.value)
+              }
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+              placeholder="email@example.com"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-600 mb-1">Phone</label>
+            <input
+              type="tel"
+              value={formData.trustedContactPhone}
+              onChange={(e) =>
+                updateField("trustedContactPhone", e.target.value)
+              }
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+              placeholder="+234 xxx xxx xxxx"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-600 mb-1">
+              Relationship
+            </label>
+            <input
+              type="text"
+              value={formData.trustedContactRelationship}
+              onChange={(e) =>
+                updateField("trustedContactRelationship", e.target.value)
+              }
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+              placeholder="e.g. Spouse, Parent, Sibling"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// STEP 4: IDENTITY VERIFICATION (Country-Aware)
+// ============================================================================
+function Step4Identity({
+  formData,
+  updateField,
+  has,
+}: {
+  formData: FormData;
+  updateField: (f: keyof FormData, v: any) => void;
+  has: (f: string) => boolean;
+}) {
+  const region = getRegion(formData.countryOfResidence);
+  const idTypes = idTypesByRegion[region];
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold text-primary-950 mb-2">
+          Identity Verification
+        </h2>
+        <p className="text-gray-600">
+          Required for KYC compliance — fields adapt based on your country of
+          residence
+        </p>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-6">
+        {/* Country selector — drives the rest */}
+        <div className="md:col-span-2">
+          <label className="block text-sm font-semibold text-gray-900 mb-2">
+            Country of Residence <span className="text-red-500">*</span>
+          </label>
+          <select
+            value={formData.countryOfResidence}
+            onChange={(e) => {
+              updateField("countryOfResidence", e.target.value);
+              updateField("idType", "");
+            }}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+          >
+            {countryOptions.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Personal Info */}
+        <div className="md:col-span-2">
+          <label className="block text-sm font-semibold text-gray-900 mb-2">
+            Full Legal Name <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            value={formData.fullName}
+            onChange={(e) => updateField("fullName", e.target.value)}
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none ${has("fullName") ? "border-red-400 ring-2 ring-red-200" : "border-gray-300"}`}
+            placeholder="As it appears on your government ID"
+          />
+          {has("fullName") && (
+            <p className="text-xs text-red-500 mt-1">Required</p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-900 mb-2">
+            Date of Birth <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="date"
+            value={formData.dateOfBirth}
+            onChange={(e) => updateField("dateOfBirth", e.target.value)}
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none ${has("dateOfBirth") ? "border-red-400 ring-2 ring-red-200" : "border-gray-300"}`}
+          />
+          {has("dateOfBirth") && (
+            <p className="text-xs text-red-500 mt-1">Required</p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-900 mb-2">
+            Citizenship
+          </label>
+          <select
+            value={formData.citizenship}
+            onChange={(e) => updateField("citizenship", e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+          >
+            <option value="">Select citizenship</option>
+            {countryOptions.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-900 mb-2">
+            Email
           </label>
           <input
             type="email"
-            value={formData.founderEmail}
-            onChange={(e) => updateField("founderEmail", e.target.value)}
-            className={inputClass(has("founderEmail"))}
-            placeholder="founder@company.com"
+            value={formData.email}
+            disabled
+            className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-500 outline-none"
           />
-          <FieldError show={has("founderEmail")} message="Email is required" />
         </div>
+
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Phone Number <span className="text-red-500">*</span>
           </label>
           <input
             type="tel"
-            value={formData.founderPhone}
-            onChange={(e) => updateField("founderPhone", e.target.value)}
-            className={inputClass(has("founderPhone"))}
-            placeholder="+234 xxx xxx xxxx"
-          />
-          <FieldError
-            show={has("founderPhone")}
-            message="Phone number is required"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
-            National Identity Number (NIN){" "}
-            <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            value={formData.founderNIN}
-            onChange={(e) => updateField("founderNIN", e.target.value)}
-            className={inputClass(has("founderNIN"))}
-            placeholder="11-digit NIN"
-            maxLength={11}
-          />
-          <FieldError show={has("founderNIN")} message="NIN is required" />
-        </div>
-        <div>
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Bank Verification Number (BVN){" "}
-            <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            value={formData.founderBVN}
-            onChange={(e) => updateField("founderBVN", e.target.value)}
-            className={inputClass(has("founderBVN"))}
-            placeholder="11-digit BVN"
-            maxLength={11}
-          />
-          <FieldError show={has("founderBVN")} message="BVN is required" />
-        </div>
-        <div>
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
-            ID Type <span className="text-red-500">*</span>
-          </label>
-          <div
-            className={
-              has("founderIDType") ? "ring-2 ring-red-400 rounded-lg" : ""
+            value={formData.phone}
+            onChange={(e) => updateField("phone", e.target.value)}
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none ${has("phone") ? "border-red-400 ring-2 ring-red-200" : "border-gray-300"}`}
+            placeholder={
+              region === "us"
+                ? "(xxx) xxx-xxxx"
+                : region === "uk"
+                  ? "+44 xxx xxxx xxxx"
+                  : "+234 xxx xxx xxxx"
             }
-          >
-            <CustomSelect
-              value={formData.founderIDType}
-              onChange={(value) => updateField("founderIDType", value)}
-              options={idTypeOptions}
-            />
-          </div>
-          <FieldError
-            show={has("founderIDType")}
-            message="ID type is required"
           />
+          {has("phone") && (
+            <p className="text-xs text-red-500 mt-1">Required</p>
+          )}
         </div>
-        <div>
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
-            ID Number <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            value={formData.founderIDNumber}
-            onChange={(e) => updateField("founderIDNumber", e.target.value)}
-            className={inputClass(has("founderIDNumber"))}
-            placeholder="ID number"
-          />
-          <FieldError
-            show={has("founderIDNumber")}
-            message="ID number is required"
-          />
-        </div>
-        <div className="md:col-span-2 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-sm text-blue-900">
-            <strong>Privacy Note:</strong> Your personal information is
-            encrypted and stored securely. We use this information solely for
-            identity verification and compliance purposes.
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
 
-// ============================================================================
-// STEP 4: TRACTION
-// ============================================================================
-function Step4Traction({ formData, updateField, errors }: StepProps) {
-  const has = (f: string) => errors.includes(f);
-  return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-primary-950 mb-2">Traction</h2>
-        <p className="text-gray-600">Show us your business performance</p>
-      </div>
-      <div className="grid md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Revenue Status <span className="text-red-500">*</span>
-          </label>
-          <div
-            className={
-              has("revenueStatus") ? "ring-2 ring-red-400 rounded-lg" : ""
-            }
-          >
-            <CustomSelect
-              value={formData.revenueStatus}
-              onChange={(value) => updateField("revenueStatus", value)}
-              options={revenueStatusOptions}
-            />
-          </div>
-          <FieldError
-            show={has("revenueStatus")}
-            message="Revenue status is required"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Revenue Range (if applicable)
-          </label>
-          <CustomSelect
-            value={formData.revenueRange}
-            onChange={(value) => updateField("revenueRange", value)}
-            options={revenueRangeOptions}
-            className={
-              formData.revenueStatus === "no_revenue"
-                ? "opacity-50 pointer-events-none"
-                : ""
-            }
-          />
-        </div>
+        {/* Address */}
         <div className="md:col-span-2">
           <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Revenue Type
-          </label>
-          <CustomSelect
-            value={formData.revenueType}
-            onChange={(value) => updateField("revenueType", value)}
-            options={revenueTypeOptions}
-          />
-        </div>
-        <div className="md:col-span-2">
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Top 3 Metrics <span className="text-red-500">*</span>
-          </label>
-          <p className="text-sm text-gray-600 mb-3">
-            What are your key performance indicators?
-          </p>
-          <div className="space-y-3">
-            <div>
-              <input
-                type="text"
-                value={formData.topMetric1}
-                onChange={(e) => updateField("topMetric1", e.target.value)}
-                className={inputClass(has("topMetric1"))}
-                placeholder="Metric 1: e.g., 10,000 active users"
-              />
-              <FieldError
-                show={has("topMetric1")}
-                message="Metric 1 is required"
-              />
-            </div>
-            <div>
-              <input
-                type="text"
-                value={formData.topMetric2}
-                onChange={(e) => updateField("topMetric2", e.target.value)}
-                className={inputClass(has("topMetric2"))}
-                placeholder="Metric 2: e.g., 25% MoM growth"
-              />
-              <FieldError
-                show={has("topMetric2")}
-                message="Metric 2 is required"
-              />
-            </div>
-            <div>
-              <input
-                type="text"
-                value={formData.topMetric3}
-                onChange={(e) => updateField("topMetric3", e.target.value)}
-                className={inputClass(has("topMetric3"))}
-                placeholder="Metric 3: e.g., $500k ARR"
-              />
-              <FieldError
-                show={has("topMetric3")}
-                message="Metric 3 is required"
-              />
-            </div>
-          </div>
-        </div>
-        <div className="md:col-span-2">
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Major Customers
-          </label>
-          <textarea
-            value={formData.majorCustomers}
-            onChange={(e) => updateField("majorCustomers", e.target.value)}
-            rows={2}
-            className={inputClass(false)}
-            placeholder="List key customers or customer types (comma-separated)"
-          />
-        </div>
-        <div className="md:col-span-2">
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Geographic Footprint
+            Residential Address <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
-            value={formData.geographicFootprint}
-            onChange={(e) => updateField("geographicFootprint", e.target.value)}
-            className={inputClass(false)}
-            placeholder="e.g., Lagos, Abuja, Accra"
+            value={formData.residentialAddress}
+            onChange={(e) => updateField("residentialAddress", e.target.value)}
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none ${has("residentialAddress") ? "border-red-400 ring-2 ring-red-200" : "border-gray-300"}`}
+            placeholder="Street address"
+          />
+          {has("residentialAddress") && (
+            <p className="text-xs text-red-500 mt-1">Required</p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-900 mb-2">
+            City <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            value={formData.city}
+            onChange={(e) => updateField("city", e.target.value)}
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none ${has("city") ? "border-red-400 ring-2 ring-red-200" : "border-gray-300"}`}
+            placeholder="City"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-900 mb-2">
+            {region === "us"
+              ? "State"
+              : region === "uk"
+                ? "County"
+                : "State / Province"}
+          </label>
+          <input
+            type="text"
+            value={formData.stateProvince}
+            onChange={(e) => updateField("stateProvince", e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+            placeholder={
+              region === "us"
+                ? "e.g. California"
+                : region === "uk"
+                  ? "e.g. Greater London"
+                  : region === "nigeria"
+                    ? "e.g. Lagos"
+                    : "State / Province"
+            }
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-900 mb-2">
+            {region === "us" ? "ZIP Code" : "Postal Code"}
+          </label>
+          <input
+            type="text"
+            value={formData.postalCode}
+            onChange={(e) => updateField("postalCode", e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+            placeholder={
+              region === "us"
+                ? "e.g. 90210"
+                : region === "uk"
+                  ? "e.g. SW1A 1AA"
+                  : "Postal code"
+            }
           />
         </div>
       </div>
-    </div>
-  );
-}
 
-// ============================================================================
-// STEP 5: CAPITAL & HISTORY
-// ============================================================================
-function Step5Capital({ formData, updateField, errors }: StepProps) {
-  const has = (f: string) => errors.includes(f);
-  return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-primary-950 mb-2">
-          Capital & History
-        </h2>
-        <p className="text-gray-600">
-          Tell us about your funding history and cap table
+      {/* Country-Specific IDs */}
+      <div className="space-y-4 p-6 bg-gray-50 rounded-lg">
+        <p className="font-semibold text-gray-900">
+          {region === "nigeria"
+            ? "Nigerian Identity Documents"
+            : region === "us"
+              ? "US Identity Documents"
+              : region === "uk"
+                ? "UK Identity Documents"
+                : "Identity Documents"}
         </p>
-      </div>
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="md:col-span-2">
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={formData.hasRaisedBefore}
-              onChange={(e) => updateField("hasRaisedBefore", e.target.checked)}
-              className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-2 focus:ring-primary-600"
-            />
-            <span className="text-sm font-semibold text-gray-900">
-              We have raised capital before
-            </span>
-          </label>
-        </div>
-        {formData.hasRaisedBefore && (
-          <div className="md:col-span-2">
+
+        {/* Nigeria: NIN + BVN */}
+        {region === "nigeria" && (
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-2">
+                National Identity Number (NIN){" "}
+                <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={formData.nin}
+                onChange={(e) => updateField("nin", e.target.value)}
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none ${has("nin") ? "border-red-400 ring-2 ring-red-200" : "border-gray-300"}`}
+                placeholder="11-digit NIN"
+                maxLength={11}
+              />
+              {has("nin") && (
+                <p className="text-xs text-red-500 mt-1">
+                  NIN is required for Nigerian residents
+                </p>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-2">
+                Bank Verification Number (BVN)
+              </label>
+              <input
+                type="text"
+                value={formData.bvn}
+                onChange={(e) => updateField("bvn", e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+                placeholder="11-digit BVN"
+                maxLength={11}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* USA: SSN */}
+        {region === "us" && (
+          <div>
             <label className="block text-sm font-semibold text-gray-900 mb-2">
-              Previous Raises
+              Social Security Number (SSN){" "}
+              <span className="text-red-500">*</span>
             </label>
-            <textarea
-              value={formData.previousRaises}
-              onChange={(e) => updateField("previousRaises", e.target.value)}
-              rows={3}
-              className={inputClass(false)}
-              placeholder="e.g., $500k seed in 2022 via SAFE, $1M Series A in 2023"
+            <input
+              type="text"
+              value={formData.ssn}
+              onChange={(e) => updateField("ssn", e.target.value)}
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none ${has("ssn") ? "border-red-400 ring-2 ring-red-200" : "border-gray-300"}`}
+              placeholder="XXX-XX-XXXX"
+              maxLength={11}
+            />
+            {has("ssn") && (
+              <p className="text-xs text-red-500 mt-1">
+                SSN is required for US residents
+              </p>
+            )}
+            <p className="text-xs text-gray-500 mt-1">
+              Your SSN is encrypted and stored securely for tax reporting (IRS
+              W-9)
+            </p>
+          </div>
+        )}
+
+        {/* UK: National Insurance Number */}
+        {region === "uk" && (
+          <div>
+            <label className="block text-sm font-semibold text-gray-900 mb-2">
+              National Insurance Number
+            </label>
+            <input
+              type="text"
+              value={formData.niNumber}
+              onChange={(e) => updateField("niNumber", e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+              placeholder="e.g. QQ 12 34 56 C"
             />
           </div>
         )}
-        <div className="md:col-span-2">
-          <p className="text-sm font-semibold text-gray-900 mb-3">
-            Cap Table Summary <span className="text-red-500">*</span>
-          </p>
-          <div className="grid md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">
-                Founder Owned %
-              </label>
-              <input
-                type="number"
-                min="0"
-                max="100"
-                step="0.01"
-                value={formData.founderOwnedPercent}
-                onChange={(e) =>
-                  updateField("founderOwnedPercent", e.target.value)
-                }
-                className={inputClass(has("founderOwnedPercent"))}
-                placeholder="75"
-              />
-              <FieldError
-                show={has("founderOwnedPercent")}
-                message="Required"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">
-                External Investors %
-              </label>
-              <input
-                type="number"
-                min="0"
-                max="100"
-                step="0.01"
-                value={formData.externalInvestorsPercent}
-                onChange={(e) =>
-                  updateField("externalInvestorsPercent", e.target.value)
-                }
-                className={inputClass(has("externalInvestorsPercent"))}
-                placeholder="20"
-              />
-              <FieldError
-                show={has("externalInvestorsPercent")}
-                message="Required"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">ESOP %</label>
-              <input
-                type="number"
-                min="0"
-                max="100"
-                step="0.01"
-                value={formData.esopPercent}
-                onChange={(e) => updateField("esopPercent", e.target.value)}
-                className={inputClass(false)}
-                placeholder="5"
-              />
-            </div>
-          </div>
-        </div>
-        <div className="md:col-span-2">
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Existing Debt Obligations
-          </label>
-          <textarea
-            value={formData.existingDebt}
-            onChange={(e) => updateField("existingDebt", e.target.value)}
-            rows={2}
-            className={inputClass(false)}
-            placeholder="Any outstanding loans, credit lines, or debt? Leave blank if none."
-          />
-        </div>
-        <div className="md:col-span-2">
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Convertible Instruments Outstanding
-          </label>
-          <textarea
-            value={formData.convertibleInstruments}
-            onChange={(e) =>
-              updateField("convertibleInstruments", e.target.value)
-            }
-            rows={2}
-            className={inputClass(false)}
-            placeholder="Any SAFEs, convertible notes, or other convertible instruments? Leave blank if none."
-          />
-        </div>
-        <div className="md:col-span-2">
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Investor Side Letters
-          </label>
-          <textarea
-            value={formData.investorSideLetters}
-            onChange={(e) => updateField("investorSideLetters", e.target.value)}
-            rows={2}
-            className={inputClass(false)}
-            placeholder="Any special agreements with existing investors? Leave blank if none."
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
 
-// ============================================================================
-// STEP 6: RISKS
-// ============================================================================
-function Step6Risks({ formData, updateField, errors }: StepProps) {
-  const has = (f: string) => errors.includes(f);
-  return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-primary-950 mb-2">Risks</h2>
-        <p className="text-gray-600">
-          Be honest about the challenges and risks
-        </p>
-      </div>
-      <div className="space-y-6">
-        <div>
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Top 3 Risks <span className="text-red-500">*</span>
-          </label>
-          <p className="text-sm text-gray-600 mb-3">
-            What are the biggest risks to your business?
-          </p>
-          <div className="space-y-3">
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">Risk 1</label>
-              <textarea
-                value={formData.topRisk1}
-                onChange={(e) => updateField("topRisk1", e.target.value)}
-                rows={2}
-                className={inputClass(has("topRisk1"))}
-                placeholder="Describe your biggest risk"
-              />
-              <FieldError show={has("topRisk1")} message="Risk 1 is required" />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">Risk 2</label>
-              <textarea
-                value={formData.topRisk2}
-                onChange={(e) => updateField("topRisk2", e.target.value)}
-                rows={2}
-                className={inputClass(has("topRisk2"))}
-                placeholder="Describe your second biggest risk"
-              />
-              <FieldError show={has("topRisk2")} message="Risk 2 is required" />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">Risk 3</label>
-              <textarea
-                value={formData.topRisk3}
-                onChange={(e) => updateField("topRisk3", e.target.value)}
-                rows={2}
-                className={inputClass(has("topRisk3"))}
-                placeholder="Describe your third biggest risk"
-              />
-              <FieldError show={has("topRisk3")} message="Risk 3 is required" />
-            </div>
-          </div>
-        </div>
-        <div className="space-y-4 p-6 bg-gray-50 rounded-lg">
-          <p className="font-semibold text-gray-900">Key Risk Factors</p>
+        {/* Passport (shown for non-Nigeria/non-US as optional) */}
+        {!["nigeria", "us"].includes(region) && (
           <div>
-            <label className="flex items-start gap-3">
-              <input
-                type="checkbox"
-                checked={formData.regulationDependent}
-                onChange={(e) =>
-                  updateField("regulationDependent", e.target.checked)
-                }
-                className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-2 focus:ring-primary-600 mt-0.5"
-              />
-              <div className="flex-1">
-                <span className="text-sm font-semibold text-gray-900 block">
-                  Regulatory Dependencies
-                </span>
-                <span className="text-xs text-gray-600">
-                  Does your business depend on regulatory approval or licenses?
-                </span>
-              </div>
+            <label className="block text-sm font-semibold text-gray-900 mb-2">
+              Passport Number
             </label>
-            {formData.regulationDependent && (
-              <textarea
-                value={formData.regulatoryDependencies}
-                onChange={(e) =>
-                  updateField("regulatoryDependencies", e.target.value)
-                }
-                rows={2}
-                className="w-full mt-2 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
-                placeholder="Explain your regulatory dependencies"
-              />
+            <input
+              type="text"
+              value={formData.passportNumber}
+              onChange={(e) => updateField("passportNumber", e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+              placeholder="Passport number"
+            />
+          </div>
+        )}
+
+        {/* Government ID (universal) */}
+        <div className="grid md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-semibold text-gray-900 mb-2">
+              Government ID Type <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={formData.idType}
+              onChange={(e) => updateField("idType", e.target.value)}
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none ${has("idType") ? "border-red-400 ring-2 ring-red-200" : "border-gray-300"}`}
+            >
+              <option value="">Select ID type</option>
+              {idTypes.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+            {has("idType") && (
+              <p className="text-xs text-red-500 mt-1">Required</p>
             )}
           </div>
           <div>
-            <label className="flex items-start gap-3">
-              <input
-                type="checkbox"
-                checked={formData.fxExposure}
-                onChange={(e) => updateField("fxExposure", e.target.checked)}
-                className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-2 focus:ring-primary-600 mt-0.5"
-              />
-              <div className="flex-1">
-                <span className="text-sm font-semibold text-gray-900 block">
-                  FX Exposure
-                </span>
-                <span className="text-xs text-gray-600">
-                  Do you have significant foreign exchange risk?
-                </span>
-              </div>
-            </label>
-          </div>
-          <div>
-            <label className="flex items-start gap-3">
-              <input
-                type="checkbox"
-                checked={formData.singleSupplier}
-                onChange={(e) =>
-                  updateField("singleSupplier", e.target.checked)
-                }
-                className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-2 focus:ring-primary-600 mt-0.5"
-              />
-              <div className="flex-1">
-                <span className="text-sm font-semibold text-gray-900 block">
-                  Single Supplier Dependency
-                </span>
-                <span className="text-xs text-gray-600">
-                  Do you rely on a single supplier for critical operations?
-                </span>
-              </div>
-            </label>
-          </div>
-        </div>
-        <div>
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Key Concentration Risk
-          </label>
-          <p className="text-sm text-gray-600 mb-2">
-            Does any single client represent more than 30% of revenue?
-          </p>
-          <textarea
-            value={formData.keyConcentrationRisk}
-            onChange={(e) =>
-              updateField("keyConcentrationRisk", e.target.value)
-            }
-            rows={2}
-            className={inputClass(false)}
-            placeholder="If yes, explain. If no, write 'No concentration risk'."
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ============================================================================
-// STEP 7: FUNDRAISING INTENT
-// ============================================================================
-function Step7Fundraising({ formData, updateField, errors }: StepProps) {
-  const has = (f: string) => errors.includes(f);
-  return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-primary-950 mb-2">
-          Fundraising Intent
-        </h2>
-        <p className="text-gray-600">What are you looking to raise?</p>
-      </div>
-      <div className="grid md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Preferred Lane <span className="text-red-500">*</span>
-          </label>
-          <div
-            className={
-              has("preferredLane") ? "ring-2 ring-red-400 rounded-lg" : ""
-            }
-          >
-            <CustomSelect
-              value={formData.preferredLane}
-              onChange={(value) => updateField("preferredLane", value)}
-              options={laneOptions}
-            />
-          </div>
-          <FieldError
-            show={has("preferredLane")}
-            message="Preferred lane is required"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Preferred Instrument <span className="text-red-500">*</span>
-          </label>
-          <div
-            className={
-              has("preferredInstrument") ? "ring-2 ring-red-400 rounded-lg" : ""
-            }
-          >
-            <CustomSelect
-              value={formData.preferredInstrument}
-              onChange={(value) => updateField("preferredInstrument", value)}
-              options={instrumentOptions}
-            />
-          </div>
-          <FieldError
-            show={has("preferredInstrument")}
-            message="Preferred instrument is required"
-          />
-        </div>
-        <div className="md:col-span-2">
-          <p className="text-sm font-semibold text-gray-900 mb-3">
-            Target Raise Range <span className="text-red-500">*</span>
-          </p>
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">
-                Minimum ($)
-              </label>
-              <input
-                type="number"
-                min="0"
-                value={formData.targetRaiseMin}
-                onChange={(e) => updateField("targetRaiseMin", e.target.value)}
-                className={inputClass(has("targetRaiseMin"))}
-                placeholder="100000"
-              />
-              <FieldError
-                show={has("targetRaiseMin")}
-                message="Minimum amount is required"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">
-                Maximum ($)
-              </label>
-              <input
-                type="number"
-                min="0"
-                value={formData.targetRaiseMax}
-                onChange={(e) => updateField("targetRaiseMax", e.target.value)}
-                className={inputClass(has("targetRaiseMax"))}
-                placeholder="500000"
-              />
-              <FieldError
-                show={has("targetRaiseMax")}
-                message="Maximum amount is required"
-              />
-            </div>
-          </div>
-        </div>
-        <div className="md:col-span-2">
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Primary Use of Funds <span className="text-red-500">*</span>
-          </label>
-          <textarea
-            value={formData.primaryUseOfFunds}
-            onChange={(e) => updateField("primaryUseOfFunds", e.target.value)}
-            rows={3}
-            className={inputClass(has("primaryUseOfFunds"))}
-            placeholder="How will you deploy the capital? Be specific."
-          />
-          <FieldError
-            show={has("primaryUseOfFunds")}
-            message="Use of funds is required"
-          />
-        </div>
-        {formData.preferredLane === "VENTURES" && (
-          <div className="md:col-span-2">
             <label className="block text-sm font-semibold text-gray-900 mb-2">
-              Proposed Valuation or Cap
+              ID Number <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
-              value={formData.proposedValuation}
-              onChange={(e) => updateField("proposedValuation", e.target.value)}
-              className={inputClass(false)}
-              placeholder="e.g., $5M post-money or $10M cap"
+              value={formData.idNumber}
+              onChange={(e) => updateField("idNumber", e.target.value)}
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none ${has("idNumber") ? "border-red-400 ring-2 ring-red-200" : "border-gray-300"}`}
+              placeholder="ID document number"
             />
-          </div>
-        )}
-        {formData.preferredLane === "YIELD" && (
-          <div className="md:col-span-2">
-            <label className="block text-sm font-semibold text-gray-900 mb-2">
-              Proposed Revenue Share %
-            </label>
-            <input
-              type="text"
-              value={formData.proposedRevenueShare}
-              onChange={(e) =>
-                updateField("proposedRevenueShare", e.target.value)
-              }
-              className={inputClass(false)}
-              placeholder="e.g., 5% of monthly revenue until 2x return"
-            />
-          </div>
-        )}
-        <div className="md:col-span-2">
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Expected Timeline to Deploy Funds
-          </label>
-          <CustomSelect
-            value={formData.deploymentTimeline}
-            onChange={(value) => updateField("deploymentTimeline", value)}
-            options={deploymentTimelineOptions}
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ============================================================================
-// STEP 8: LEGAL REPRESENTATIONS
-// ============================================================================
-function Step8Legal({ formData, updateField, errors }: StepProps) {
-  const has = (f: string) => errors.includes(f);
-  return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-primary-950 mb-2">
-          Legal Representations
-        </h2>
-        <p className="text-gray-600">
-          Please acknowledge the following before submission
-        </p>
-      </div>
-
-      <div className="space-y-4 p-6 bg-gray-50 rounded-lg">
-        {errors.length > 0 && (
-          <div className="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg text-sm font-medium">
-            ⚠ You must accept all acknowledgements to proceed
-          </div>
-        )}
-
-        <div
-          className={`flex items-start gap-3 p-3 rounded-lg ${has("acknowledgePlacement") ? "bg-red-50 border border-red-300" : ""}`}
-        >
-          <input
-            type="checkbox"
-            checked={formData.acknowledgePlacement}
-            onChange={(e) =>
-              updateField("acknowledgePlacement", e.target.checked)
-            }
-            className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-2 focus:ring-primary-600 mt-1"
-          />
-          <div className="flex-1">
-            <p className="text-sm font-semibold text-gray-900">
-              This is a private placement
-            </p>
-            <p className="text-xs text-gray-600 mt-1">
-              I understand that this is a private placement exempt from general
-              public offering requirements.
-            </p>
-          </div>
-        </div>
-
-        <div
-          className={`flex items-start gap-3 p-3 rounded-lg ${has("acknowledgeNoSolicitation") ? "bg-red-50 border border-red-300" : ""}`}
-        >
-          <input
-            type="checkbox"
-            checked={formData.acknowledgeNoSolicitation}
-            onChange={(e) =>
-              updateField("acknowledgeNoSolicitation", e.target.checked)
-            }
-            className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-2 focus:ring-primary-600 mt-1"
-          />
-          <div className="flex-1">
-            <p className="text-sm font-semibold text-gray-900">
-              No general solicitation
-            </p>
-            <p className="text-xs text-gray-600 mt-1">
-              I will not engage in general solicitation or advertising outside
-              of Capvista's platform.
-            </p>
-          </div>
-        </div>
-
-        <div
-          className={`flex items-start gap-3 p-3 rounded-lg ${has("acknowledgeAccuracy") ? "bg-red-50 border border-red-300" : ""}`}
-        >
-          <input
-            type="checkbox"
-            checked={formData.acknowledgeAccuracy}
-            onChange={(e) =>
-              updateField("acknowledgeAccuracy", e.target.checked)
-            }
-            className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-2 focus:ring-primary-600 mt-1"
-          />
-          <div className="flex-1">
-            <p className="text-sm font-semibold text-gray-900">
-              Information accuracy
-            </p>
-            <p className="text-xs text-gray-600 mt-1">
-              All information provided is accurate, complete, and truthful to
-              the best of my knowledge.
-            </p>
-          </div>
-        </div>
-
-        <div
-          className={`flex items-start gap-3 p-3 rounded-lg ${has("acknowledgeEquity") ? "bg-red-50 border border-red-300" : ""}`}
-        >
-          <input
-            type="checkbox"
-            checked={formData.acknowledgeEquity}
-            onChange={(e) => updateField("acknowledgeEquity", e.target.checked)}
-            className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-2 focus:ring-primary-600 mt-1"
-          />
-          <div className="flex-1">
-            <p className="text-sm font-semibold text-gray-900">
-              1% equity to Capvista Holdings
-            </p>
-            <p className="text-xs text-gray-600 mt-1">
-              I acknowledge that 1% non-preferential equity will be issued to
-              Capvista Holdings as a condition of platform access.
-            </p>
-          </div>
-        </div>
-
-        <div
-          className={`flex items-start gap-3 p-3 rounded-lg ${has("acknowledgeNoGuarantee") ? "bg-red-50 border border-red-300" : ""}`}
-        >
-          <input
-            type="checkbox"
-            checked={formData.acknowledgeNoGuarantee}
-            onChange={(e) =>
-              updateField("acknowledgeNoGuarantee", e.target.checked)
-            }
-            className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-2 focus:ring-primary-600 mt-1"
-          />
-          <div className="flex-1">
-            <p className="text-sm font-semibold text-gray-900">
-              No funding guarantee
-            </p>
-            <p className="text-xs text-gray-600 mt-1">
-              I understand that Capvista does not guarantee funding and that
-              acceptance to the platform does not constitute a commitment to
-              invest.
-            </p>
+            {has("idNumber") && (
+              <p className="text-xs text-red-500 mt-1">Required</p>
+            )}
           </div>
         </div>
       </div>
 
       <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
         <p className="text-sm text-blue-900">
-          <strong>Note:</strong> By submitting this application, you agree to
-          undergo additional verification including director identity
-          verification (NIN) and BVN for signatories as part of our compliance
-          process.
+          <strong>Privacy & Security:</strong> All identity information is
+          encrypted at rest and in transit. We use this data solely for KYC/AML
+          compliance and will never sell or share it with unauthorized third
+          parties.
         </p>
       </div>
     </div>
@@ -2038,9 +1592,126 @@ function Step8Legal({ formData, updateField, errors }: StepProps) {
 }
 
 // ============================================================================
-// STEP 9: REVIEW & SUBMIT
+// STEP 5: RISK ACKNOWLEDGEMENT
 // ============================================================================
-function Step9Review({ formData }: { formData: FormData }) {
+function Step5Risk({
+  formData,
+  updateField,
+  has,
+  validationErrors,
+}: {
+  formData: FormData;
+  updateField: (f: keyof FormData, v: any) => void;
+  has: (f: string) => boolean;
+  validationErrors: string[];
+}) {
+  const items = [
+    {
+      field: "acknowledgePrivatePlacement" as keyof FormData,
+      title: "Private placement investments",
+      desc: "I understand that investments on Capvista are private placements and are not registered with any securities regulatory authority.",
+    },
+    {
+      field: "acknowledgeIlliquidity" as keyof FormData,
+      title: "Illiquidity risk",
+      desc: "I understand that private market investments are illiquid. I may not be able to sell or transfer my investment for an extended period.",
+    },
+    {
+      field: "acknowledgeLossRisk" as keyof FormData,
+      title: "Risk of total loss",
+      desc: "I understand that investing in private companies carries significant risk, including the potential for total loss of invested capital.",
+    },
+    {
+      field: "acknowledgeNoGuarantee" as keyof FormData,
+      title: "No guaranteed returns",
+      desc: "I understand that Capvista does not guarantee any returns. All projected returns are estimates and actual performance may differ materially.",
+    },
+    {
+      field: "acknowledgeAccreditedStatus" as keyof FormData,
+      title: "Investor qualification",
+      desc: "I confirm that I meet the qualifications of a sophisticated/accredited investor as defined by applicable securities regulations in my jurisdiction.",
+    },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold text-primary-950 mb-2">
+          Risk Acknowledgement
+        </h2>
+        <p className="text-gray-600">
+          Please read and acknowledge each statement before proceeding
+        </p>
+      </div>
+      <div className="space-y-4 p-6 bg-gray-50 rounded-lg">
+        {validationErrors.length > 0 && (
+          <div className="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg text-sm font-medium">
+            You must accept all acknowledgements to proceed
+          </div>
+        )}
+        {items.map(({ field, title, desc }) => (
+          <div
+            key={field}
+            className={`flex items-start gap-3 p-4 rounded-lg transition-all ${has(field) ? "bg-red-50 border border-red-300" : formData[field] ? "bg-green-50 border border-green-200" : "bg-white border border-gray-200"}`}
+          >
+            <input
+              type="checkbox"
+              checked={formData[field] as boolean}
+              onChange={(e) => updateField(field, e.target.checked)}
+              className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-2 focus:ring-primary-600 mt-1 shrink-0"
+            />
+            <div>
+              <p className="text-sm font-semibold text-gray-900">{title}</p>
+              <p className="text-xs text-gray-600 mt-1">{desc}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+        <p className="text-sm text-yellow-900">
+          <strong>Important:</strong> Your accreditation status will be reviewed
+          by our compliance team. You can browse companies immediately while
+          review is pending.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// STEP 6: REVIEW & SUBMIT
+// ============================================================================
+function Step6Review({ formData }: { formData: FormData }) {
+  const labels: Record<string, string> = {
+    INDIVIDUAL: "Individual Investor",
+    ANGEL: "Angel Investor",
+    FAMILY_OFFICE: "Family Office",
+    INSTITUTIONAL: "Institutional",
+    FUND: "Fund / VC",
+    FINTECH: "FinTech",
+    LOGISTICS: "Logistics",
+    ENERGY: "Energy",
+    CONSUMER_FMCG: "Consumer/FMCG",
+    HEALTH: "Health",
+    AGRI_FOOD: "Agri/Food",
+    REAL_ESTATE: "Real Estate",
+    INFRASTRUCTURE: "Infrastructure",
+    SAAS_TECH: "SaaS/Tech",
+    TECHNOLOGY: "Technology",
+    MANUFACTURING: "Manufacturing",
+    conservative: "Conservative",
+    moderate: "Moderate",
+    higher: "Higher",
+    aggressive: "Aggressive",
+    none: "None",
+    limited: "Limited",
+    extensive: "Extensive",
+    some: "Some",
+    experienced: "Experienced",
+    very_experienced: "Very experienced",
+  };
+  const region = getRegion(formData.countryOfResidence);
+
   return (
     <div className="space-y-6">
       <div>
@@ -2048,105 +1719,162 @@ function Step9Review({ formData }: { formData: FormData }) {
           Review & Submit
         </h2>
         <p className="text-gray-600">
-          Please review your information before submitting
+          Review your information before completing onboarding
         </p>
       </div>
-      <div className="space-y-6">
-        <div className="p-6 bg-gray-50 rounded-lg">
-          <h3 className="font-semibold text-gray-900 mb-3">Company Identity</h3>
-          <dl className="grid md:grid-cols-2 gap-3 text-sm">
+
+      <div className="p-6 bg-gray-50 rounded-lg">
+        <h3 className="font-semibold text-gray-900 mb-3">Investor Profile</h3>
+        <dl className="grid md:grid-cols-2 gap-3 text-sm">
+          <div>
+            <dt className="text-gray-600">Type</dt>
+            <dd className="font-medium text-gray-900">
+              {labels[formData.investorType] || "-"}
+            </dd>
+          </div>
+          {formData.firmName && (
             <div>
-              <dt className="text-gray-600">Legal Name</dt>
-              <dd className="font-medium text-gray-900">
-                {formData.legalName || "-"}
-              </dd>
+              <dt className="text-gray-600">Firm</dt>
+              <dd className="font-medium text-gray-900">{formData.firmName}</dd>
             </div>
+          )}
+          <div>
+            <dt className="text-gray-600">Risk Tolerance</dt>
+            <dd className="font-medium text-gray-900">
+              {labels[formData.riskTolerance] || "-"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-gray-600">Experience</dt>
+            <dd className="font-medium text-gray-900">
+              {labels[formData.generalExperience] || "-"}
+            </dd>
+          </div>
+        </dl>
+      </div>
+
+      <div className="p-6 bg-gray-50 rounded-lg">
+        <h3 className="font-semibold text-gray-900 mb-3">
+          Investment Preferences
+        </h3>
+        <dl className="space-y-3 text-sm">
+          <div>
+            <dt className="text-gray-600">Sectors</dt>
+            <dd className="flex flex-wrap gap-2 mt-1">
+              {formData.investmentFocus.map((s) => (
+                <span
+                  key={s}
+                  className="px-2 py-1 bg-white border border-gray-200 rounded text-xs"
+                >
+                  {labels[s] || s}
+                </span>
+              ))}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-gray-600">Lanes</dt>
+            <dd className="flex flex-wrap gap-2 mt-1">
+              {formData.preferredLanes.map((l) => (
+                <span
+                  key={l}
+                  className="px-2 py-1 bg-white border border-gray-200 rounded text-xs"
+                >
+                  {l === "YIELD" ? "Yield" : "Ventures"}
+                </span>
+              ))}
+            </dd>
+          </div>
+          {(formData.minimumCheckSize || formData.maximumCheckSize) && (
             <div>
-              <dt className="text-gray-600">CAC Number</dt>
+              <dt className="text-gray-600">Check Size</dt>
               <dd className="font-medium text-gray-900">
-                {formData.incorporationNumber || "-"}
+                {formData.minimumCheckSize
+                  ? `$${Number(formData.minimumCheckSize).toLocaleString()}`
+                  : "—"}{" "}
+                –{" "}
+                {formData.maximumCheckSize
+                  ? `$${Number(formData.maximumCheckSize).toLocaleString()}`
+                  : "—"}
               </dd>
             </div>
+          )}
+        </dl>
+      </div>
+
+      <div className="p-6 bg-gray-50 rounded-lg">
+        <h3 className="font-semibold text-gray-900 mb-3">
+          Identity ({formData.countryOfResidence})
+        </h3>
+        <dl className="grid md:grid-cols-2 gap-3 text-sm">
+          <div>
+            <dt className="text-gray-600">Name</dt>
+            <dd className="font-medium text-gray-900">
+              {formData.fullName || "-"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-gray-600">Date of Birth</dt>
+            <dd className="font-medium text-gray-900">
+              {formData.dateOfBirth || "-"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-gray-600">Phone</dt>
+            <dd className="font-medium text-gray-900">
+              {formData.phone || "-"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-gray-600">City</dt>
+            <dd className="font-medium text-gray-900">
+              {formData.city || "-"}
+            </dd>
+          </div>
+          {region === "nigeria" && (
             <div>
-              <dt className="text-gray-600">Country</dt>
+              <dt className="text-gray-600">NIN</dt>
               <dd className="font-medium text-gray-900">
-                {formData.countryOfIncorporation || "-"}
+                {formData.nin ? "***" + formData.nin.slice(-4) : "-"}
               </dd>
             </div>
+          )}
+          {region === "us" && (
             <div>
-              <dt className="text-gray-600">Incorporation Date</dt>
+              <dt className="text-gray-600">SSN</dt>
               <dd className="font-medium text-gray-900">
-                {formData.incorporationDate || "-"}
+                {formData.ssn ? "***-**-" + formData.ssn.slice(-4) : "-"}
               </dd>
             </div>
-          </dl>
-        </div>
-        <div className="p-6 bg-gray-50 rounded-lg">
-          <h3 className="font-semibold text-gray-900 mb-3">Team & Overview</h3>
-          <dl className="grid md:grid-cols-2 gap-3 text-sm">
+          )}
+          {region === "uk" && formData.niNumber && (
             <div>
-              <dt className="text-gray-600">Sector</dt>
+              <dt className="text-gray-600">NI Number</dt>
               <dd className="font-medium text-gray-900">
-                {formData.sector || "-"}
+                {formData.niNumber ? "**" + formData.niNumber.slice(-4) : "-"}
               </dd>
             </div>
-            <div>
-              <dt className="text-gray-600">Stage</dt>
-              <dd className="font-medium text-gray-900">
-                {formData.stage || "-"}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-gray-600">Business Model</dt>
-              <dd className="font-medium text-gray-900">
-                {formData.businessModel || "-"}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-gray-600">Team Size</dt>
-              <dd className="font-medium text-gray-900">
-                {formData.teamSize || "-"}
-              </dd>
-            </div>
-            <div className="md:col-span-2">
-              <dt className="text-gray-600">One-Line Description</dt>
-              <dd className="font-medium text-gray-900">
-                {formData.oneLineDescription || "-"}
-              </dd>
-            </div>
-          </dl>
-        </div>
-        <div className="p-6 bg-gray-50 rounded-lg">
-          <h3 className="font-semibold text-gray-900 mb-3">
-            Fundraising Intent
-          </h3>
-          <dl className="grid md:grid-cols-2 gap-3 text-sm">
-            <div>
-              <dt className="text-gray-600">Lane</dt>
-              <dd className="font-medium text-gray-900">
-                {formData.preferredLane || "-"}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-gray-600">Instrument</dt>
-              <dd className="font-medium text-gray-900">
-                {formData.preferredInstrument || "-"}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-gray-600">Target Raise</dt>
-              <dd className="font-medium text-gray-900">
-                ${formData.targetRaiseMin || "0"} - $
-                {formData.targetRaiseMax || "0"}
-              </dd>
-            </div>
-          </dl>
-        </div>
-        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <p className="text-sm text-yellow-900">
-            <strong>Next Steps:</strong> After submission, our team will review
-            your application. You'll receive an email with next steps.
-          </p>
+          )}
+          <div>
+            <dt className="text-gray-600">ID Type</dt>
+            <dd className="font-medium text-gray-900">
+              {formData.idType || "-"}
+            </dd>
+          </div>
+        </dl>
+      </div>
+
+      <div className="p-6 bg-green-50 border border-green-200 rounded-lg">
+        <div className="flex items-start gap-3">
+          <span className="text-green-600 text-xl mt-0.5">✓</span>
+          <div>
+            <p className="text-sm font-semibold text-green-900">
+              All risk acknowledgements accepted
+            </p>
+            <p className="text-xs text-green-700 mt-1">
+              Your accreditation will be reviewed by compliance. You can browse
+              companies immediately.
+            </p>
+          </div>
         </div>
       </div>
     </div>
