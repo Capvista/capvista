@@ -13,7 +13,7 @@ export default function DashboardPage() {
       if (!user) {
         router.push("/login");
       } else {
-        const role = user.user_metadata?.role;
+        const role = (user as any).user_metadata?.role || user.role;
         if (role === "INVESTOR") {
           router.push("/dashboard/investor");
         } else if (role === "FOUNDER") {
