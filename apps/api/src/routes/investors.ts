@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import { PrismaClient } from "@capvista/database";
+import { prisma } from "@capvista/database";
 import { requireAuth, requireRole } from "../middleware/auth";
 
 const router = Router();
