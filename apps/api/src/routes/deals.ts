@@ -371,7 +371,7 @@ router.patch(
       }
 
       // Verify user is founder
-      cconst founderProfile = await prisma.founderProfile.findUnique({
+      const founderProfile = await prisma.founderProfile.findUnique({
         where: { userId: req.user!.id },
       });
       const isFounder = founderProfile
