@@ -286,6 +286,7 @@ model Company {
   equityIssuedToCapvistaHoldings Boolean   @default(false)
 
   currentMonitoringStatus MonitoringMode @default(NORMAL)
+  approvalStatus          String         @default("PENDING_REVIEW")
 
   founders            CompanyFounder[]
   verificationRecords VerificationRecord[]
@@ -582,6 +583,12 @@ enum AdminActionType {
   SUSPEND_COMPANY
   SUSPEND_USER
   MANUAL_INTERVENTION
+  COMPANY_APPROVED
+  COMPANY_REJECTED
+  COMPANY_INFO_REQUESTED
+  INVESTOR_VERIFIED
+  INVESTOR_REJECTED
+  INVESTOR_INFO_REQUESTED
 }
 
 model AdminAction {

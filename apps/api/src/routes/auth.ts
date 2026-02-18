@@ -218,4 +218,94 @@ router.post("/login", async (req: Request, res: Response) => {
   }
 });
 
+// POST /api/auth/register-admin
+router.post("/register-admin", async (req: Request, res: Response) => {
+  try {
+    const { email, password, firstName, lastName, inviteCode } = req.body;
+
+    // Validate required fields
+    if (!email || !password || !firstName || !lastName || !inviteCode) {
+      return res.status(400).json({
+        success: false,
+        error: { code: "VALIDATION_ERROR", message: "All fields are required" },
+      });
+    }
+
+    // Validate invite code
+    const validInviteCode = process.env.ADMIN_INVITE_CODE;
+    if (!validInviteCode || inviteCode !== validInviteCode) {
+      return res.status(403).json({
+        success: false,
+        error: { code: "INVALID_INVITE_CODE", message: "Invalid invite code" },
+      });
+    }
+
+    if (password.length < 8) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "Password must be at least 8 characters",
+        },
+      });
+    }
+
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (existingUser) {
+      return res.status(409).json({
+        success: false,
+        error: {
+          code: "USER_EXISTS",
+          message: "An account with this email already exists",
+        },
+      });
+    }
+
+    // Hash password
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    // Create admin user (no FounderProfile or InvestorProfile)
+    const user = await prisma.user.create({
+      data: {
+        email,
+        passwordHash,
+        role: "ADMIN",
+        firstName,
+        lastName,
+        status: "active",
+      },
+    });
+
+    // Generate token
+    const { accessToken } = generateTokens(user.id, user.role);
+
+    console.log(`✅ Admin registered: ${email} (${user.id})`);
+
+    return res.status(201).json({
+      success: true,
+      message: "Admin registration successful",
+      data: {
+        accessToken,
+        user: {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+          firstName: user.firstName,
+          lastName: user.lastName,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Admin registration error:", error);
+    return res.status(500).json({
+      success: false,
+      error: { code: "INTERNAL_ERROR", message: "Registration failed" },
+    });
+  }
+});
+
 export default router;
