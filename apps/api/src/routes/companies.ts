@@ -81,6 +81,7 @@ router.get("/", async (req: Request, res: Response) => {
     const { sector, stage, lane, page = "1", limit = "20" } = req.query;
 
     const where: any = {};
+    where.approvalStatus = 'APPROVED';
     if (sector) where.sector = sector;
     if (stage) where.stage = stage;
     if (lane) where.preferredLane = lane;
