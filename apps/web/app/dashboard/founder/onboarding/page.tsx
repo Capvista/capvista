@@ -387,6 +387,8 @@ function validateStep(step: number, formData: FormData): string[] {
       if (!formData.sector) errors.push("sector");
       if (!formData.subsector) errors.push("subsector");
       if (!formData.businessModel) errors.push("businessModel");
+      if (!formData.founderLinkedIn.trim()) errors.push("founderLinkedIn");
+      if (!formData.yearsExperience.trim()) errors.push("yearsExperience");
       break;
 
     case 2: // Founder Verification
@@ -646,6 +648,10 @@ export default function CompanyOnboarding() {
         preferredInstrument: formData.preferredInstrument,
         targetRaiseRange: `$${formData.targetRaiseMin} - $${formData.targetRaiseMax}`,
         primaryUseOfFunds: formData.primaryUseOfFunds,
+        founderLinkedIn: formData.founderLinkedIn || undefined,
+        yearsExperience: formData.yearsExperience || undefined,
+        founderNIN: formData.founderNIN || undefined,
+        founderBVN: formData.founderBVN || undefined,
       };
 
       console.log("📤 Sending payload to API...");
@@ -1246,28 +1252,30 @@ function Step2Team({ formData, updateField, errors }: StepProps) {
         </div>
         <div className="md:col-span-2">
           <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Founder LinkedIn
+            Founder LinkedIn <span className="text-red-500">*</span>
           </label>
           <input
             type="url"
             value={formData.founderLinkedIn}
             onChange={(e) => updateField("founderLinkedIn", e.target.value)}
-            className={inputClass(false)}
+            className={inputClass(has("founderLinkedIn"))}
             placeholder="https://linkedin.com/in/yourprofile"
           />
+          <FieldError show={has("founderLinkedIn")} message="Founder LinkedIn is required" />
         </div>
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Years of Relevant Experience
+            Years of Relevant Experience <span className="text-red-500">*</span>
           </label>
           <input
             type="number"
             min="0"
             value={formData.yearsExperience}
             onChange={(e) => updateField("yearsExperience", e.target.value)}
-            className={inputClass(false)}
+            className={inputClass(has("yearsExperience"))}
             placeholder="Years in this industry"
           />
+          <FieldError show={has("yearsExperience")} message="Years of experience is required" />
         </div>
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">

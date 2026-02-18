@@ -67,6 +67,10 @@ const createCompanySchema = z.object({
     .optional(),
   targetRaiseRange: z.string().optional(),
   primaryUseOfFunds: z.string().optional(),
+  founderLinkedIn: z.string().optional(),
+  yearsExperience: z.string().optional(),
+  founderNIN: z.string().optional(),
+  founderBVN: z.string().optional(),
 });
 
 const updateCompanySchema = createCompanySchema.partial();
@@ -371,6 +375,23 @@ router.post(
       });
 
       console.log(`✅ Company created: ${company.legalName} (${company.id})`);
+
+      // Update FounderProfile with data from the onboarding form
+      await prisma.founderProfile.update({
+        where: { userId: req.user!.id },
+        data: {
+          linkedinUrl: body.founderLinkedIn || undefined,
+          yearsExperience: body.yearsExperience
+            ? parseInt(body.yearsExperience, 10)
+            : undefined,
+          nin: body.founderNIN || undefined,
+          bvn: body.founderBVN || undefined,
+          onboardingCompleted: true,
+          onboardingCompletedAt: new Date(),
+        },
+      });
+
+      console.log(`✅ FounderProfile updated for user: ${req.user!.id}`);
 
       return res.status(201).json({
         success: true,
