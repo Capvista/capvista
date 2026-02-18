@@ -49,6 +49,30 @@ router.put(
         });
       }
 
+      // Compliance & suitability required fields
+      const complianceMissing: string[] = [];
+      if (!body.taxResidency) complianceMissing.push("taxResidency");
+      if (!body.yearsInvesting) complianceMissing.push("yearsInvesting");
+      if (!body.investorTitle) complianceMissing.push("investorTitle");
+      if (body.canAbsorbTotalLoss === undefined || body.canAbsorbTotalLoss === null || body.canAbsorbTotalLoss === "")
+        complianceMissing.push("canAbsorbTotalLoss");
+      if (!body.illiquidityComfort || body.illiquidityComfort < 1 || body.illiquidityComfort > 5)
+        complianceMissing.push("illiquidityComfort");
+      if (!body.holdingPeriod) complianceMissing.push("holdingPeriod");
+      if (!body.liquidityNeeds) complianceMissing.push("liquidityNeeds");
+      if (!body.investmentHorizon) complianceMissing.push("investmentHorizon");
+      if (!body.acknowledgeNotAdvisor)
+        complianceMissing.push("acknowledgeNotAdvisor");
+
+      if (complianceMissing.length > 0) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            message: `Missing required compliance fields: ${complianceMissing.join(", ")}`,
+          },
+        });
+      }
+
       // Ensure User record exists
       let user = await prisma.user.findUnique({ where: { id: userId } });
       if (!user) {

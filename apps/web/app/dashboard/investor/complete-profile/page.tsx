@@ -72,6 +72,7 @@ type FormData = {
   maximumCheckSize: string;
   holdingPeriod: string;
   liquidityNeeds: string;
+  investmentHorizon: string;
 
   // Step 6: Risk Acknowledgement
   acknowledgePrivatePlacement: boolean;
@@ -576,6 +577,13 @@ const liquidityOptions = [
   { value: "no", label: "No — Don't anticipate needing quick access" },
 ];
 
+const investmentHorizonOptions = [
+  { value: "", label: "Select investment horizon" },
+  { value: "short", label: "Short-term — Under 2 years" },
+  { value: "medium", label: "Medium-term — 2–5 years" },
+  { value: "long", label: "Long-term — 5+ years" },
+];
+
 // ============================================================================
 // MAIN COMPONENT
 // ============================================================================
@@ -645,6 +653,7 @@ export default function CompleteInvestorProfile() {
     maximumCheckSize: "",
     holdingPeriod: "",
     liquidityNeeds: "",
+    investmentHorizon: "",
     // Step 6
     acknowledgePrivatePlacement: false,
     acknowledgeIlliquidity: false,
@@ -697,6 +706,7 @@ export default function CompleteInvestorProfile() {
       if (!formData.dateOfBirth) missing.push("dateOfBirth");
       if (!formData.residentialAddress) missing.push("residentialAddress");
       if (!formData.city) missing.push("city");
+      if (!formData.taxResidency) missing.push("taxResidency");
       if (!formData.idType) missing.push("idType");
       if (!formData.idNumber) missing.push("idNumber");
       const region = getRegion(formData.countryOfResidence);
@@ -712,6 +722,8 @@ export default function CompleteInvestorProfile() {
         !formData.firmName
       )
         missing.push("firmName");
+      if (!formData.yearsInvesting) missing.push("yearsInvesting");
+      if (!formData.investorTitle) missing.push("investorTitle");
     }
     if (currentStep === 2) {
       if (!formData.accreditationBasis) missing.push("accreditationBasis");
@@ -729,6 +741,9 @@ export default function CompleteInvestorProfile() {
       if (formData.investmentFocus.length === 0)
         missing.push("investmentFocus");
       if (formData.preferredLanes.length === 0) missing.push("preferredLanes");
+      if (!formData.holdingPeriod) missing.push("holdingPeriod");
+      if (!formData.liquidityNeeds) missing.push("liquidityNeeds");
+      if (!formData.investmentHorizon) missing.push("investmentHorizon");
     }
     if (currentStep === 5) {
       if (!formData.acknowledgePrivatePlacement)
@@ -781,6 +796,7 @@ export default function CompleteInvestorProfile() {
         // Identity
         countryOfResidence: formData.countryOfResidence,
         citizenship: formData.citizenship || undefined,
+        taxResidency: formData.taxResidency,
         fullName: formData.fullName,
         dateOfBirth: formData.dateOfBirth,
         phone: formData.phone,
@@ -799,7 +815,9 @@ export default function CompleteInvestorProfile() {
         // Investor Profile
         investorType: formData.investorType,
         firmName: formData.firmName || undefined,
+        investorTitle: formData.investorTitle,
         aum: formData.aum || undefined,
+        yearsInvesting: formData.yearsInvesting,
 
         // Accreditation
         accreditationBasis: formData.accreditationBasis,
@@ -808,7 +826,17 @@ export default function CompleteInvestorProfile() {
         riskTolerance: formData.riskTolerance,
         generalExperience: formData.generalExperience,
         privateMarketExperience: formData.privateMarketExperience || undefined,
+        illiquidityComfort: formData.illiquidityComfort,
+        canAbsorbTotalLoss: formData.canAbsorbTotalLoss,
         sourceOfFunds: formData.sourceOfFunds,
+        politicallyExposed: formData.politicallyExposed,
+        politicallyExposedDetails: formData.politicallyExposed
+          ? formData.politicallyExposedDetails
+          : undefined,
+        regulatoryRestrictions: formData.regulatoryRestrictions,
+        regulatoryRestrictionsDetails: formData.regulatoryRestrictions
+          ? formData.regulatoryRestrictionsDetails
+          : undefined,
         brokerAffiliated: formData.brokerAffiliated,
         brokerDetails: formData.brokerAffiliated
           ? formData.brokerDetails
@@ -832,13 +860,19 @@ export default function CompleteInvestorProfile() {
         maximumCheckSize: formData.maximumCheckSize
           ? parseFloat(formData.maximumCheckSize)
           : undefined,
-        liquidityNeeds: formData.liquidityNeeds || undefined,
+        holdingPeriod: formData.holdingPeriod,
+        liquidityNeeds: formData.liquidityNeeds,
+        investmentHorizon: formData.investmentHorizon,
+
+        // Accreditation
+        accreditationCertified: formData.accreditationCertified,
 
         // Risk Acknowledgement
         riskAcknowledged: true,
         acknowledgePrivatePlacement: formData.acknowledgePrivatePlacement,
         acknowledgeIlliquidity: formData.acknowledgeIlliquidity,
         acknowledgeLossRisk: formData.acknowledgeLossRisk,
+        acknowledgeNotAdvisor: formData.acknowledgeNotAdvisor,
         acknowledgeNoGuarantee: formData.acknowledgeNoGuarantee,
         acknowledgeAccreditedStatus: formData.acknowledgeAccreditedStatus,
       };
@@ -1113,23 +1147,23 @@ function Step1Identity({
         {/* Tax Residency */}
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Tax Residency
+            Tax Residency <span className="text-red-500">*</span>
           </label>
           <select
             value={formData.taxResidency}
             onChange={(e) => updateField("taxResidency", e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none ${has("taxResidency") ? "border-red-400 ring-2 ring-red-200" : "border-gray-300"}`}
           >
-            <option value="">Same as country of residence</option>
+            <option value="">Select tax residency</option>
             {countryOptions.map((o) => (
               <option key={o.value} value={o.value}>
                 {o.label}
               </option>
             ))}
           </select>
-          <p className="text-xs text-gray-500 mt-1">
-            Only select if different from country of residence
-          </p>
+          {has("taxResidency") && (
+            <p className="text-xs text-red-500 mt-1">Required</p>
+          )}
         </div>
 
         {/* Full Name */}
@@ -1531,15 +1565,18 @@ function Step2InvestorProfile({
 
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Title / Role
+            Title / Role <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
             value={formData.investorTitle}
             onChange={(e) => updateField("investorTitle", e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none ${has("investorTitle") ? "border-red-400 ring-2 ring-red-200" : "border-gray-300"}`}
             placeholder="e.g. Managing Partner, CEO, Individual"
           />
+          {has("investorTitle") && (
+            <p className="text-xs text-red-500 mt-1">Required</p>
+          )}
         </div>
 
         <div>
@@ -1561,12 +1598,13 @@ function Step2InvestorProfile({
 
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Years of Investing Experience
+            Years of Investing Experience{" "}
+            <span className="text-red-500">*</span>
           </label>
           <select
             value={formData.yearsInvesting}
             onChange={(e) => updateField("yearsInvesting", e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none ${has("yearsInvesting") ? "border-red-400 ring-2 ring-red-200" : "border-gray-300"}`}
           >
             {yearsInvestingOptions.map((o) => (
               <option key={o.value} value={o.value}>
@@ -1574,6 +1612,9 @@ function Step2InvestorProfile({
               </option>
             ))}
           </select>
+          {has("yearsInvesting") && (
+            <p className="text-xs text-red-500 mt-1">Required</p>
+          )}
         </div>
       </div>
     </div>
@@ -2194,12 +2235,12 @@ function Step5Preferences({
       {/* Holding Period */}
       <div>
         <label className="block text-sm font-semibold text-gray-900 mb-2">
-          Desired Holding Period
+          Desired Holding Period <span className="text-red-500">*</span>
         </label>
         <select
           value={formData.holdingPeriod}
           onChange={(e) => updateField("holdingPeriod", e.target.value)}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none ${has("holdingPeriod") ? "border-red-400 ring-2 ring-red-200" : "border-gray-300"}`}
         >
           {holdingPeriodOptions.map((o) => (
             <option key={o.value} value={o.value}>
@@ -2207,17 +2248,20 @@ function Step5Preferences({
             </option>
           ))}
         </select>
+        {has("holdingPeriod") && (
+          <p className="text-xs text-red-500 mt-1">Required</p>
+        )}
       </div>
 
       {/* Liquidity */}
       <div>
         <label className="block text-sm font-semibold text-gray-900 mb-2">
-          Liquidity Needs
+          Liquidity Needs <span className="text-red-500">*</span>
         </label>
         <select
           value={formData.liquidityNeeds}
           onChange={(e) => updateField("liquidityNeeds", e.target.value)}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none ${has("liquidityNeeds") ? "border-red-400 ring-2 ring-red-200" : "border-gray-300"}`}
         >
           {liquidityOptions.map((o) => (
             <option key={o.value} value={o.value}>
@@ -2225,6 +2269,30 @@ function Step5Preferences({
             </option>
           ))}
         </select>
+        {has("liquidityNeeds") && (
+          <p className="text-xs text-red-500 mt-1">Required</p>
+        )}
+      </div>
+
+      {/* Investment Horizon */}
+      <div>
+        <label className="block text-sm font-semibold text-gray-900 mb-2">
+          Investment Horizon <span className="text-red-500">*</span>
+        </label>
+        <select
+          value={formData.investmentHorizon}
+          onChange={(e) => updateField("investmentHorizon", e.target.value)}
+          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none ${has("investmentHorizon") ? "border-red-400 ring-2 ring-red-200" : "border-gray-300"}`}
+        >
+          {investmentHorizonOptions.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+        {has("investmentHorizon") && (
+          <p className="text-xs text-red-500 mt-1">Required</p>
+        )}
       </div>
     </div>
   );
