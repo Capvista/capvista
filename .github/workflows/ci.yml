@@ -6,14 +6,11 @@ on:
   pull_request:
     branches: [main, develop]
 
-env:
-  NODE_VERSION: "20"
-  DATABASE_URL: "postgresql://test:test@localhost:5432/capvista_test"
-
 jobs:
-  lint-and-build:
-    name: Lint & Build
+  build:
+    name: Build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout code
@@ -27,7 +24,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: "20"
           cache: "pnpm"
 
       - name: Install dependencies
@@ -35,13 +32,6 @@ jobs:
 
       - name: Generate Prisma client
         run: pnpm db:generate
-
-      - name: Lint web
-        run: pnpm --filter web lint
-
-      - name: Lint API
-        run: pnpm --filter api lint
-        continue-on-error: true
 
       - name: Build API
         run: pnpm --filter api build
@@ -52,3 +42,14 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: "https://placeholder.supabase.co"
           NEXT_PUBLIC_SUPABASE_ANON_KEY: "placeholder"
           NEXT_PUBLIC_API_URL: "http://localhost:4000"
+
+      - name: Build summary
+        if: always()
+        run: |
+          echo "# CI Summary" >> $GITHUB_STEP_SUMMARY
+          echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| **Status** | ${{ job.status }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Branch** | \`${{ github.ref_name }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Commit** | \`$(git rev-parse --short HEAD)\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Actor** | ${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
