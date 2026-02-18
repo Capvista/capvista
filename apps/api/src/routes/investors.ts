@@ -54,9 +54,17 @@ router.put(
       if (!body.taxResidency) complianceMissing.push("taxResidency");
       if (!body.yearsInvesting) complianceMissing.push("yearsInvesting");
       if (!body.investorTitle) complianceMissing.push("investorTitle");
-      if (body.canAbsorbTotalLoss === undefined || body.canAbsorbTotalLoss === null || body.canAbsorbTotalLoss === "")
+      if (
+        body.canAbsorbTotalLoss === undefined ||
+        body.canAbsorbTotalLoss === null ||
+        body.canAbsorbTotalLoss === ""
+      )
         complianceMissing.push("canAbsorbTotalLoss");
-      if (!body.illiquidityComfort || body.illiquidityComfort < 1 || body.illiquidityComfort > 5)
+      if (
+        !body.illiquidityComfort ||
+        body.illiquidityComfort < 1 ||
+        body.illiquidityComfort > 5
+      )
         complianceMissing.push("illiquidityComfort");
       if (!body.holdingPeriod) complianceMissing.push("holdingPeriod");
       if (!body.liquidityNeeds) complianceMissing.push("liquidityNeeds");
@@ -167,7 +175,9 @@ router.put(
               eSignatureTimestamp: new Date(),
               eSignatureIp:
                 req.ip ||
-                req.headers["x-forwarded-for"] ||
+                (Array.isArray(req.headers["x-forwarded-for"])
+                  ? req.headers["x-forwarded-for"][0]
+                  : req.headers["x-forwarded-for"]) ||
                 "unknown",
             }
           : {}),
