@@ -161,6 +161,16 @@ router.put(
         acknowledgeNoGuarantee: body.acknowledgeNoGuarantee || false,
         acknowledgeAccreditedStatus: body.acknowledgeAccreditedStatus || false,
         verificationStatus: "PENDING",
+        ...(body.riskAcknowledged
+          ? {
+              riskAcknowledgedAt: new Date(),
+              eSignatureTimestamp: new Date(),
+              eSignatureIp:
+                req.ip ||
+                req.headers["x-forwarded-for"] ||
+                "unknown",
+            }
+          : {}),
       };
 
       const profile = await prisma.investorProfile.upsert({
