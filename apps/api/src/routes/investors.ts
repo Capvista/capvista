@@ -1,9 +1,8 @@
 import { Router, Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@capvista/database";
 import { requireAuth, requireRole } from "../middleware/auth";
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // GET /api/investors/profile
 router.get(
@@ -102,7 +101,8 @@ router.put(
         politicallyExposed: body.politicallyExposed || false,
         politicallyExposedDetails: body.politicallyExposedDetails || null,
         regulatoryRestrictions: body.regulatoryRestrictions || false,
-        regulatoryRestrictionsDetails: body.regulatoryRestrictionsDetails || null,
+        regulatoryRestrictionsDetails:
+          body.regulatoryRestrictionsDetails || null,
         holdingPeriod: body.holdingPeriod || null,
         acknowledgeNotAdvisor: body.acknowledgeNotAdvisor || false,
         accreditationCertified: body.accreditationCertified || false,

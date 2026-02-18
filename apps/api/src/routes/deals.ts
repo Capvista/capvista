@@ -38,12 +38,19 @@ router.post(
       const body = createDealSchema.parse(req.body);
 
       // Verify user is founder of the company
-      const companyFounder = await prisma.companyFounder.findFirst({
-        where: {
-          companyId: body.companyId,
-          userId: req.user!.id,
-        },
+      // Look up founder profile first, then check company ownership
+      const founderProfile = await prisma.founderProfile.findUnique({
+        where: { userId: req.user!.id },
       });
+
+      const companyFounder = founderProfile
+        ? await prisma.companyFounder.findFirst({
+            where: {
+              companyId: body.companyId,
+              founderId: founderProfile.id,
+            },
+          })
+        : null;
 
       if (!companyFounder) {
         return res.status(403).json({
@@ -262,11 +269,15 @@ router.get("/:id", async (req: Request, res: Response) => {
           include: {
             founders: {
               include: {
-                user: {
-                  select: {
-                    id: true,
-                    firstName: true,
-                    lastName: true,
+                founder: {
+                  include: {
+                    user: {
+                      select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true,
+                      },
+                    },
                   },
                 },
               },
@@ -360,9 +371,12 @@ router.patch(
       }
 
       // Verify user is founder
-      const isFounder = deal.company.founders.some(
-        (f) => f.userId === req.user!.id,
-      );
+      cconst founderProfile = await prisma.founderProfile.findUnique({
+        where: { userId: req.user!.id },
+      });
+      const isFounder = founderProfile
+        ? deal.company.founders.some((f) => f.founderId === founderProfile.id)
+        : false;
       if (!isFounder) {
         return res.status(403).json({
           success: false,
@@ -447,9 +461,12 @@ router.post(
       }
 
       // Verify founder
-      const isFounder = deal.company.founders.some(
-        (f) => f.userId === req.user!.id,
-      );
+      const founderProfile = await prisma.founderProfile.findUnique({
+        where: { userId: req.user!.id },
+      });
+      const isFounder = founderProfile
+        ? deal.company.founders.some((f) => f.founderId === founderProfile.id)
+        : false;
       if (!isFounder) {
         return res.status(403).json({
           success: false,

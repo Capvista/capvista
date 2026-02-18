@@ -13,7 +13,7 @@ const createInvestmentSchema = z.object({
 
 const fundInvestmentSchema = z.object({
   fundedAmount: z.number().positive(),
-  externalRef: z.string().optional(), // Payment provider reference
+  externalRef: z.string().optional(),
 });
 
 // POST /v1/investments - Create investment (soft commitment)
@@ -26,12 +26,12 @@ router.post(
       const body = createInvestmentSchema.parse(req.body);
 
       // Verify investor has acknowledged risk
-      const investor = await prisma.user.findUnique({
-        where: { id: req.user!.id },
-        select: { riskAcknowledgedAt: true },
+      const investorProfile = await prisma.investorProfile.findUnique({
+        where: { userId: req.user!.id },
+        select: { id: true, riskAcknowledged: true },
       });
 
-      if (!investor?.riskAcknowledgedAt) {
+      if (!investorProfile?.riskAcknowledged) {
         return res.status(400).json({
           success: false,
           error: {
@@ -97,9 +97,19 @@ router.post(
       }
 
       // Create investment in COMMITTED status
+      if (!investorProfile) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: "PROFILE_REQUIRED",
+            message: "Complete your investor profile first",
+          },
+        });
+      }
+
       const investment = await prisma.investment.create({
         data: {
-          investorId: req.user!.id,
+          investorId: investorProfile.id,
           dealId: body.dealId,
           commitmentAmount: body.commitmentAmount,
           status: "COMMITTED",
@@ -180,7 +190,11 @@ router.post(
       }
 
       // Verify ownership
-      if (investment.investorId !== req.user!.id) {
+      const investorProfile = await prisma.investorProfile.findUnique({
+        where: { userId: req.user!.id },
+        select: { id: true },
+      });
+      if (!investorProfile || investment.investorId !== investorProfile.id) {
         return res.status(403).json({
           success: false,
           error: {
@@ -220,7 +234,7 @@ router.post(
             fundedAmount: body.fundedAmount,
             fundedAt: new Date(),
             status: "FUNDED",
-            currentValue: body.fundedAmount, // Initial value
+            currentValue: body.fundedAmount,
           },
         }),
         prisma.escrowTransaction.create({
@@ -311,7 +325,14 @@ router.get("/:id", requireAuth, async (req: Request, res: Response) => {
     }
 
     // Verify access (investor owns it OR admin)
-    if (investment.investorId !== req.user!.id && req.user!.role !== "ADMIN") {
+    const investorProfile = await prisma.investorProfile.findUnique({
+      where: { userId: req.user!.id },
+      select: { id: true },
+    });
+    if (
+      (!investorProfile || investment.investorId !== investorProfile.id) &&
+      req.user!.role !== "ADMIN"
+    ) {
       return res.status(403).json({
         success: false,
         error: {
@@ -370,8 +391,13 @@ router.get(
         });
       }
 
+      const investorProfile = await prisma.investorProfile.findUnique({
+        where: { userId },
+        select: { id: true },
+      });
+
       const investments = await prisma.investment.findMany({
-        where: { investorId: userId },
+        where: { investorId: investorProfile?.id || "" },
         include: {
           deal: {
             select: {

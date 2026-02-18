@@ -28,7 +28,7 @@ router.get("/me", requireAuth, async (req: Request, res: Response) => {
                 sector: true,
                 stage: true,
                 oneLineDescription: true,
-                verificationStatus: true,
+                cacVerificationStatus: true,
               },
             },
           },
