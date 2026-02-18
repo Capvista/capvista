@@ -5,6 +5,27 @@ import { requireAuth, requireRole } from "../middleware/auth";
 
 const router = Router();
 
+// ============================================================================
+// DEAL CREATION GUARD
+// Use this helper in the deal creation endpoint to ensure a company is approved
+// before allowing deals to be created against it.
+// ============================================================================
+export async function assertCompanyApproved(companyId: string): Promise<{ approved: boolean; status: string }> {
+  const company = await prisma.company.findUnique({
+    where: { id: companyId },
+    select: { approvalStatus: true },
+  });
+
+  if (!company) {
+    return { approved: false, status: "NOT_FOUND" };
+  }
+
+  return {
+    approved: company.approvalStatus === "APPROVED",
+    status: company.approvalStatus,
+  };
+}
+
 // Validation schemas
 const createCompanySchema = z.object({
   logoUrl: z.string().url().optional(),

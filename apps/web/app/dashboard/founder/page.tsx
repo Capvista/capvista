@@ -424,14 +424,74 @@ function CompanyCard({
             </p>
           </div>
 
-          {/* Right: Status Badge */}
-          <div className="flex-shrink-0">
+          {/* Right: Status Badge + Deal Action */}
+          <div className="flex-shrink-0 flex flex-col items-end gap-3">
             <span
               className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold border ${status.bg} ${status.color}`}
             >
               <span className="w-2 h-2 rounded-full bg-current"></span>
               {status.label}
             </span>
+
+            {/* Deal Creation Action */}
+            {company.approvalStatus === "APPROVED" && (
+              <Link
+                href={`/dashboard/founder/deals/create?companyId=${company.id}`}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all hover:opacity-90"
+                style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+                Create Deal
+              </Link>
+            )}
+            {company.approvalStatus === "PENDING_REVIEW" && (
+              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-gray-400 bg-gray-100 cursor-not-allowed">
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                Awaiting Approval
+              </span>
+            )}
+            {company.approvalStatus === "REJECTED" && (
+              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-red-400">
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+                Application Rejected
+              </span>
+            )}
           </div>
         </div>
       </div>
