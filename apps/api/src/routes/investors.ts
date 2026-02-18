@@ -4,6 +4,63 @@ import { requireAuth, requireRole } from "../middleware/auth";
 
 const router = Router();
 
+// GET /api/investors/profile/status
+router.get(
+  "/profile/status",
+  requireAuth,
+  requireRole("INVESTOR"),
+  async (req: Request, res: Response) => {
+    try {
+      const profile = await prisma.investorProfile.findUnique({
+        where: { userId: req.user!.id },
+        select: { id: true, verificationStatus: true },
+      });
+
+      if (!profile) {
+        return res.json({
+          success: true,
+          data: { verificationStatus: null, latestAction: null },
+        });
+      }
+
+      const latestAction = await prisma.adminAction.findFirst({
+        where: {
+          targetType: "INVESTOR",
+          targetId: profile.id,
+          actionType: {
+            in: [
+              "INVESTOR_VERIFIED",
+              "INVESTOR_REJECTED",
+              "INVESTOR_INFO_REQUESTED",
+            ],
+          },
+        },
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          actionType: true,
+          reason: true,
+          createdAt: true,
+        },
+      });
+
+      return res.json({
+        success: true,
+        data: {
+          verificationStatus: profile.verificationStatus,
+          latestAction: latestAction || null,
+        },
+      });
+    } catch (error) {
+      console.error("Error fetching investor status:", error);
+      return res.status(500).json({
+        success: false,
+        error: { message: "Failed to fetch investor status" },
+      });
+    }
+  },
+);
+
 // GET /api/investors/profile
 router.get(
   "/profile",

@@ -262,27 +262,51 @@ export default function InvestorDashboard() {
 // Overview Tab Component
 function OverviewTab({ user, router }: { user: any; router: any }) {
   const { accessToken } = useAuth();
-  const [profileStatus, setProfileStatus] = useState(
-    "loading" as "loading" | "incomplete" | "pending" | "approved",
-  );
+  const [profileStatus, setProfileStatus] = useState<
+    "loading" | "incomplete" | "PENDING" | "VERIFIED" | "REJECTED" | "INFO_REQUESTED"
+  >("loading");
+  const [adminReason, setAdminReason] = useState<string | null>(null);
 
   useEffect(() => {
     const checkProfile = async () => {
       try {
         const API_URL =
           process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
-        const res = await fetch(`${API_URL}/api/investors/profile`, {
+
+        // First check if profile exists
+        const profileRes = await fetch(`${API_URL}/api/investors/profile`, {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
-        const result = await res.json();
-        if (result.success && result.data && result.data.investorType) {
-          setProfileStatus(
-            result.data.verificationStatus === "APPROVED"
-              ? "approved"
-              : "pending",
-          );
-        } else {
+        const profileResult = await profileRes.json();
+
+        if (!profileResult.success || !profileResult.data || !profileResult.data.investorType) {
           setProfileStatus("incomplete");
+          return;
+        }
+
+        // Profile exists — fetch verification status with admin action
+        const statusRes = await fetch(`${API_URL}/api/investors/profile/status`, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        const statusResult = await statusRes.json();
+
+        if (statusResult.success && statusResult.data) {
+          const { verificationStatus, latestAction } = statusResult.data;
+
+          // Check if there's an INFO_REQUESTED admin action (even if verificationStatus is still PENDING)
+          if (latestAction?.actionType === "INVESTOR_INFO_REQUESTED") {
+            setProfileStatus("INFO_REQUESTED");
+            setAdminReason(latestAction.reason || null);
+          } else if (verificationStatus === "VERIFIED") {
+            setProfileStatus("VERIFIED");
+          } else if (verificationStatus === "REJECTED") {
+            setProfileStatus("REJECTED");
+            setAdminReason(latestAction?.reason || null);
+          } else {
+            setProfileStatus("PENDING");
+          }
+        } else {
+          setProfileStatus("PENDING");
         }
       } catch {
         setProfileStatus("incomplete");
@@ -470,7 +494,7 @@ function OverviewTab({ user, router }: { user: any; router: any }) {
                 </p>
               </div>
             </button>
-          ) : profileStatus === "pending" ? (
+          ) : profileStatus === "PENDING" ? (
             <div className="flex items-center gap-4 p-6 rounded-xl border-2 border-blue-200 bg-blue-50">
               <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-blue-100">
                 <svg
@@ -494,7 +518,7 @@ function OverviewTab({ user, router }: { user: any; router: any }) {
                 </p>
               </div>
             </div>
-          ) : (
+          ) : profileStatus === "VERIFIED" ? (
             <div className="flex items-center gap-4 p-6 rounded-xl border-2 border-green-200 bg-green-50">
               <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-green-100">
                 <svg
@@ -513,14 +537,78 @@ function OverviewTab({ user, router }: { user: any; router: any }) {
               </div>
               <div className="text-left">
                 <h3 className="font-semibold text-green-900">
-                  Profile Complete
+                  Profile Verified
                 </h3>
                 <p className="text-sm text-green-700">
                   You're verified and ready to invest
                 </p>
               </div>
             </div>
-          )}
+          ) : profileStatus === "REJECTED" ? (
+            <div className="flex items-start gap-4 p-6 rounded-xl border-2 border-red-200 bg-red-50">
+              <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-red-100 shrink-0">
+                <svg
+                  className="w-6 h-6 text-red-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <div className="text-left">
+                <h3 className="font-semibold text-red-900">
+                  Profile Rejected
+                </h3>
+                {adminReason && (
+                  <p className="text-sm text-red-700 mt-1">
+                    {adminReason}
+                  </p>
+                )}
+              </div>
+            </div>
+          ) : profileStatus === "INFO_REQUESTED" ? (
+            <button
+              onClick={() =>
+                router.push("/dashboard/investor/complete-profile")
+              }
+              className="flex items-start gap-4 p-6 rounded-xl border-2 border-orange-300 bg-orange-50 hover:border-orange-400 transition-all group text-left"
+            >
+              <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-orange-100 shrink-0">
+                <svg
+                  className="w-6 h-6 text-orange-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-semibold text-orange-900">
+                  Additional Information Required
+                </h3>
+                {adminReason && (
+                  <p className="text-sm text-orange-700 mt-1">
+                    {adminReason}
+                  </p>
+                )}
+                <p className="text-sm text-orange-600 mt-2 font-medium group-hover:underline">
+                  Update your profile &rarr;
+                </p>
+              </div>
+            </button>
+          ) : null}
         </div>
       </div>
 
