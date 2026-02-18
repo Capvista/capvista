@@ -170,6 +170,7 @@ router.get(
           preferredInstrument: true,
           targetRaiseRange: true,
           currentMonitoringStatus: true,
+          approvalStatus: true,
           createdAt: true,
           logoUrl: true,
         },
@@ -182,6 +183,68 @@ router.get(
       return res.status(500).json({
         success: false,
         error: { code: "INTERNAL_ERROR", message: "Failed to fetch companies" },
+      });
+    }
+  },
+);
+
+// GET /api/companies/:id/status - Get company approval status and latest admin action
+router.get(
+  "/:id/status",
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+
+      const company = await prisma.company.findUnique({
+        where: { id },
+        select: { id: true, approvalStatus: true, ownerId: true },
+      });
+
+      if (!company) {
+        return res.status(404).json({
+          success: false,
+          error: { code: "COMPANY_NOT_FOUND", message: "Company not found" },
+        });
+      }
+
+      // Fetch the most recent admin action for this company
+      const latestAction = await prisma.adminAction.findFirst({
+        where: {
+          targetId: id,
+          targetType: "COMPANY",
+          actionType: {
+            in: [
+              "COMPANY_APPROVED",
+              "COMPANY_REJECTED",
+              "COMPANY_INFO_REQUESTED",
+            ],
+          },
+        },
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          actionType: true,
+          reason: true,
+          createdAt: true,
+        },
+      });
+
+      return res.json({
+        success: true,
+        data: {
+          approvalStatus: company.approvalStatus,
+          latestAction: latestAction || null,
+        },
+      });
+    } catch (error) {
+      console.error("Get company status error:", error);
+      return res.status(500).json({
+        success: false,
+        error: {
+          code: "INTERNAL_ERROR",
+          message: "Failed to fetch company status",
+        },
       });
     }
   },
