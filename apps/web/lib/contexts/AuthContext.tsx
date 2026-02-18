@@ -110,7 +110,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem("capvista_user");
     setAccessToken(null);
     setUser(null);
-    router.push("/login");
+    router.push("/");
   };
 
   return (
