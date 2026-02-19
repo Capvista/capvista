@@ -354,16 +354,16 @@ model Deal {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  name           String
-  lane           DealLane
-  instrumentType InstrumentType
+  name           String         @default("")
+  lane           DealLane?
+  instrumentType InstrumentType?
   status         DealStatus     @default(DRAFT)
 
-  targetAmount      Decimal @db.Decimal(12, 2)
-  minimumInvestment Decimal @db.Decimal(12, 2)
-  raisedAmount      Decimal @db.Decimal(12, 2) @default(0)
+  targetAmount      Decimal? @db.Decimal(12, 2)
+  minimumInvestment Decimal? @db.Decimal(12, 2)
+  raisedAmount      Decimal  @db.Decimal(12, 2) @default(0)
 
-  terms Json
+  terms Json?
 
   openedAt DateTime?
   closedAt DateTime?

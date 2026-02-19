@@ -239,15 +239,6 @@ export default function FounderDashboard() {
                 company={company}
                 adminAction={adminActions[company.id] || null}
                 deals={companyDeals[company.id] || []}
-                accessToken={accessToken}
-                onDealUpdated={(companyId: string, updatedDeal: Deal) => {
-                  setCompanyDeals((prev) => ({
-                    ...prev,
-                    [companyId]: (prev[companyId] || []).map((d) =>
-                      d.id === updatedDeal.id ? updatedDeal : d,
-                    ),
-                  }));
-                }}
               />
             ))}
 
@@ -315,14 +306,10 @@ function CompanyCard({
   company,
   adminAction,
   deals,
-  accessToken,
-  onDealUpdated,
 }: {
   company: Company;
   adminAction: AdminAction | null;
   deals: Deal[];
-  accessToken: string | null;
-  onDealUpdated: (companyId: string, updatedDeal: Deal) => void;
 }) {
   const statusConfig: Record<
     string,
@@ -563,10 +550,6 @@ function CompanyCard({
                     key={deal.id}
                     deal={deal}
                     companyId={company.id}
-                    accessToken={accessToken}
-                    onSubmitted={(updatedDeal) =>
-                      onDealUpdated(company.id, updatedDeal)
-                    }
                   />
                 ))}
               </div>
@@ -661,16 +644,10 @@ function CompanyCard({
 function DealRow({
   deal,
   companyId,
-  accessToken,
-  onSubmitted,
 }: {
   deal: Deal;
   companyId: string;
-  accessToken: string | null;
-  onSubmitted: (updatedDeal: Deal) => void;
 }) {
-  const [submitting, setSubmitting] = useState(false);
-
   const dealStatusConfig: Record<
     string,
     { label: string; color: string; bg: string }
@@ -729,30 +706,6 @@ function DealRow({
     minimumFractionDigits: 0,
   }).format(targetAmount);
 
-  async function handleSubmitForReview() {
-    if (!accessToken || submitting) return;
-    setSubmitting(true);
-    try {
-      const API_URL =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
-      const res = await fetch(`${API_URL}/api/deals/${deal.id}/submit`, {
-        method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-      });
-      const data = await res.json();
-      if (data.success) {
-        onSubmitted({ ...deal, status: "UNDER_REVIEW" });
-      }
-    } catch (err) {
-      console.error("Failed to submit deal:", err);
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
   return (
     <div className="flex items-center justify-between py-3 px-3 rounded-lg hover:bg-gray-50 transition-colors">
       <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -792,22 +745,12 @@ function DealRow({
 
       <div className="flex items-center gap-2 flex-shrink-0 ml-3">
         {deal.status === "DRAFT" && (
-          <>
-            <Link
-              href={`/dashboard/founder/deals/create?dealId=${deal.id}&companyId=${companyId}`}
-              className="px-3 py-1.5 rounded-lg text-xs font-medium border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              Edit
-            </Link>
-            <button
-              onClick={handleSubmitForReview}
-              disabled={submitting}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-colors disabled:opacity-50"
-              style={{ backgroundColor: "#0B1C2D" }}
-            >
-              {submitting ? "Submitting..." : "Submit for Review"}
-            </button>
-          </>
+          <Link
+            href={`/dashboard/founder/deals/create?dealId=${deal.id}&companyId=${companyId}`}
+            className="px-3 py-1.5 rounded-lg text-xs font-medium border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            Edit
+          </Link>
         )}
         <span
           className={`px-3 py-1 rounded-full text-xs font-medium ${status.bg} ${status.color}`}

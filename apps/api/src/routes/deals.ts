@@ -5,7 +5,7 @@ import { requireAuth, requireRole } from "../middleware/auth";
 
 const router = Router();
 
-// Validation schemas
+// Validation schemas — full submission (UNDER_REVIEW) requires all core fields
 const createDealSchema = z.object({
   companyId: z.string(),
   name: z.string().min(1),
@@ -21,6 +21,7 @@ const createDealSchema = z.object({
   minimumInvestment: z.number().positive(),
   terms: z.any(), // JSON object with instrument-specific terms
   duration: z.number().int().positive().optional().nullable(),
+  status: z.enum(["DRAFT", "UNDER_REVIEW"]).optional(),
 
   // Overview fields
   jurisdiction: z.string().optional().nullable(),
@@ -60,7 +61,65 @@ const createDealSchema = z.object({
   bankStatementsUrl: z.string().optional().nullable(),
 });
 
-const updateDealSchema = createDealSchema.partial().omit({ companyId: true });
+// Draft schema — only companyId required, everything else optional
+const createDraftDealSchema = z.object({
+  companyId: z.string(),
+  name: z.string().optional().default(""),
+  lane: z.enum(["YIELD", "VENTURES"]).optional().nullable(),
+  instrumentType: z.enum([
+    "REVENUE_SHARE_NOTE",
+    "ASSET_BACKED_PARTICIPATION",
+    "CONVERTIBLE_NOTE",
+    "SAFE",
+    "SPV_EQUITY",
+  ]).optional().nullable(),
+  targetAmount: z.number().positive().optional().nullable(),
+  minimumInvestment: z.number().positive().optional().nullable(),
+  terms: z.any().optional().nullable(),
+  duration: z.number().int().positive().optional().nullable(),
+  status: z.literal("DRAFT").optional(),
+
+  // Overview fields
+  jurisdiction: z.string().optional().nullable(),
+  entityType: z.string().optional().nullable(),
+  offeringStructure: z.string().optional().nullable(),
+  closingType: z.string().optional().nullable(),
+  leadInvestor: z.string().optional().nullable(),
+
+  // Financials
+  softCap: z.number().positive().optional().nullable(),
+  closeDate: z.string().optional().nullable(),
+  rollingClose: z.boolean().optional(),
+  useOfFunds: z.string().optional().nullable(),
+  currentRevenue: z.string().optional().nullable(),
+  previousCapitalRaised: z.string().optional().nullable(),
+  expectedReturnStructure: z.string().optional().nullable(),
+  paymentFrequency: z.string().optional().nullable(),
+  capitalProtection: z.string().optional().nullable(),
+  maturityTerms: z.string().optional().nullable(),
+
+  // Disclosure & Risks (JSON)
+  companyDisclosure: z.any().optional().nullable(),
+  dealRisks: z.any().optional().nullable(),
+
+  // Document URLs
+  pitchDeckUrl: z.string().optional().nullable(),
+  financialDocsUrl: z.string().optional().nullable(),
+  termsSheetUrl: z.string().optional().nullable(),
+  incorporationDocsUrl: z.string().optional().nullable(),
+  instrumentTemplateUrl: z.string().optional().nullable(),
+  riskDisclosureDocUrl: z.string().optional().nullable(),
+  subscriptionAgreementUrl: z.string().optional().nullable(),
+  capTableDocUrl: z.string().optional().nullable(),
+  financialStatementsUrl: z.string().optional().nullable(),
+  founderBackgroundDocsUrl: z.string().optional().nullable(),
+  customerContractsUrl: z.string().optional().nullable(),
+  bankStatementsUrl: z.string().optional().nullable(),
+});
+
+const updateDealSchema = createDealSchema.partial().omit({ companyId: true }).extend({
+  status: z.enum(["DRAFT", "UNDER_REVIEW"]).optional(),
+});
 
 // POST /v1/deals - Create deal (founders only)
 router.post(
@@ -69,7 +128,12 @@ router.post(
   requireRole("FOUNDER"),
   async (req: Request, res: Response) => {
     try {
-      const body = createDealSchema.parse(req.body);
+      // Determine which schema to use based on the requested status
+      const requestedStatus = req.body.status || "DRAFT";
+      const isDraft = requestedStatus === "DRAFT";
+      const body = isDraft
+        ? createDraftDealSchema.parse(req.body)
+        : createDealSchema.parse(req.body);
 
       // Verify user is founder of the company (check both owner and companyFounder)
       const founderProfile = await prisma.founderProfile.findUnique({
@@ -137,51 +201,54 @@ router.post(
         });
       }
 
-      // Validate lane and instrument match
-      const yieldInstruments = [
-        "REVENUE_SHARE_NOTE",
-        "ASSET_BACKED_PARTICIPATION",
-      ];
-      const venturesInstruments = ["CONVERTIBLE_NOTE", "SAFE", "SPV_EQUITY"];
+      // Validate lane and instrument match (only for full submissions with both fields)
+      if (body.lane && body.instrumentType) {
+        const yieldInstruments = [
+          "REVENUE_SHARE_NOTE",
+          "ASSET_BACKED_PARTICIPATION",
+        ];
+        const venturesInstruments = ["CONVERTIBLE_NOTE", "SAFE", "SPV_EQUITY"];
 
-      if (
-        body.lane === "YIELD" &&
-        !yieldInstruments.includes(body.instrumentType)
-      ) {
-        return res.status(400).json({
-          success: false,
-          error: {
-            code: "INVALID_INSTRUMENT",
-            message: "Selected instrument is not valid for Yield lane",
-          },
-        });
+        if (
+          body.lane === "YIELD" &&
+          !yieldInstruments.includes(body.instrumentType)
+        ) {
+          return res.status(400).json({
+            success: false,
+            error: {
+              code: "INVALID_INSTRUMENT",
+              message: "Selected instrument is not valid for Yield lane",
+            },
+          });
+        }
+
+        if (
+          body.lane === "VENTURES" &&
+          !venturesInstruments.includes(body.instrumentType)
+        ) {
+          return res.status(400).json({
+            success: false,
+            error: {
+              code: "INVALID_INSTRUMENT",
+              message: "Selected instrument is not valid for Ventures lane",
+            },
+          });
+        }
       }
 
-      if (
-        body.lane === "VENTURES" &&
-        !venturesInstruments.includes(body.instrumentType)
-      ) {
-        return res.status(400).json({
-          success: false,
-          error: {
-            code: "INVALID_INSTRUMENT",
-            message: "Selected instrument is not valid for Ventures lane",
-          },
-        });
-      }
-
-      // Create deal in DRAFT status (needs admin approval)
+      // Create deal with the requested status (DRAFT or UNDER_REVIEW)
+      const dealStatus = isDraft ? "DRAFT" : "UNDER_REVIEW";
       const deal = await prisma.deal.create({
         data: {
           companyId: body.companyId,
-          name: body.name,
-          lane: body.lane,
-          instrumentType: body.instrumentType,
-          targetAmount: body.targetAmount,
-          minimumInvestment: body.minimumInvestment,
-          terms: body.terms,
+          name: body.name || "Untitled Deal",
+          lane: body.lane ?? undefined,
+          instrumentType: body.instrumentType ?? undefined,
+          targetAmount: body.targetAmount ?? undefined,
+          minimumInvestment: body.minimumInvestment ?? undefined,
+          terms: body.terms ?? undefined,
           duration: body.duration ?? undefined,
-          status: "DRAFT",
+          status: dealStatus,
 
           // Overview
           jurisdiction: body.jurisdiction ?? undefined,

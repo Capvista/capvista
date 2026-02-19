@@ -428,6 +428,9 @@ function CreateDealContent() {
   const [submitting, setSubmitting] = useState(false);
 
   const preselectedCompanyId = searchParams.get("companyId") || "";
+  const editDealId = searchParams.get("dealId") || "";
+  const [savingDraft, setSavingDraft] = useState(false);
+  const [loadingDeal, setLoadingDeal] = useState(!!searchParams.get("dealId"));
 
   const [formData, setFormData] = useState<FormData>({
     // Step 1: Overview
@@ -562,6 +565,107 @@ function CreateDealContent() {
     }
   }, [user, loading, accessToken, preselectedCompanyId]);
 
+  // Fetch existing deal data when editing a draft
+  useEffect(() => {
+    async function fetchDeal() {
+      if (!accessToken || !editDealId) return;
+      try {
+        const API_URL =
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+        const res = await fetch(`${API_URL}/api/deals/${editDealId}`, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        const data = await res.json();
+        if (data.success && data.data) {
+          const d = data.data;
+          const terms = d.terms || {};
+          const disclosure = d.companyDisclosure || {};
+          const risks = d.dealRisks || {};
+          setFormData((prev) => ({
+            ...prev,
+            companyId: d.companyId || prev.companyId,
+            dealName: d.name || "",
+            lane: d.lane || "",
+            instrumentType: d.instrumentType || "",
+            jurisdiction: d.jurisdiction || "",
+            entityType: d.entityType || "",
+            offeringStructure: d.offeringStructure || "",
+            closingType: d.closingType || "",
+            leadInvestor: d.leadInvestor || "",
+            targetAmount: d.targetAmount ? String(d.targetAmount) : "",
+            minimumInvestment: d.minimumInvestment ? String(d.minimumInvestment) : "",
+            softCap: d.softCap ? String(d.softCap) : "",
+            closeDate: d.closeDate ? d.closeDate.split("T")[0] : "",
+            rollingClose: d.rollingClose || false,
+            useOfFunds: d.useOfFunds || "",
+            currentRevenue: d.currentRevenue || "",
+            previousCapitalRaised: d.previousCapitalRaised || "",
+            expectedReturnStructure: d.expectedReturnStructure || "",
+            paymentFrequency: d.paymentFrequency || "",
+            capitalProtection: d.capitalProtection || "",
+            maturityTerms: d.maturityTerms || "",
+            // Terms
+            revenueSharePercentage: terms.revenueSharePercentage != null ? String(terms.revenueSharePercentage) : "",
+            repaymentCap: terms.repaymentCap != null ? String(terms.repaymentCap) : "",
+            assetDescription: terms.assetDescription || "",
+            expectedYield: terms.expectedYield != null ? String(terms.expectedYield) : "",
+            collateralDetails: terms.collateralDetails || "",
+            interestRate: terms.interestRate != null ? String(terms.interestRate) : "",
+            maturityDate: terms.maturityDate || "",
+            conversionDiscount: terms.conversionDiscount != null ? String(terms.conversionDiscount) : "",
+            valuationCap: terms.valuationCap != null ? String(terms.valuationCap) : "",
+            safeValuationCap: terms.valuationCap != null && d.instrumentType === "SAFE" ? String(terms.valuationCap) : "",
+            safeDiscountRate: terms.discountRate != null ? String(terms.discountRate) : "",
+            mfnClause: terms.mfnClause || false,
+            pricePerShare: terms.pricePerShare != null ? String(terms.pricePerShare) : "",
+            equityPercentageOffered: terms.equityPercentageOffered != null ? String(terms.equityPercentageOffered) : "",
+            premoneyOrPostmoney: terms.premoneyOrPostmoney || "",
+            proRataRights: terms.proRataRights || false,
+            conversionTriggerEvents: terms.conversionTriggerEvents || "",
+            liquidityEventDefinition: terms.liquidityEventDefinition || "",
+            governingLaw: terms.governingLaw || "",
+            investorRightsSummary: terms.investorRightsSummary || "",
+            transferRestrictions: terms.transferRestrictions || "",
+            minimumHoldPeriod: terms.minimumHoldPeriod || "",
+            distributionTerms: terms.distributionTerms || "",
+            spvJurisdiction: terms.spvJurisdiction || "",
+            spvAdminFee: terms.spvAdminFee || "",
+            spvManager: terms.spvManager || "",
+            carry: terms.carry || "",
+            votingRightsStructure: terms.votingRightsStructure || "",
+            // Company Disclosure
+            corporateStructureOverview: disclosure.corporateStructureOverview || "",
+            capTableSnapshot: disclosure.capTableSnapshot || "",
+            keyShareholders: disclosure.keyShareholders || "",
+            directorList: disclosure.directorList || "",
+            bankingRelationship: disclosure.bankingRelationship || "",
+            materialContracts: disclosure.materialContracts || "",
+            hasOutstandingDebt: disclosure.hasOutstandingDebt || false,
+            outstandingDebtDetails: disclosure.outstandingDebtDetails || "",
+            hasPendingLitigation: disclosure.hasPendingLitigation || false,
+            pendingLitigationDetails: disclosure.pendingLitigationDetails || "",
+            // Risks
+            marketRisk: risks.marketRisk || "",
+            executionRisk: risks.executionRisk || "",
+            regulatoryRisk: risks.regulatoryRisk || "",
+            currencyRisk: risks.currencyRisk || "",
+            liquidityRisk: risks.liquidityRisk || "",
+            concentrationRisk: risks.concentrationRisk || "",
+            riskDisclosureAcknowledged: risks.riskDisclosureAcknowledged || false,
+          }));
+        }
+      } catch (err) {
+        console.error("Failed to fetch deal:", err);
+      } finally {
+        setLoadingDeal(false);
+      }
+    }
+
+    if (!loading && user && editDealId) {
+      fetchDeal();
+    }
+  }, [user, loading, accessToken, editDealId]);
+
   const updateField = (field: keyof FormData, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -687,6 +791,106 @@ function CreateDealContent() {
     };
   };
 
+  const saveDraft = async () => {
+    if (!formData.companyId) {
+      alert("Please select a company before saving a draft.");
+      return;
+    }
+    setSavingDraft(true);
+    try {
+      if (!accessToken) {
+        alert("Your session has expired. Please log in again.");
+        router.push("/");
+        return;
+      }
+
+      const API_URL =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+
+      const payload: Record<string, any> = {
+        companyId: formData.companyId,
+        name: formData.dealName || undefined,
+        status: "DRAFT",
+      };
+
+      // Include whatever data has been filled so far
+      if (formData.lane) payload.lane = formData.lane;
+      if (formData.instrumentType) payload.instrumentType = formData.instrumentType;
+      if (formData.targetAmount) payload.targetAmount = parseFloat(formData.targetAmount);
+      if (formData.minimumInvestment) payload.minimumInvestment = parseFloat(formData.minimumInvestment);
+      if (formData.jurisdiction) payload.jurisdiction = formData.jurisdiction;
+      if (formData.entityType) payload.entityType = formData.entityType;
+      if (formData.offeringStructure) payload.offeringStructure = formData.offeringStructure;
+      if (formData.closingType) payload.closingType = formData.closingType;
+      if (formData.leadInvestor) payload.leadInvestor = formData.leadInvestor;
+      if (formData.softCap) payload.softCap = parseFloat(formData.softCap);
+      if (formData.closeDate) payload.closeDate = formData.closeDate;
+      payload.rollingClose = formData.rollingClose;
+      if (formData.useOfFunds) payload.useOfFunds = formData.useOfFunds;
+      if (formData.currentRevenue) payload.currentRevenue = formData.currentRevenue;
+      if (formData.previousCapitalRaised) payload.previousCapitalRaised = formData.previousCapitalRaised;
+      if (formData.expectedReturnStructure) payload.expectedReturnStructure = formData.expectedReturnStructure;
+      if (formData.paymentFrequency) payload.paymentFrequency = formData.paymentFrequency;
+      if (formData.capitalProtection) payload.capitalProtection = formData.capitalProtection;
+      if (formData.maturityTerms) payload.maturityTerms = formData.maturityTerms;
+
+      // Include terms if any instrument-specific data exists
+      if (formData.instrumentType) {
+        payload.terms = buildTerms();
+      }
+
+      // Include disclosure if any data exists
+      if (formData.corporateStructureOverview || formData.capTableSnapshot) {
+        payload.companyDisclosure = buildCompanyDisclosure();
+      }
+
+      // Include risks if any data exists
+      if (formData.marketRisk || formData.executionRisk) {
+        payload.dealRisks = buildDealRisks();
+      }
+
+      if (editDealId) {
+        // Update existing draft — remove companyId (not allowed on PATCH)
+        const { companyId: _, ...patchPayload } = payload;
+        const response = await fetch(`${API_URL}/api/deals/${editDealId}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify(patchPayload),
+        });
+        const result = await response.json();
+        if (result.success) {
+          router.push("/dashboard/founder");
+        } else {
+          alert(`Error: ${result.error?.message || "Failed to save draft"}`);
+        }
+      } else {
+        // Create new draft
+        const response = await fetch(`${API_URL}/api/deals`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify(payload),
+        });
+        const result = await response.json();
+        if (result.success) {
+          router.push("/dashboard/founder");
+        } else {
+          alert(`Error: ${result.error?.message || "Failed to save draft"}`);
+        }
+      }
+    } catch (error) {
+      console.error("Save draft error:", error);
+      alert("Failed to save draft. Please try again.");
+    } finally {
+      setSavingDraft(false);
+    }
+  };
+
   const uploadFile = async (file: File, prefix: string): Promise<string> => {
     const fileExt = file.name.split(".").pop();
     const fileName = `${formData.companyId}/${prefix}-${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
@@ -748,6 +952,7 @@ function CreateDealContent() {
         targetAmount: parseFloat(formData.targetAmount),
         minimumInvestment: parseFloat(formData.minimumInvestment),
         terms: buildTerms(),
+        status: "UNDER_REVIEW",
 
         // Overview
         jurisdiction: formData.jurisdiction,
@@ -778,14 +983,29 @@ function CreateDealContent() {
         ...docUploads,
       };
 
-      const response = await fetch(`${API_URL}/api/deals`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify(payload),
-      });
+      let response;
+      if (editDealId) {
+        // Update existing draft and submit for review — remove companyId (not allowed on PATCH)
+        const { companyId: _, ...patchPayload } = payload;
+        response = await fetch(`${API_URL}/api/deals/${editDealId}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify(patchPayload),
+        });
+      } else {
+        // Create new deal directly as UNDER_REVIEW
+        response = await fetch(`${API_URL}/api/deals`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify(payload),
+        });
+      }
 
       const result = await response.json();
 
@@ -914,7 +1134,7 @@ function CreateDealContent() {
             </div>
           )}
 
-          {loadingCompanies ? (
+          {loadingCompanies || loadingDeal ? (
             <div className="text-center py-12">
               <div className="w-10 h-10 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
               <p className="text-gray-500">Loading your companies...</p>
@@ -984,13 +1204,22 @@ function CreateDealContent() {
 
               {/* Navigation */}
               <div className="flex items-center justify-between mt-8 pt-8 border-t border-gray-200">
-                <button
-                  onClick={prevStep}
-                  disabled={currentStep === 0}
-                  className="px-6 py-3 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed border-2 border-gray-300 text-gray-700 hover:border-gray-400"
-                >
-                  Previous
-                </button>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={prevStep}
+                    disabled={currentStep === 0}
+                    className="px-6 py-3 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed border-2 border-gray-300 text-gray-700 hover:border-gray-400"
+                  >
+                    Previous
+                  </button>
+                  <button
+                    onClick={saveDraft}
+                    disabled={savingDraft || submitting}
+                    className="px-5 py-3 rounded-lg font-medium transition-all disabled:opacity-50 border border-gray-300 text-gray-600 hover:bg-gray-50"
+                  >
+                    {savingDraft ? "Saving..." : "Save Draft"}
+                  </button>
+                </div>
 
                 {currentStep < STEPS.length - 1 ? (
                   <button
@@ -1003,11 +1232,11 @@ function CreateDealContent() {
                 ) : (
                   <button
                     onClick={handleSubmit}
-                    disabled={submitting}
+                    disabled={submitting || savingDraft}
                     className="px-6 py-3 rounded-lg font-semibold transition-all disabled:opacity-50"
                     style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
                   >
-                    {submitting ? "Creating Deal..." : "Create Deal"}
+                    {submitting ? "Submitting..." : "Submit for Review"}
                   </button>
                 )}
               </div>
@@ -2883,7 +3112,7 @@ function Step6DocumentsReview({
           </div>
         </div>
 
-        {/* Draft Notice */}
+        {/* Submission Notice */}
         <div
           className="mt-6 rounded-xl border p-4"
           style={{
@@ -2911,11 +3140,12 @@ function Step6DocumentsReview({
                 className="text-sm font-semibold"
                 style={{ color: "#0B1C2D" }}
               >
-                Deal will be saved as Draft
+                Your deal will be submitted for admin review
               </p>
               <p className="text-sm text-gray-600 mt-1">
-                After creation, your deal will be saved as a draft. You can
-                submit it for admin review from your dashboard when ready.
+                Once submitted, our team will review your deal. You can save a
+                draft at any time using the &quot;Save Draft&quot; button if you need to come
+                back later.
               </p>
             </div>
           </div>
