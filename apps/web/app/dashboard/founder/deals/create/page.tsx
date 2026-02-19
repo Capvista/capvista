@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import CustomSelect from "@/components/CustomSelect";
@@ -166,6 +166,26 @@ function FieldError({ show, message }: { show: boolean; message: string }) {
 // MAIN PAGE
 // ============================================================================
 export default function CreateDealPage() {
+  return (
+    <Suspense
+      fallback={
+        <div
+          className="min-h-screen flex items-center justify-center"
+          style={{ backgroundColor: "#F6F8FA" }}
+        >
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-slate">Loading...</p>
+          </div>
+        </div>
+      }
+    >
+      <CreateDealContent />
+    </Suspense>
+  );
+}
+
+function CreateDealContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, accessToken, loading } = useAuth();
