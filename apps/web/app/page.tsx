@@ -22,13 +22,13 @@ export default function HomePage() {
           </div>
           <nav className="hidden md:flex items-center space-x-8">
             <Link
-              href="/how-it-works"
+              href="#how-it-works"
               className="text-gray-900 hover:text-primary-950 font-medium transition-colors"
             >
               How It Works
             </Link>
             <Link
-              href="/browse"
+              href="/dashboard/investor/companies"
               className="text-gray-900 hover:text-primary-950 font-medium transition-colors"
             >
               Browse Companies
@@ -39,8 +39,12 @@ export default function HomePage() {
             >
               Log In
             </Link>
-            <Link href="/signup" className="btn-primary">
-              Get Started
+            <Link
+              href="/signup"
+              className="inline-block px-6 py-2.5 rounded-lg font-bold text-sm transition-all hover:opacity-90"
+              style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
+            >
+              Sign Up
             </Link>
           </nav>
         </div>
@@ -70,228 +74,24 @@ export default function HomePage() {
               qualified investors worldwide.
             </p>
 
-            <Link
-              href="/apply"
-              className="btn-primary text-lg px-10 py-4 inline-block"
-            >
-              Apply for Access
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Investment Lanes Section */}
-      <section className="py-24" style={{ backgroundColor: "#F6F8FA" }}>
-        <div className="container">
-          <div className="mb-16 text-center max-w-3xl mx-auto">
-            <h2 className="text-4xl md:text-5xl font-bold text-primary-950 mb-4">
-              Investment <span className="text-slate">opportunities</span>
-            </h2>
-            <p className="text-xl text-slate-light">
-              Access Exclusive, Vetted Deals
+            <div className="flex items-center justify-center gap-4 mb-4">
+              <Link
+                href="/signup"
+                className="inline-block px-10 py-4 rounded-lg font-bold text-lg transition-all hover:opacity-90"
+                style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
+              >
+                Get Started
+              </Link>
+              <Link
+                href="/dashboard/investor/companies"
+                className="inline-block px-10 py-4 rounded-lg font-bold text-lg border-2 border-white text-white transition-all hover:bg-white/10"
+              >
+                Browse Companies
+              </Link>
+            </div>
+            <p className="text-sm text-gray-400">
+              Qualified investors only. Deal details visible after verification.
             </p>
-            <p className="text-slate-light mt-2">
-              Available to qualified investors only.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
-            {/* Investors Card - Dark */}
-            <div
-              className="group relative overflow-hidden rounded-2xl p-10 transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] cursor-pointer"
-              style={{
-                background: "linear-gradient(135deg, #142B4F 0%, #243B53 100%)",
-              }}
-            >
-              <div
-                className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-10 group-hover:opacity-20 transition-opacity duration-300"
-                style={{
-                  background:
-                    "radial-gradient(circle, #C8A24D 0%, transparent 70%)",
-                  transform: "translate(30%, -30%)",
-                }}
-              />
-
-              <div className="relative">
-                <div className="flex items-center gap-2 mb-6">
-                  <svg
-                    className="w-6 h-6 text-gold group-hover:scale-110 transition-transform duration-300"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-                    />
-                  </svg>
-                  <span className="text-sm uppercase tracking-wider text-gray-300 font-semibold">
-                    Investors
-                  </span>
-                </div>
-
-                <h3 className="text-3xl font-bold text-white mb-4 group-hover:text-gold transition-colors duration-300">
-                  Invest in Verified, Private African Companies
-                </h3>
-
-                <p className="text-gray-300 mb-8 text-lg leading-relaxed">
-                  Structured access to exclusive opportunities in Africa's top
-                  private companies.
-                </p>
-
-                <div className="space-y-4">
-                  <Link
-                    href="/apply/investor"
-                    className="block w-full py-4 px-6 rounded-lg font-bold text-center transition-all hover:scale-105 text-lg"
-                    style={{
-                      backgroundColor: "#C8A24D",
-                      color: "#0B1C2D",
-                    }}
-                  >
-                    Qualified Investor Apply
-                  </Link>
-                  <Link
-                    href="/investors"
-                    className="block text-center text-gray-300 hover:text-white transition-colors flex items-center justify-center gap-2 group/link"
-                  >
-                    Learn More
-                    <svg
-                      className="w-4 h-4 group-hover/link:translate-x-1 transition-transform duration-300"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
-                  </Link>
-                </div>
-              </div>
-            </div>
-
-            {/* Companies Card - Light with border */}
-            <div
-              className="group relative overflow-hidden rounded-2xl p-10 bg-white border-2 transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] cursor-pointer"
-              style={{
-                borderColor: "#2F3B4A",
-              }}
-            >
-              <div
-                className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-5 group-hover:opacity-10 transition-opacity duration-300"
-                style={{
-                  background:
-                    "radial-gradient(circle, #C8A24D 0%, transparent 70%)",
-                  transform: "translate(30%, -30%)",
-                }}
-              />
-
-              <div className="relative">
-                <div className="flex items-center gap-2 mb-6">
-                  <svg
-                    className="w-6 h-6 group-hover:scale-110 transition-transform duration-300"
-                    style={{ color: "#C8A24D" }}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                    />
-                  </svg>
-                  <span
-                    className="text-sm uppercase tracking-wider font-semibold"
-                    style={{ color: "#6B7C93" }}
-                  >
-                    Companies
-                  </span>
-                </div>
-
-                <h3
-                  className="text-3xl font-bold mb-4 transition-colors duration-300"
-                  style={{ color: "#0B1C2D" }}
-                >
-                  Grow with Trusted Private Capital
-                </h3>
-
-                <p
-                  className="mb-8 text-lg leading-relaxed"
-                  style={{ color: "#2F3B4A" }}
-                >
-                  Connect with a network of qualified investors to secure your
-                  next funding round.
-                </p>
-
-                <div className="space-y-4">
-                  <Link
-                    href="/apply/company"
-                    className="block w-full py-4 px-6 rounded-lg font-bold text-center transition-all hover:scale-105 text-lg"
-                    style={{
-                      backgroundColor: "#C8A24D",
-                      color: "#0B1C2D",
-                    }}
-                  >
-                    Apply as Company
-                  </Link>
-                  <Link
-                    href="/companies"
-                    className="block text-center transition-colors flex items-center justify-center gap-2 group/link"
-                    style={{ color: "#2F3B4A" }}
-                  >
-                    Learn More
-                    <svg
-                      className="w-4 h-4 group-hover/link:translate-x-1 transition-transform duration-300"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Gating notice */}
-          <div className="mt-12 max-w-6xl mx-auto bg-gray-100 rounded-xl p-6 flex items-start gap-4 border border-gray-200">
-            <svg
-              className="w-6 h-6 text-slate flex-shrink-0 mt-0.5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <div>
-              <p className="text-slate font-medium">
-                Qualified investors only see deal details.{" "}
-                <Link
-                  href="/learn-more"
-                  className="text-primary-950 font-semibold hover:underline"
-                >
-                  Learn More
-                </Link>
-              </p>
-            </div>
           </div>
         </div>
       </section>
