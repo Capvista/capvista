@@ -45,6 +45,7 @@ type FormData = {
   softCap: string;
   closeDate: string;
   rollingClose: boolean;
+  allowWaitlist: boolean;
   useOfFunds: string;
   currentRevenue: string;
   previousCapitalRaised: string;
@@ -449,6 +450,7 @@ function CreateDealContent() {
     softCap: "",
     closeDate: "",
     rollingClose: false,
+    allowWaitlist: false,
     useOfFunds: "",
     currentRevenue: "",
     previousCapitalRaised: "",
@@ -597,6 +599,7 @@ function CreateDealContent() {
             softCap: d.softCap ? String(d.softCap) : "",
             closeDate: d.closeDate ? d.closeDate.split("T")[0] : "",
             rollingClose: d.rollingClose || false,
+            allowWaitlist: d.allowWaitlist || false,
             useOfFunds: d.useOfFunds || "",
             currentRevenue: d.currentRevenue || "",
             previousCapitalRaised: d.previousCapitalRaised || "",
@@ -826,6 +829,7 @@ function CreateDealContent() {
       if (formData.softCap) payload.softCap = parseFloat(formData.softCap);
       if (formData.closeDate) payload.closeDate = formData.closeDate;
       payload.rollingClose = formData.rollingClose;
+      payload.allowWaitlist = formData.allowWaitlist;
       if (formData.useOfFunds) payload.useOfFunds = formData.useOfFunds;
       if (formData.currentRevenue) payload.currentRevenue = formData.currentRevenue;
       if (formData.previousCapitalRaised) payload.previousCapitalRaised = formData.previousCapitalRaised;
@@ -965,6 +969,7 @@ function CreateDealContent() {
         softCap: formData.softCap ? parseFloat(formData.softCap) : null,
         closeDate: formData.closeDate,
         rollingClose: formData.rollingClose,
+        allowWaitlist: formData.allowWaitlist,
         useOfFunds: formData.useOfFunds,
         currentRevenue: formData.currentRevenue || null,
         previousCapitalRaised: formData.previousCapitalRaised || null,
@@ -1600,6 +1605,24 @@ function Step2Financials({
             </span>
           </label>
         </div>
+      </div>
+
+      {/* Allow Waitlist */}
+      <div className="mb-6">
+        <label className="flex items-center gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={formData.allowWaitlist}
+            onChange={(e) => updateField("allowWaitlist", e.target.checked)}
+            className="w-5 h-5 rounded border-gray-300 text-primary-600 focus:ring-primary-600"
+          />
+          <span className="text-sm font-medium text-gray-700">
+            Allow waitlist if oversubscribed
+          </span>
+        </label>
+        <p className="text-xs text-gray-500 mt-1 ml-8">
+          If enabled, investors can join a waitlist when the offering is fully subscribed. They will be notified if a slot becomes available.
+        </p>
       </div>
 
       {/* Use of Funds */}
@@ -2871,6 +2894,10 @@ function Step6DocumentsReview({
             <span className="text-gray-600">Rolling Close</span>
             <span className="font-medium text-gray-900">
               {formData.rollingClose ? "Yes" : "No"}
+            </span>
+            <span className="text-gray-600">Allow Waitlist</span>
+            <span className="font-medium text-gray-900">
+              {formData.allowWaitlist ? "Yes" : "No"}
             </span>
             <span className="text-gray-600">Use of Funds</span>
             <span className="font-medium text-gray-900">

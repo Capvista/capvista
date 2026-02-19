@@ -249,6 +249,7 @@ router.patch(
               raisedAmount: true,
               minimumInvestment: true,
               terms: true,
+              allowWaitlist: true,
             },
           },
         },
@@ -296,18 +297,55 @@ router.patch(
         });
       }
 
-      // Validate remaining allocation
+      // Check oversubscription
       const targetAmount = Number(investment.deal.targetAmount || 0);
       const raisedAmount = Number(investment.deal.raisedAmount || 0);
-      const remaining = targetAmount - raisedAmount;
+      const wouldExceed = targetAmount > 0 && raisedAmount + body.commitmentAmount > targetAmount;
 
-      if (targetAmount > 0 && body.commitmentAmount > remaining) {
+      if (wouldExceed && !investment.deal.allowWaitlist) {
         return res.status(400).json({
           success: false,
           error: {
-            code: "EXCEEDS_ALLOCATION",
-            message: `Commitment exceeds remaining allocation of $${remaining.toLocaleString()}`,
+            code: "FULLY_SUBSCRIBED",
+            message: "This offering is fully subscribed",
           },
+        });
+      }
+
+      // If oversubscribed but waitlist allowed, create as WAITLISTED
+      if (wouldExceed && investment.deal.allowWaitlist) {
+        const maxPosition = await prisma.investment.aggregate({
+          where: { dealId: investment.dealId, waitlisted: true },
+          _max: { waitlistPosition: true },
+        });
+        const waitlistPosition = (maxPosition._max.waitlistPosition || 0) + 1;
+
+        const waitlisted = await prisma.investment.update({
+          where: { id },
+          data: {
+            commitmentAmount: body.commitmentAmount,
+            status: "WAITLISTED",
+            committedAt: new Date(),
+            waitlisted: true,
+            waitlistPosition,
+          },
+          include: {
+            deal: {
+              select: {
+                id: true,
+                name: true,
+                lane: true,
+                instrumentType: true,
+                company: { select: { legalName: true, tradingName: true } },
+              },
+            },
+          },
+        });
+
+        return res.json({
+          success: true,
+          data: waitlisted,
+          message: `This offering is fully subscribed. You have been added to the waitlist at position ${waitlistPosition}.`,
         });
       }
 
@@ -884,6 +922,29 @@ router.patch(
         where: { id },
         data: { status: "CANCELLED" },
       });
+
+      // If a non-waitlisted investment was cancelled, promote the next waitlisted investor
+      if (investment.status !== "WAITLISTED") {
+        const nextWaitlisted = await prisma.investment.findFirst({
+          where: {
+            dealId: investment.dealId,
+            status: "WAITLISTED",
+            waitlisted: true,
+          },
+          orderBy: { waitlistPosition: "asc" },
+        });
+
+        if (nextWaitlisted) {
+          await prisma.investment.update({
+            where: { id: nextWaitlisted.id },
+            data: {
+              status: "INTERESTED",
+              waitlisted: false,
+              waitlistPosition: null,
+            },
+          });
+        }
+      }
 
       return res.json({
         success: true,

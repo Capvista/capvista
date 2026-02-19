@@ -34,6 +34,7 @@ const createDealSchema = z.object({
   softCap: z.number().positive().optional().nullable(),
   closeDate: z.string().optional().nullable(), // ISO date string
   rollingClose: z.boolean().optional(),
+  allowWaitlist: z.boolean().optional(),
   useOfFunds: z.string().optional().nullable(),
   currentRevenue: z.string().optional().nullable(),
   previousCapitalRaised: z.string().optional().nullable(),
@@ -90,6 +91,7 @@ const createDraftDealSchema = z.object({
   softCap: z.number().positive().optional().nullable(),
   closeDate: z.string().optional().nullable(),
   rollingClose: z.boolean().optional(),
+  allowWaitlist: z.boolean().optional(),
   useOfFunds: z.string().optional().nullable(),
   currentRevenue: z.string().optional().nullable(),
   previousCapitalRaised: z.string().optional().nullable(),
@@ -261,6 +263,7 @@ router.post(
           softCap: body.softCap ?? undefined,
           closeDate: body.closeDate ? new Date(body.closeDate) : undefined,
           rollingClose: body.rollingClose ?? false,
+          allowWaitlist: body.allowWaitlist ?? false,
           useOfFunds: body.useOfFunds ?? undefined,
           currentRevenue: body.currentRevenue ?? undefined,
           previousCapitalRaised: body.previousCapitalRaised ?? undefined,
