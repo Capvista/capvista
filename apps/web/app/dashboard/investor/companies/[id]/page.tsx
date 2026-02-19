@@ -82,6 +82,8 @@ type Company = {
     terms: any;
     openedAt?: string;
     closedAt?: string;
+    closeDate?: string;
+    investorCount?: number;
   }>;
   verificationRecords: Array<{
     type: string;
@@ -362,15 +364,16 @@ export default function CompanyDetailPage() {
       company.keyMetrics.metric2 ||
       company.keyMetrics.metric3);
 
+  const allDeals = company.deals || [];
+  const pastDeals = allDeals.filter((d) => d.status === "CLOSED" || d.status === "COMPLETED");
+
   const tabs = [
     { id: "overview", label: "Overview" },
     { id: "traction", label: "Traction & Metrics" },
     { id: "team", label: "Team" },
     { id: "capital", label: "Capital History" },
     { id: "risks", label: "Risks" },
-    ...(liveDeals.length > 0
-      ? [{ id: "deals", label: `Deals (${liveDeals.length})` }]
-      : []),
+    { id: "deals", label: `Deals${allDeals.length > 0 ? ` (${allDeals.length})` : ""}` },
   ];
 
   return (
@@ -537,13 +540,13 @@ export default function CompanyDetailPage() {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Content — Left 2/3 */}
           <div className="lg:col-span-2 space-y-8">
-            {activeTab === "overview" && <OverviewTab company={company} />}
+            {activeTab === "overview" && <OverviewTab company={company} liveDeals={liveDeals} onViewDeals={() => setActiveTab("deals")} />}
             {activeTab === "traction" && <TractionTab company={company} />}
             {activeTab === "team" && <TeamTab company={company} />}
             {activeTab === "capital" && <CapitalTab company={company} />}
             {activeTab === "risks" && <RisksTab company={company} />}
             {activeTab === "deals" && (
-              <DealsTab company={company} deals={liveDeals} />
+              <DealsTab company={company} liveDeals={liveDeals} pastDeals={pastDeals} />
             )}
           </div>
 
@@ -717,7 +720,7 @@ function SidebarRow({ label, value }: { label: string; value: string }) {
 // ============================================================================
 // OVERVIEW TAB
 // ============================================================================
-function OverviewTab({ company }: { company: Company }) {
+function OverviewTab({ company, liveDeals, onViewDeals }: { company: Company; liveDeals: Company["deals"]; onViewDeals: () => void }) {
   return (
     <div className="space-y-8">
       {/* Description */}
@@ -729,6 +732,30 @@ function OverviewTab({ company }: { company: Company }) {
         <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
           {company.detailedDescription}
         </p>
+
+        {/* Active Offering Banner */}
+        {liveDeals.length > 0 && (
+          <div className="mt-6 p-4 rounded-lg border border-amber-200 bg-amber-50/50">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                  <p className="text-sm font-semibold text-gray-900">Active Offering Available</p>
+                </div>
+                <p className="text-xs text-gray-600">
+                  {liveDeals[0].name} · {instrumentLabels[liveDeals[0].instrumentType] || liveDeals[0].instrumentType} · ${Number(liveDeals[0].targetAmount).toLocaleString()} target
+                </p>
+              </div>
+              <button
+                onClick={onViewDeals}
+                className="px-4 py-2 text-xs font-semibold rounded-lg transition-all hover:opacity-90"
+                style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
+              >
+                View Deal →
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Quick Stats */}
@@ -1196,22 +1223,65 @@ function RiskFlag({
 // ============================================================================
 // DEALS TAB
 // ============================================================================
+function DealKeyTerms({ terms, instrumentType }: { terms: any; instrumentType: string }) {
+  if (!terms) return null;
+  const bullets: string[] = [];
+
+  if (instrumentType === "SAFE" || instrumentType === "CONVERTIBLE_NOTE") {
+    if (terms.valuationCap || terms.valuation_cap) bullets.push(`Valuation cap: $${Number(terms.valuationCap || terms.valuation_cap).toLocaleString()}`);
+    if (terms.discount) bullets.push(`Discount: ${terms.discount}%`);
+    if (terms.interestRate) bullets.push(`Interest rate: ${terms.interestRate}%`);
+  } else if (instrumentType === "SPV_EQUITY") {
+    if (terms.preMoneyValuation || terms.valuation) bullets.push(`Pre-money valuation: $${Number(terms.preMoneyValuation || terms.valuation).toLocaleString()}`);
+    if (terms.shareClass) bullets.push(`Share class: ${terms.shareClass}`);
+  } else if (instrumentType === "REVENUE_SHARE_NOTE" || instrumentType === "ASSET_BACKED_PARTICIPATION") {
+    if (terms.revenueSharePercentage || terms.revenueShare) bullets.push(`Revenue share: ${terms.revenueSharePercentage || terms.revenueShare}%`);
+    if (terms.repaymentCap || terms.returnCap) bullets.push(`Repayment cap: ${terms.repaymentCap || terms.returnCap}x`);
+    if (terms.paymentFrequency) bullets.push(`Payment frequency: ${terms.paymentFrequency}`);
+  }
+
+  if (bullets.length === 0) return null;
+
+  return (
+    <div className="mt-3 pt-3 border-t border-gray-100">
+      <p className="text-xs text-gray-400 mb-1.5">Key Terms</p>
+      <ul className="space-y-1">
+        {bullets.slice(0, 3).map((b, i) => (
+          <li key={i} className="text-xs text-gray-600 flex items-start gap-1.5">
+            <span className="text-gray-300 mt-0.5">·</span>
+            <span>{b}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function DealsTab({
   company,
-  deals,
+  liveDeals,
+  pastDeals,
 }: {
   company: Company;
-  deals: Company["deals"];
+  liveDeals: Company["deals"];
+  pastDeals: Company["deals"];
 }) {
+  const router = useRouter();
+
+  const handleExpressInterest = (dealId: string) => {
+    router.push(`/dashboard/investor/invest/${dealId}`);
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* Live Deals */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h3 className="text-lg font-bold text-gray-900 mb-6">Active Deals</h3>
-        {deals.length === 0 ? (
-          <p className="text-sm text-gray-500">No active deals at this time.</p>
+        <h3 className="text-lg font-bold text-gray-900 mb-6">Live Deals</h3>
+        {liveDeals.length === 0 ? (
+          <p className="text-sm text-gray-500">No live deals at this time.</p>
         ) : (
           <div className="space-y-4">
-            {deals.map((deal) => {
+            {liveDeals.map((deal) => {
               const progress =
                 deal.targetAmount > 0
                   ? (deal.raisedAmount / deal.targetAmount) * 100
@@ -1246,7 +1316,7 @@ function DealsTab({
                   {/* Progress */}
                   <div className="mb-3">
                     <div className="flex justify-between text-xs mb-1">
-                      <span className="text-gray-500">Raised</span>
+                      <span className="text-gray-500">Round filled</span>
                       <span className="font-medium text-gray-900">
                         {Math.round(progress)}%
                       </span>
@@ -1259,9 +1329,9 @@ function DealsTab({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-4 text-sm">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
                     <div>
-                      <p className="text-xs text-gray-400">Target</p>
+                      <p className="text-xs text-gray-400">Hard Cap</p>
                       <p className="font-semibold text-gray-900">
                         ${Number(deal.targetAmount).toLocaleString()}
                       </p>
@@ -1278,6 +1348,27 @@ function DealsTab({
                         ${Number(deal.minimumInvestment).toLocaleString()}
                       </p>
                     </div>
+                    {deal.closeDate && (
+                      <div>
+                        <p className="text-xs text-gray-400">Close Date</p>
+                        <p className="font-semibold text-gray-900">
+                          {new Date(deal.closeDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  <DealKeyTerms terms={deal.terms} instrumentType={deal.instrumentType} />
+
+                  {/* Express Interest Button */}
+                  <div className="mt-4 pt-4 border-t border-gray-100">
+                    <button
+                      onClick={() => handleExpressInterest(deal.id)}
+                      className="w-full py-3 rounded-lg text-sm font-semibold transition-all hover:opacity-90"
+                      style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
+                    >
+                      Express Interest
+                    </button>
                   </div>
                 </div>
               );
@@ -1285,6 +1376,72 @@ function DealsTab({
           </div>
         )}
       </div>
+
+      {/* Past Deals */}
+      {pastDeals.length > 0 && (
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <h3 className="text-lg font-bold text-gray-900 mb-6">Past Deals</h3>
+          <div className="space-y-4">
+            {pastDeals.map((deal) => {
+              const progress =
+                deal.targetAmount > 0
+                  ? (deal.raisedAmount / deal.targetAmount) * 100
+                  : 0;
+              return (
+                <div
+                  key={deal.id}
+                  className="p-5 border border-gray-200 rounded-lg bg-gray-50/50"
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <h4 className="text-base font-bold text-gray-900">
+                        {deal.name}
+                      </h4>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span
+                          className={`px-2 py-0.5 rounded text-xs font-semibold ${deal.lane === "YIELD" ? "bg-blue-50 text-blue-700" : "bg-purple-50 text-purple-700"}`}
+                        >
+                          {laneLabels[deal.lane] || deal.lane}
+                        </span>
+                        <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs font-medium">
+                          {instrumentLabels[deal.instrumentType] ||
+                            deal.instrumentType}
+                        </span>
+                      </div>
+                    </div>
+                    <span className="px-3 py-1 bg-gray-200 text-gray-600 rounded-full text-xs font-semibold">
+                      {deal.status === "COMPLETED" ? "Completed" : "Closed"}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <p className="text-xs text-gray-400">Target</p>
+                      <p className="font-semibold text-gray-900">
+                        ${Number(deal.targetAmount).toLocaleString()}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-400">Final Raised</p>
+                      <p className="font-semibold text-gray-900">
+                        ${Number(deal.raisedAmount).toLocaleString()}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-400">Filled</p>
+                      <p className="font-semibold text-gray-900">
+                        {Math.round(progress)}%
+                      </p>
+                    </div>
+                  </div>
+
+                  <DealKeyTerms terms={deal.terms} instrumentType={deal.instrumentType} />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

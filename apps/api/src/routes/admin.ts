@@ -905,4 +905,278 @@ router.patch("/deals/:id/golive", async (req: Request, res: Response) => {
   }
 });
 
+// ============================================================================
+// INVESTMENTS
+// ============================================================================
+
+// GET /api/admin/investments — list all investments with filters
+router.get("/investments", async (req: Request, res: Response) => {
+  try {
+    const { status, dealId, investorId, search, page = "1", limit = "20" } = req.query;
+    const skip = (Number(page) - 1) * Number(limit);
+    const take = Number(limit);
+
+    const where: any = {};
+    if (status) where.status = status;
+    if (dealId) where.dealId = dealId;
+    if (investorId) where.investorId = investorId;
+    if (search) {
+      where.OR = [
+        { fundingReference: { contains: String(search), mode: "insensitive" } },
+        { deal: { name: { contains: String(search), mode: "insensitive" } } },
+        { investor: { user: { email: { contains: String(search), mode: "insensitive" } } } },
+      ];
+    }
+
+    const [investments, total] = await Promise.all([
+      prisma.investment.findMany({
+        where,
+        skip,
+        take,
+        orderBy: { createdAt: "desc" },
+        include: {
+          deal: {
+            select: {
+              id: true,
+              name: true,
+              lane: true,
+              instrumentType: true,
+              status: true,
+              company: {
+                select: { id: true, legalName: true, tradingName: true },
+              },
+            },
+          },
+          investor: {
+            select: {
+              id: true,
+              fullName: true,
+              user: {
+                select: { id: true, email: true, firstName: true, lastName: true },
+              },
+            },
+          },
+        },
+      }),
+      prisma.investment.count({ where }),
+    ]);
+
+    return res.json({
+      success: true,
+      data: investments,
+      meta: {
+        total,
+        page: Number(page),
+        limit: Number(limit),
+        totalPages: Math.ceil(total / Number(limit)),
+      },
+    });
+  } catch (error) {
+    console.error("Admin list investments error:", error);
+    return res.status(500).json({
+      success: false,
+      error: { code: "INTERNAL_ERROR", message: "Failed to fetch investments" },
+    });
+  }
+});
+
+// GET /api/admin/investments/:id — investment detail
+router.get("/investments/:id", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const investment = await prisma.investment.findUnique({
+      where: { id },
+      include: {
+        deal: {
+          include: {
+            company: {
+              select: { id: true, legalName: true, tradingName: true, sector: true },
+            },
+          },
+        },
+        investor: {
+          include: {
+            user: {
+              select: { id: true, email: true, firstName: true, lastName: true },
+            },
+          },
+        },
+        escrowTransactions: {
+          orderBy: { createdAt: "desc" },
+        },
+        ownershipRecords: true,
+      },
+    });
+
+    if (!investment) {
+      return res.status(404).json({
+        success: false,
+        error: { code: "NOT_FOUND", message: "Investment not found" },
+      });
+    }
+
+    return res.json({ success: true, data: investment });
+  } catch (error) {
+    console.error("Admin get investment error:", error);
+    return res.status(500).json({
+      success: false,
+      error: { code: "INTERNAL_ERROR", message: "Failed to fetch investment" },
+    });
+  }
+});
+
+// PATCH /api/admin/investments/:id/confirm-funding — mark investment as FUNDED
+router.patch("/investments/:id/confirm-funding", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { fundedAmount, externalRef } = req.body;
+
+    const investment = await prisma.investment.findUnique({
+      where: { id },
+      include: { deal: true },
+    });
+
+    if (!investment) {
+      return res.status(404).json({
+        success: false,
+        error: { code: "NOT_FOUND", message: "Investment not found" },
+      });
+    }
+
+    if (investment.status !== "PENDING_FUNDING") {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: "INVALID_STATUS",
+          message: `Investment must be in PENDING_FUNDING status. Current: ${investment.status}`,
+        },
+      });
+    }
+
+    const expectedAmount = Number(investment.commitmentAmount);
+    if (Number(fundedAmount) !== expectedAmount) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: "AMOUNT_MISMATCH",
+          message: `Funded amount ($${fundedAmount}) must match commitment amount ($${expectedAmount})`,
+        },
+      });
+    }
+
+    // Transaction: update investment, create escrow, update deal
+    const [updatedInvestment] = await prisma.$transaction([
+      prisma.investment.update({
+        where: { id },
+        data: {
+          status: "FUNDED",
+          fundedAmount,
+          fundedAt: new Date(),
+          currentValue: fundedAmount,
+          reviewedBy: req.user!.id,
+          reviewedAt: new Date(),
+        },
+      }),
+      prisma.escrowTransaction.create({
+        data: {
+          investmentId: id,
+          amount: fundedAmount,
+          direction: "INVESTOR_TO_ESCROW",
+          status: "COMPLETED",
+          externalRef: externalRef || investment.fundingReference,
+        },
+      }),
+      prisma.deal.update({
+        where: { id: investment.dealId },
+        data: {
+          raisedAmount: { increment: fundedAmount },
+          investorCount: { increment: 1 },
+        },
+      }),
+      prisma.adminAction.create({
+        data: {
+          adminId: req.user!.id,
+          actionType: "CONFIRM_FUNDING",
+          targetType: "INVESTMENT",
+          targetId: id,
+          dealId: investment.dealId,
+          metadata: { fundedAmount, externalRef },
+        },
+      }),
+    ]);
+
+    return res.json({
+      success: true,
+      data: updatedInvestment,
+      message: "Funding confirmed. Investment is now FUNDED.",
+    });
+  } catch (error) {
+    console.error("Admin confirm funding error:", error);
+    return res.status(500).json({
+      success: false,
+      error: { code: "INTERNAL_ERROR", message: "Failed to confirm funding" },
+    });
+  }
+});
+
+// PATCH /api/admin/investments/:id/cancel — admin cancel investment
+router.patch("/investments/:id/cancel", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    const investment = await prisma.investment.findUnique({
+      where: { id },
+    });
+
+    if (!investment) {
+      return res.status(404).json({
+        success: false,
+        error: { code: "NOT_FOUND", message: "Investment not found" },
+      });
+    }
+
+    if (investment.status === "COMPLETED") {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: "CANNOT_CANCEL",
+          message: "Cannot cancel a completed investment",
+        },
+      });
+    }
+
+    await prisma.$transaction([
+      prisma.investment.update({
+        where: { id },
+        data: {
+          status: "CANCELLED",
+          adminNotes: reason || "Cancelled by admin",
+          reviewedBy: req.user!.id,
+          reviewedAt: new Date(),
+        },
+      }),
+      prisma.adminAction.create({
+        data: {
+          adminId: req.user!.id,
+          actionType: "CANCEL_INVESTMENT",
+          targetType: "INVESTMENT",
+          targetId: id,
+          dealId: investment.dealId,
+          reason: reason || "Cancelled by admin",
+        },
+      }),
+    ]);
+
+    return res.json({ success: true, message: "Investment cancelled by admin" });
+  } catch (error) {
+    console.error("Admin cancel investment error:", error);
+    return res.status(500).json({
+      success: false,
+      error: { code: "INTERNAL_ERROR", message: "Failed to cancel investment" },
+    });
+  }
+});
+
 export default router;

@@ -415,6 +415,7 @@ model Deal {
   amlCleared             Boolean   @default(false)
   investorCount          Int       @default(0)
   jurisdictionFlags      String[]  @default([])
+  allowWaitlist          Boolean   @default(false)
 
   currentMonitoringStatus MonitoringMode @default(NORMAL)
 
@@ -433,11 +434,15 @@ model Deal {
 // ============================================================================
 
 enum InvestmentStatus {
+  INTERESTED
   COMMITTED
+  PENDING_FUNDING
   FUNDED
   ACTIVE
-  EXITED
+  COMPLETED
   DEFAULTED
+  CANCELLED
+  WAITLISTED
 }
 
 model Investment {
@@ -447,17 +452,54 @@ model Investment {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  commitmentAmount Decimal @db.Decimal(12, 2)
-  fundedAmount     Decimal @db.Decimal(12, 2) @default(0)
+  // Amounts
+  commitmentAmount Decimal  @db.Decimal(12, 2) @default(0)
+  fundedAmount     Decimal  @db.Decimal(12, 2) @default(0)
 
-  status InvestmentStatus @default(COMMITTED)
+  // Status flow: INTERESTED → COMMITTED → PENDING_FUNDING → FUNDED → ACTIVE → COMPLETED/DEFAULTED
+  status InvestmentStatus @default(INTERESTED)
 
-  committedAt DateTime @default(now())
-  fundedAt    DateTime?
+  // Timeline
+  interestedAt DateTime  @default(now())
+  committedAt  DateTime?
+  fundedAt     DateTime?
+  completedAt  DateTime?
 
+  // Returns tracking
   totalReturned Decimal @db.Decimal(12, 2) @default(0)
   currentValue  Decimal @db.Decimal(12, 2) @default(0)
 
+  // Subscription details
+  subscriptionAgreementSignedAt DateTime?
+  subscriptionAgreementIp       String?
+
+  // Representations (from subscription step)
+  confirmedQualifiedInvestor      Boolean @default(false)
+  confirmedUnderstandsRisks       Boolean @default(false)
+  confirmedOwnAccount             Boolean @default(false)
+  confirmedNoLiquidityExpectation Boolean @default(false)
+  eSignature                      String?
+  eSignatureTimestamp              DateTime?
+  eSignatureIp                    String?
+
+  // Funding details
+  fundingMethod    String?
+  fundingReference String?   @unique
+  fundingDeadline  DateTime?
+
+  // Wire instructions (generated per investment)
+  wireInstructions Json?
+
+  // Waitlist
+  waitlisted       Boolean @default(false)
+  waitlistPosition Int?
+
+  // Admin
+  adminNotes String? @db.Text
+  reviewedBy String?
+  reviewedAt DateTime?
+
+  // Relationships
   investor           InvestorProfile     @relation(fields: [investorId], references: [id])
   deal               Deal                @relation(fields: [dealId], references: [id])
   escrowTransactions EscrowTransaction[]
@@ -632,6 +674,8 @@ enum AdminActionType {
   INVESTOR_VERIFIED
   INVESTOR_REJECTED
   INVESTOR_INFO_REQUESTED
+  CONFIRM_FUNDING
+  CANCEL_INVESTMENT
 }
 
 model AdminAction {
