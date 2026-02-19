@@ -74,7 +74,7 @@ function ActionModal({
   onSubmit,
 }: {
   title: string;
-  type: "approve" | "reject" | "golive";
+  type: "approve" | "reject" | "golive" | "close";
   onClose: () => void;
   onSubmit: (reason?: string) => void;
 }) {
@@ -87,8 +87,9 @@ function ActionModal({
     setSubmitting(false);
   };
 
-  const colors = { approve: "#10B981", reject: "#EF4444", golive: "#3B82F6" };
-  const labels = { approve: "Confirm Approve", reject: "Confirm Reject", golive: "Confirm Go Live" };
+  const colors = { approve: "#10B981", reject: "#EF4444", golive: "#3B82F6", close: "#6B7280" };
+  const labels = { approve: "Confirm Approve", reject: "Confirm Reject", golive: "Confirm Go Live", close: "Confirm Close" };
+  const showTextarea = type === "reject" || type === "close";
   const descriptions: Record<string, string> = {
     approve: "Are you sure you want to approve this deal? It will become eligible to go live.",
     golive: "Are you sure you want to set this deal to LIVE? It will become visible to investors.",
@@ -98,12 +99,12 @@ function ActionModal({
     <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
       <div style={{ backgroundColor: "#1A2332", border: "1px solid #2A3444", borderRadius: 12, padding: 24, width: "100%", maxWidth: 480 }}>
         <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16, margin: "0 0 16px 0" }}>{title}</h3>
-        {type === "reject" ? (
+        {showTextarea ? (
           <textarea
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            placeholder="Reason for rejection (required)"
-            required
+            placeholder={type === "close" ? "Reason for closing deal (optional)" : "Reason for rejection (required)"}
+            required={type === "reject"}
             style={{
               width: "100%",
               minHeight: 100,
@@ -151,7 +152,7 @@ export default function DealDetailPage() {
   const params = useParams();
   const [deal, setDeal] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [modal, setModal] = useState<"approve" | "reject" | "golive" | null>(null);
+  const [modal, setModal] = useState<"approve" | "reject" | "golive" | "close" | null>(null);
 
   const fetchDeal = async () => {
     if (!accessToken) return;
@@ -178,8 +179,9 @@ export default function DealDetailPage() {
       approve: "approve",
       reject: "reject",
       golive: "golive",
+      close: "close",
     };
-    const body = modal === "reject" ? { reason } : {};
+    const body = modal === "reject" || modal === "close" ? { reason } : {};
 
     try {
       const res = await fetch(`${API_URL}/api/admin/deals/${params.id}/${endpoints[modal]}`, {
@@ -218,6 +220,7 @@ export default function DealDetailPage() {
   const showApprove = deal.status === "UNDER_REVIEW";
   const showReject = deal.status === "UNDER_REVIEW";
   const showGoLive = deal.status === "APPROVED";
+  const showClose = deal.status === "APPROVED" || deal.status === "LIVE";
 
   return (
     <div>
@@ -255,6 +258,11 @@ export default function DealDetailPage() {
           {showGoLive && (
             <button onClick={() => setModal("golive")} style={{ padding: "8px 20px", backgroundColor: "#3B82F6", border: "none", borderRadius: 6, color: "#FFFFFF", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
               Go Live
+            </button>
+          )}
+          {showClose && (
+            <button onClick={() => setModal("close")} style={{ padding: "8px 20px", backgroundColor: "#6B7280", border: "none", borderRadius: 6, color: "#FFFFFF", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+              Close Deal
             </button>
           )}
         </div>
@@ -398,6 +406,9 @@ export default function DealDetailPage() {
       )}
       {modal === "golive" && (
         <ActionModal title="Set Deal Live" type="golive" onClose={() => setModal(null)} onSubmit={handleAction} />
+      )}
+      {modal === "close" && (
+        <ActionModal title="Close Deal" type="close" onClose={() => setModal(null)} onSubmit={handleAction} />
       )}
     </div>
   );

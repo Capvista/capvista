@@ -575,6 +575,7 @@ enum TransactionStatus {
   COMPLETED
   FAILED
   REVERSED
+  REFUNDED
 }
 
 model EscrowTransaction {
@@ -676,6 +677,7 @@ enum AdminActionType {
   INVESTOR_INFO_REQUESTED
   CONFIRM_FUNDING
   CANCEL_INVESTMENT
+  CLOSE_DEAL
 }
 
 model AdminAction {

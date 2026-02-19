@@ -914,6 +914,110 @@ router.patch("/deals/:id/golive", async (req: Request, res: Response) => {
   }
 });
 
+// PATCH /api/admin/deals/:id/close — close/cancel a deal
+router.patch("/deals/:id/close", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    const deal = await prisma.deal.findUnique({
+      where: { id },
+      select: { id: true, status: true, name: true },
+    });
+
+    if (!deal) {
+      return res.status(404).json({
+        success: false,
+        error: { code: "NOT_FOUND", message: "Deal not found" },
+      });
+    }
+
+    if (deal.status === "CLOSED") {
+      return res.status(400).json({
+        success: false,
+        error: { code: "INVALID_STATE", message: "Deal is already closed" },
+      });
+    }
+
+    if (deal.status === "DRAFT" || deal.status === "UNDER_REVIEW") {
+      return res.status(400).json({
+        success: false,
+        error: { code: "INVALID_STATE", message: "Deal must be APPROVED or LIVE to close" },
+      });
+    }
+
+    // Find all investments that need cancellation (PENDING_FUNDING or COMMITTED)
+    const investmentsToCancelIds = await prisma.investment.findMany({
+      where: {
+        dealId: id,
+        status: { in: ["PENDING_FUNDING", "COMMITTED"] },
+      },
+      select: { id: true },
+    });
+
+    const investmentIds = investmentsToCancelIds.map((i) => i.id);
+
+    await prisma.$transaction([
+      // 1. Close the deal
+      prisma.deal.update({
+        where: { id },
+        data: { status: "CLOSED", closedAt: new Date() },
+      }),
+
+      // 2. Cancel all PENDING_FUNDING and COMMITTED investments
+      prisma.investment.updateMany({
+        where: {
+          dealId: id,
+          status: { in: ["PENDING_FUNDING", "COMMITTED"] },
+        },
+        data: { status: "CANCELLED" },
+      }),
+
+      // 3. Refund all PENDING escrow transactions for those investments
+      ...(investmentIds.length > 0
+        ? [
+            prisma.escrowTransaction.updateMany({
+              where: {
+                investmentId: { in: investmentIds },
+                status: "PENDING",
+              },
+              data: { status: "REFUNDED" },
+            }),
+          ]
+        : []),
+
+      // 4. Log admin action
+      prisma.adminAction.create({
+        data: {
+          adminId: req.user!.id,
+          actionType: "CLOSE_DEAL",
+          targetType: "DEAL",
+          targetId: id,
+          dealId: id,
+          reason: reason || "Deal closed by admin",
+          metadata: {
+            cancelledInvestments: investmentIds.length,
+          },
+        },
+      }),
+    ]);
+
+    return res.json({
+      success: true,
+      message: "Deal closed successfully",
+      data: {
+        cancelledInvestments: investmentIds.length,
+      },
+    });
+  } catch (error) {
+    console.error("Admin close deal error:", error);
+    return res.status(500).json({
+      success: false,
+      error: { code: "INTERNAL_ERROR", message: "Failed to close deal" },
+    });
+  }
+});
+
 // ============================================================================
 // INVESTMENTS
 // ============================================================================
