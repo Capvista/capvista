@@ -331,7 +331,7 @@ export default function BrowseCompanies() {
         <div className="container">
           <div className="flex items-center justify-between py-4">
             <Link
-              href="/dashboard/investor"
+              href="/"
               className="flex items-center space-x-2"
             >
               <div
