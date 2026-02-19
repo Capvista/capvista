@@ -1,7 +1,5 @@
 "use client";
 
-import { useAuth } from "@/lib/contexts/AuthContext";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import CustomSelect from "@/components/CustomSelect";
@@ -200,8 +198,6 @@ const laneLabels: Record<string, string> = {
 // ============================================================================
 
 export default function BrowseCompanies() {
-  const { user, accessToken, loading } = useAuth();
-  const router = useRouter();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [filteredCompanies, setFilteredCompanies] = useState<Company[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -233,14 +229,8 @@ export default function BrowseCompanies() {
   }, [sectorFilter]);
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push("/login");
-    }
-  }, [user, loading, router]);
-
-  useEffect(() => {
-    if (user) fetchCompanies();
-  }, [user]);
+    fetchCompanies();
+  }, []);
 
   useEffect(() => {
     applyFilters();
@@ -260,9 +250,7 @@ export default function BrowseCompanies() {
       setIsLoading(true);
       const API_URL =
         process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
-      const response = await fetch(`${API_URL}/api/companies`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
+      const response = await fetch(`${API_URL}/api/companies`);
       const result = await response.json();
       if (result.success) {
         setCompanies(result.data);
@@ -335,20 +323,6 @@ export default function BrowseCompanies() {
     setLaneFilter("all");
     setQuickFilter("all");
   };
-
-  if (loading || !user) {
-    return (
-      <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ backgroundColor: "#F6F8FA" }}
-      >
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate">Loading...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#F6F8FA" }}>
