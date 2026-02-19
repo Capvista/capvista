@@ -97,7 +97,7 @@ export default function HomePage() {
 
             <div className="flex flex-col items-center gap-4">
               <Link
-                href="/login?redirect=/dashboard/investor/companies"
+                href="/dashboard/investor/companies"
                 className="inline-block px-10 py-4 rounded-lg font-semibold text-lg transition-all hover:opacity-90"
                 style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
               >
@@ -605,7 +605,7 @@ export default function HomePage() {
               <ul className="space-y-3">
                 <li>
                   <Link
-                    href="/login?redirect=/dashboard/investor/companies"
+                    href="/dashboard/investor/companies"
                     className="text-sm text-gray-400 hover:text-white transition-colors"
                   >
                     Browse Companies
