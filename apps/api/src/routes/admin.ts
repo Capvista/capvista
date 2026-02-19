@@ -25,6 +25,9 @@ router.get("/stats", async (req: Request, res: Response) => {
       rejectedInvestors,
       totalUsers,
       totalDeals,
+      underReviewDeals,
+      approvedDeals,
+      liveDeals,
     ] = await Promise.all([
       prisma.company.count(),
       prisma.company.count({ where: { approvalStatus: "PENDING_REVIEW" } }),
@@ -36,6 +39,9 @@ router.get("/stats", async (req: Request, res: Response) => {
       prisma.investorProfile.count({ where: { verificationStatus: "REJECTED" } }),
       prisma.user.count(),
       prisma.deal.count(),
+      prisma.deal.count({ where: { status: "UNDER_REVIEW" } }),
+      prisma.deal.count({ where: { status: "APPROVED" } }),
+      prisma.deal.count({ where: { status: "LIVE" } }),
     ]);
 
     return res.json({
@@ -44,7 +50,7 @@ router.get("/stats", async (req: Request, res: Response) => {
         companies: { total: totalCompanies, pending: pendingCompanies, approved: approvedCompanies, rejected: rejectedCompanies },
         investors: { total: totalInvestors, pending: pendingInvestors, verified: verifiedInvestors, rejected: rejectedInvestors },
         users: totalUsers,
-        deals: totalDeals,
+        deals: { total: totalDeals, underReview: underReviewDeals, approved: approvedDeals, live: liveDeals },
       },
     });
   } catch (error) {
@@ -648,6 +654,253 @@ router.get("/users", async (req: Request, res: Response) => {
     return res.status(500).json({
       success: false,
       error: { code: "INTERNAL_ERROR", message: "Failed to fetch users" },
+    });
+  }
+});
+
+// ============================================================================
+// DEALS
+// ============================================================================
+
+// GET /api/admin/deals — list deals with filters
+router.get("/deals", async (req: Request, res: Response) => {
+  try {
+    const { status, lane, companyId, search, page = "1", limit = "20" } = req.query;
+    const skip = (Number(page) - 1) * Number(limit);
+    const take = Number(limit);
+
+    const where: any = {};
+    if (status) where.status = status;
+    if (lane) where.lane = lane;
+    if (companyId) where.companyId = companyId;
+    if (search) {
+      where.OR = [
+        { name: { contains: String(search), mode: "insensitive" } },
+        { company: { legalName: { contains: String(search), mode: "insensitive" } } },
+      ];
+    }
+
+    const [deals, total] = await Promise.all([
+      prisma.deal.findMany({
+        where,
+        skip,
+        take,
+        orderBy: { createdAt: "desc" },
+        include: {
+          company: {
+            select: { id: true, legalName: true, logoUrl: true, sector: true },
+          },
+        },
+      }),
+      prisma.deal.count({ where }),
+    ]);
+
+    return res.json({
+      success: true,
+      data: deals,
+      meta: {
+        total,
+        page: Number(page),
+        limit: Number(limit),
+        totalPages: Math.ceil(total / Number(limit)),
+      },
+    });
+  } catch (error) {
+    console.error("Admin list deals error:", error);
+    return res.status(500).json({
+      success: false,
+      error: { code: "INTERNAL_ERROR", message: "Failed to fetch deals" },
+    });
+  }
+});
+
+// GET /api/admin/deals/:id — full deal detail with company info
+router.get("/deals/:id", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const deal = await prisma.deal.findUnique({
+      where: { id },
+      include: {
+        company: {
+          include: {
+            owner: {
+              include: {
+                user: { select: { id: true, email: true, firstName: true, lastName: true } },
+              },
+            },
+          },
+        },
+        adminActions: {
+          orderBy: { createdAt: "desc" },
+          include: {
+            admin: { select: { id: true, firstName: true, lastName: true, email: true } },
+          },
+        },
+      },
+    });
+
+    if (!deal) {
+      return res.status(404).json({
+        success: false,
+        error: { code: "NOT_FOUND", message: "Deal not found" },
+      });
+    }
+
+    return res.json({ success: true, data: deal });
+  } catch (error) {
+    console.error("Admin get deal error:", error);
+    return res.status(500).json({
+      success: false,
+      error: { code: "INTERNAL_ERROR", message: "Failed to fetch deal" },
+    });
+  }
+});
+
+// PATCH /api/admin/deals/:id/approve — approve deal (UNDER_REVIEW → APPROVED)
+router.patch("/deals/:id/approve", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const deal = await prisma.deal.findUnique({ where: { id } });
+    if (!deal) {
+      return res.status(404).json({
+        success: false,
+        error: { code: "NOT_FOUND", message: "Deal not found" },
+      });
+    }
+
+    if (deal.status !== "UNDER_REVIEW") {
+      return res.status(400).json({
+        success: false,
+        error: { code: "INVALID_STATE", message: "Deal must be UNDER_REVIEW to approve" },
+      });
+    }
+
+    await prisma.$transaction([
+      prisma.deal.update({
+        where: { id },
+        data: { status: "APPROVED" },
+      }),
+      prisma.adminAction.create({
+        data: {
+          adminId: req.user!.id,
+          actionType: "APPROVE_DEAL",
+          targetType: "DEAL",
+          targetId: id,
+          dealId: id,
+        },
+      }),
+    ]);
+
+    return res.json({ success: true, message: "Deal approved" });
+  } catch (error) {
+    console.error("Admin approve deal error:", error);
+    return res.status(500).json({
+      success: false,
+      error: { code: "INTERNAL_ERROR", message: "Failed to approve deal" },
+    });
+  }
+});
+
+// PATCH /api/admin/deals/:id/reject — reject deal with reason
+router.patch("/deals/:id/reject", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    if (!reason) {
+      return res.status(400).json({
+        success: false,
+        error: { code: "VALIDATION_ERROR", message: "Reason is required for rejection" },
+      });
+    }
+
+    const deal = await prisma.deal.findUnique({ where: { id } });
+    if (!deal) {
+      return res.status(404).json({
+        success: false,
+        error: { code: "NOT_FOUND", message: "Deal not found" },
+      });
+    }
+
+    if (deal.status !== "UNDER_REVIEW") {
+      return res.status(400).json({
+        success: false,
+        error: { code: "INVALID_STATE", message: "Deal must be UNDER_REVIEW to reject" },
+      });
+    }
+
+    await prisma.$transaction([
+      prisma.deal.update({
+        where: { id },
+        data: { status: "DRAFT" },
+      }),
+      prisma.adminAction.create({
+        data: {
+          adminId: req.user!.id,
+          actionType: "REJECT_DEAL",
+          targetType: "DEAL",
+          targetId: id,
+          dealId: id,
+          reason,
+        },
+      }),
+    ]);
+
+    return res.json({ success: true, message: "Deal rejected" });
+  } catch (error) {
+    console.error("Admin reject deal error:", error);
+    return res.status(500).json({
+      success: false,
+      error: { code: "INTERNAL_ERROR", message: "Failed to reject deal" },
+    });
+  }
+});
+
+// PATCH /api/admin/deals/:id/golive — set deal to LIVE (APPROVED → LIVE)
+router.patch("/deals/:id/golive", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const deal = await prisma.deal.findUnique({ where: { id } });
+    if (!deal) {
+      return res.status(404).json({
+        success: false,
+        error: { code: "NOT_FOUND", message: "Deal not found" },
+      });
+    }
+
+    if (deal.status !== "APPROVED") {
+      return res.status(400).json({
+        success: false,
+        error: { code: "INVALID_STATE", message: "Deal must be APPROVED to go live" },
+      });
+    }
+
+    await prisma.$transaction([
+      prisma.deal.update({
+        where: { id },
+        data: { status: "LIVE", openedAt: new Date() },
+      }),
+      prisma.adminAction.create({
+        data: {
+          adminId: req.user!.id,
+          actionType: "APPROVE_DEAL",
+          targetType: "DEAL",
+          targetId: id,
+          dealId: id,
+          reason: "Deal set to LIVE",
+        },
+      }),
+    ]);
+
+    return res.json({ success: true, message: "Deal is now live" });
+  } catch (error) {
+    console.error("Admin go-live deal error:", error);
+    return res.status(500).json({
+      success: false,
+      error: { code: "INTERNAL_ERROR", message: "Failed to set deal live" },
     });
   }
 });

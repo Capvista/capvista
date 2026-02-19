@@ -10,7 +10,7 @@ type Stats = {
   companies: { total: number; pending: number; approved: number; rejected: number };
   investors: { total: number; pending: number; verified: number; rejected: number };
   users: number;
-  deals: number;
+  deals: { total: number; underReview: number; approved: number; live: number };
 };
 
 type FeedItem = {
@@ -105,9 +105,13 @@ export default function DashboardPage() {
         },
         {
           title: "Deals",
-          total: stats.deals,
-          subs: [],
-          href: "#",
+          total: stats.deals.total,
+          subs: [
+            { label: "Review", value: stats.deals.underReview, color: "#F59E0B" },
+            { label: "Approved", value: stats.deals.approved, color: "#10B981" },
+            { label: "Live", value: stats.deals.live, color: "#3B82F6" },
+          ],
+          href: "/deals",
         },
       ]
     : [];
