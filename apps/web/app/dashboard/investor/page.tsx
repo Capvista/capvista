@@ -259,6 +259,96 @@ export default function InvestorDashboard() {
   );
 }
 
+// ============================================================================
+// TYPES & CONSTANTS
+// ============================================================================
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+
+type InvestmentDeal = {
+  id: string;
+  name: string;
+  lane: string;
+  instrumentType: string;
+  targetAmount: number;
+  raisedAmount: number;
+  status: string;
+  company: {
+    id: string;
+    legalName: string;
+    tradingName?: string;
+    sector?: string;
+    logoUrl?: string;
+  };
+};
+
+type Investment = {
+  id: string;
+  status: string;
+  commitmentAmount: number;
+  fundedAmount: number;
+  currentValue: number;
+  totalReturned: number;
+  fundingMethod?: string;
+  fundingReference?: string;
+  fundingDeadline?: string;
+  interestedAt: string;
+  committedAt?: string;
+  fundedAt?: string;
+  completedAt?: string;
+  deal: InvestmentDeal;
+};
+
+type PortfolioSummary = {
+  totalCommitted: number;
+  totalFunded: number;
+  totalCurrentValue: number;
+  totalReturned: number;
+  investmentCount: number;
+  activeCount: number;
+};
+
+const statusConfig: Record<string, { label: string; bg: string; text: string }> = {
+  INTERESTED: { label: "Interested", bg: "#F1F5F9", text: "#64748B" },
+  COMMITTED: { label: "Committed", bg: "#DBEAFE", text: "#1D4ED8" },
+  PENDING_FUNDING: { label: "Pending Funding", bg: "#FEF3C7", text: "#B45309" },
+  FUNDED: { label: "Funded", bg: "#D1FAE5", text: "#047857" },
+  ACTIVE: { label: "Active", bg: "#D1FAE5", text: "#047857" },
+  COMPLETED: { label: "Completed", bg: "#F1F5F9", text: "#64748B" },
+  WAITLISTED: { label: "Waitlisted", bg: "#FFEDD5", text: "#C2410C" },
+  CANCELLED: { label: "Cancelled", bg: "#FEE2E2", text: "#DC2626" },
+};
+
+const laneLabels: Record<string, string> = {
+  YIELD: "Yield",
+  VENTURES: "Ventures",
+};
+
+const instrumentLabels: Record<string, string> = {
+  REVENUE_SHARE_NOTE: "Revenue Share Note",
+  ASSET_BACKED_PARTICIPATION: "Asset-Backed Participation",
+  CONVERTIBLE_NOTE: "Convertible Note",
+  SAFE: "SAFE",
+  SPV_EQUITY: "SPV Equity",
+};
+
+function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+
+function formatDate(dateStr: string): string {
+  return new Date(dateStr).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
 // Overview Tab Component
 function OverviewTab({ user, router }: { user: any; router: any }) {
   const { accessToken } = useAuth();
@@ -266,13 +356,13 @@ function OverviewTab({ user, router }: { user: any; router: any }) {
     "loading" | "incomplete" | "PENDING" | "VERIFIED" | "REJECTED" | "INFO_REQUESTED"
   >("loading");
   const [adminReason, setAdminReason] = useState<string | null>(null);
+  const [investments, setInvestments] = useState<Investment[]>([]);
+  const [summary, setSummary] = useState<PortfolioSummary | null>(null);
+  const [investmentsLoading, setInvestmentsLoading] = useState(true);
 
   useEffect(() => {
     const checkProfile = async () => {
       try {
-        const API_URL =
-          process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
-
         // First check if profile exists
         const profileRes = await fetch(`${API_URL}/api/investors/profile`, {
           headers: { Authorization: `Bearer ${accessToken}` },
@@ -315,6 +405,27 @@ function OverviewTab({ user, router }: { user: any; router: any }) {
     if (accessToken) checkProfile();
   }, [accessToken]);
 
+  // Fetch investments
+  useEffect(() => {
+    const fetchInvestments = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/investments/my-investments`, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        const result = await res.json();
+        if (result.success && result.data) {
+          setInvestments(result.data.investments);
+          setSummary(result.data.summary);
+        }
+      } catch {
+        // Silently fail — stats stay at defaults
+      } finally {
+        setInvestmentsLoading(false);
+      }
+    };
+    if (accessToken) fetchInvestments();
+  }, [accessToken]);
+
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
@@ -327,7 +438,7 @@ function OverviewTab({ user, router }: { user: any; router: any }) {
 
       {/* Stats Grid */}
       <div className="grid md:grid-cols-3 gap-6">
-        {/* Total Invested */}
+        {/* Total Committed */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
@@ -353,8 +464,12 @@ function OverviewTab({ user, router }: { user: any; router: any }) {
               </svg>
             </div>
           </div>
-          <p className="text-3xl font-bold text-primary-950 mb-1">$0</p>
-          <p className="text-sm text-gray-500">Across 0 deals</p>
+          <p className="text-3xl font-bold text-primary-950 mb-1">
+            {investmentsLoading ? "..." : formatCurrency(summary?.totalCommitted || 0)}
+          </p>
+          <p className="text-sm text-gray-500">
+            Across {summary?.investmentCount || 0} deal{summary?.investmentCount !== 1 ? "s" : ""}
+          </p>
         </div>
 
         {/* Active Investments */}
@@ -382,8 +497,12 @@ function OverviewTab({ user, router }: { user: any; router: any }) {
               </svg>
             </div>
           </div>
-          <p className="text-3xl font-bold text-primary-950 mb-1">0</p>
-          <p className="text-sm text-gray-500">No active positions</p>
+          <p className="text-3xl font-bold text-primary-950 mb-1">
+            {investmentsLoading ? "..." : summary?.activeCount || 0}
+          </p>
+          <p className="text-sm text-gray-500">
+            {summary?.activeCount ? "Active positions" : "No active positions"}
+          </p>
         </div>
 
         {/* Total Returns */}
@@ -411,8 +530,14 @@ function OverviewTab({ user, router }: { user: any; router: any }) {
               </svg>
             </div>
           </div>
-          <p className="text-3xl font-bold text-primary-950 mb-1">$0</p>
-          <p className="text-sm text-emerald">+0% IRR</p>
+          <p className="text-3xl font-bold text-primary-950 mb-1">
+            {investmentsLoading ? "..." : formatCurrency(summary?.totalReturned || 0)}
+          </p>
+          <p className="text-sm text-emerald">
+            {summary?.totalCurrentValue && summary.totalFunded
+              ? `${((summary.totalCurrentValue / summary.totalFunded - 1) * 100).toFixed(1)}% return`
+              : "+0% IRR"}
+          </p>
         </div>
       </div>
 
@@ -612,42 +737,170 @@ function OverviewTab({ user, router }: { user: any; router: any }) {
         </div>
       </div>
 
-      {/* Empty State - Recent Activity */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12 text-center">
-        <div
-          className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center"
-          style={{ backgroundColor: "rgba(107, 124, 147, 0.1)" }}
-        >
-          <svg
-            className="w-8 h-8 text-slate-light"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-            />
-          </svg>
+      {/* My Investments Section */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-primary-950">My Investments</h2>
+          {investments.length > 0 && (
+            <button
+              onClick={() => router.push("/dashboard/investor/companies")}
+              className="text-sm font-medium transition-colors"
+              style={{ color: "#C8A24D" }}
+            >
+              Browse more deals
+            </button>
+          )}
         </div>
-        <h3 className="text-lg font-semibold text-primary-950 mb-2">
-          No Recent Activity
-        </h3>
-        <p className="text-gray-600 mb-6">
-          Start exploring companies to see your activity here
-        </p>
-        <button
-          onClick={() => router.push("/dashboard/investor/companies")}
-          className="inline-block px-6 py-3 rounded-lg font-semibold transition-all"
-          style={{
-            backgroundColor: "#C8A24D",
-            color: "#0B1C2D",
-          }}
-        >
-          Browse Companies
-        </button>
+
+        {investmentsLoading ? (
+          <div className="space-y-4">
+            {[1, 2].map((i) => (
+              <div key={i} className="p-5 rounded-xl border border-gray-200 animate-pulse">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-lg bg-gray-100" />
+                  <div className="flex-1">
+                    <div className="h-4 w-48 bg-gray-100 rounded mb-2" />
+                    <div className="h-3 w-32 bg-gray-100 rounded" />
+                  </div>
+                  <div className="h-6 w-20 bg-gray-100 rounded-full" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : investments.length === 0 ? (
+          <div className="text-center py-12">
+            <div
+              className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center"
+              style={{ backgroundColor: "rgba(107, 124, 147, 0.1)" }}
+            >
+              <svg
+                className="w-8 h-8 text-slate-light"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-primary-950 mb-2">
+              No active investments
+            </h3>
+            <p className="text-gray-600 mb-6">
+              Browse companies to discover opportunities.
+            </p>
+            <Link
+              href="/dashboard/investor/companies"
+              className="inline-block px-6 py-3 rounded-lg font-semibold transition-all"
+              style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
+            >
+              Browse Companies
+            </Link>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {investments.map((inv) => {
+              const status = statusConfig[inv.status] || statusConfig.INTERESTED;
+              const companyName = inv.deal.company.tradingName || inv.deal.company.legalName;
+              const laneLabel = laneLabels[inv.deal.lane] || inv.deal.lane;
+              const instrumentLabel = instrumentLabels[inv.deal.instrumentType] || inv.deal.instrumentType;
+
+              return (
+                <button
+                  key={inv.id}
+                  onClick={() => router.push(`/dashboard/investor/investments/${inv.id}`)}
+                  className="w-full text-left p-5 rounded-xl border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all group"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    {/* Left: Company info */}
+                    <div className="flex items-start gap-4 min-w-0">
+                      {/* Company logo / initial */}
+                      <div
+                        className="w-12 h-12 rounded-lg flex items-center justify-center shrink-0 text-sm font-bold"
+                        style={{ backgroundColor: "rgba(200, 162, 77, 0.1)", color: "#C8A24D" }}
+                      >
+                        {inv.deal.company.logoUrl ? (
+                          <img
+                            src={inv.deal.company.logoUrl}
+                            alt={companyName}
+                            className="w-12 h-12 rounded-lg object-cover"
+                          />
+                        ) : (
+                          companyName.charAt(0).toUpperCase()
+                        )}
+                      </div>
+
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-primary-950 group-hover:text-primary-900 truncate">
+                          {inv.deal.name}
+                        </h3>
+                        <p className="text-sm text-gray-600 truncate">{companyName}</p>
+
+                        {/* Instrument type + Lane badge */}
+                        <div className="flex items-center gap-2 mt-2">
+                          <span className="text-xs text-gray-500">{instrumentLabel}</span>
+                          <span
+                            className="inline-block px-2 py-0.5 rounded text-xs font-medium"
+                            style={{
+                              backgroundColor: inv.deal.lane === "YIELD" ? "#EFF6FF" : "#F5F3FF",
+                              color: inv.deal.lane === "YIELD" ? "#1D4ED8" : "#7C3AED",
+                            }}
+                          >
+                            {laneLabel}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right: Amount + Status */}
+                    <div className="text-right shrink-0">
+                      <p className="font-semibold text-primary-950">
+                        {formatCurrency(Number(inv.commitmentAmount))}
+                      </p>
+
+                      {/* Status badge */}
+                      <span
+                        className="inline-block px-2.5 py-1 rounded-full text-xs font-medium mt-1"
+                        style={{ backgroundColor: status.bg, color: status.text }}
+                      >
+                        {status.label}
+                      </span>
+
+                      {/* Status-specific details */}
+                      {inv.status === "PENDING_FUNDING" && (
+                        <div className="mt-2 text-xs text-gray-500 space-y-0.5">
+                          {inv.fundingReference && (
+                            <p>Ref: <span className="font-mono">{inv.fundingReference}</span></p>
+                          )}
+                          {inv.fundingDeadline && (
+                            <p>Due: {formatDate(inv.fundingDeadline)}</p>
+                          )}
+                        </div>
+                      )}
+
+                      {(inv.status === "FUNDED" || inv.status === "ACTIVE") && (
+                        <div className="mt-2 text-xs space-y-0.5">
+                          <p className="text-gray-500">
+                            Value: <span className="font-medium text-primary-950">{formatCurrency(Number(inv.currentValue))}</span>
+                          </p>
+                          {Number(inv.totalReturned) > 0 && (
+                            <p className="text-emerald">
+                              +{formatCurrency(Number(inv.totalReturned))} returned
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
