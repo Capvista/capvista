@@ -122,6 +122,100 @@ function ActionModal({
   );
 }
 
+function ParticipationStatusBadge({ status }: { status: string }) {
+  const colors: Record<string, { bg: string; text: string }> = {
+    NOT_STARTED: { bg: "rgba(148, 163, 184, 0.15)", text: "#94A3B8" },
+    ACKNOWLEDGED: { bg: "rgba(245, 158, 11, 0.15)", text: "#F59E0B" },
+    EXECUTED: { bg: "rgba(59, 130, 246, 0.15)", text: "#3B82F6" },
+    VERIFIED: { bg: "rgba(16, 185, 129, 0.15)", text: "#10B981" },
+  };
+  const c = colors[status] || colors.NOT_STARTED;
+  return (
+    <span style={{ padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: 500, backgroundColor: c.bg, color: c.text }}>
+      {status.replace(/_/g, " ")}
+    </span>
+  );
+}
+
+function VerifyParticipationModal({
+  onClose,
+  onSubmit,
+}: {
+  onClose: () => void;
+  onSubmit: (adminSignature: string) => void;
+}) {
+  const [signature, setSignature] = useState("");
+  const [confirmed, setConfirmed] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!signature.trim() || !confirmed) return;
+    setSubmitting(true);
+    await onSubmit(signature.trim());
+    setSubmitting(false);
+  };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
+      <div style={{ backgroundColor: "#1A2332", border: "1px solid #2A3444", borderRadius: 12, padding: 24, width: "100%", maxWidth: 480 }}>
+        <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16, margin: "0 0 16px 0" }}>Verify Issuance & Counter-Sign</h3>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 16 }}>
+          <input
+            type="checkbox"
+            checked={confirmed}
+            onChange={(e) => setConfirmed(e.target.checked)}
+            style={{ marginTop: 3 }}
+          />
+          <span style={{ fontSize: 14, color: "#94A3B8" }}>
+            I have reviewed the issuance documentation and confirm it meets requirements
+          </span>
+        </div>
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ fontSize: 13, color: "#94A3B8", display: "block", marginBottom: 4 }}>Admin Counter-Signature (type your name)</label>
+          <input
+            type="text"
+            value={signature}
+            onChange={(e) => setSignature(e.target.value)}
+            placeholder="Full name"
+            style={{
+              width: "100%",
+              padding: 10,
+              backgroundColor: "#0F1729",
+              border: "1px solid #2A3444",
+              borderRadius: 8,
+              color: "#FFFFFF",
+              fontSize: 14,
+              boxSizing: "border-box",
+            }}
+          />
+        </div>
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: 12 }}>
+          <button onClick={onClose} style={{ padding: "8px 20px", backgroundColor: "transparent", border: "1px solid #2A3444", borderRadius: 6, color: "#94A3B8", cursor: "pointer", fontSize: 14 }}>
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={submitting || !signature.trim() || !confirmed}
+            style={{
+              padding: "8px 20px",
+              backgroundColor: "#10B981",
+              border: "none",
+              borderRadius: 6,
+              color: "#FFFFFF",
+              cursor: submitting || !signature.trim() || !confirmed ? "not-allowed" : "pointer",
+              fontSize: 14,
+              fontWeight: 600,
+              opacity: submitting || !signature.trim() || !confirmed ? 0.5 : 1,
+            }}
+          >
+            {submitting ? "Processing..." : "Verify & Counter-Sign"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function CompanyDetailPage() {
   const { accessToken } = useAuth();
   const params = useParams();
@@ -129,6 +223,7 @@ export default function CompanyDetailPage() {
   const [company, setCompany] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState<"approve" | "reject" | "info" | null>(null);
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
 
   const fetchCompany = async () => {
     if (!accessToken) return;
@@ -171,6 +266,27 @@ export default function CompanyDetailPage() {
       }
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleVerifyParticipation = async (adminSignature: string) => {
+    if (!accessToken) return;
+    try {
+      const res = await fetch(`${API_URL}/api/admin/companies/${params.id}/verify-participation`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ adminSignature }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setShowVerifyModal(false);
+        fetchCompany();
+      } else {
+        alert(data.error?.message || "Failed to verify participation");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Failed to verify participation");
     }
   };
 
@@ -313,7 +429,96 @@ export default function CompanyDetailPage() {
         </FieldGrid>
       </Section>
 
+      {/* Platform Participation */}
+      <Section title="Platform Participation">
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+          <span style={{ fontSize: 13, color: "#94A3B8" }}>Status:</span>
+          <ParticipationStatusBadge status={company.participationStatus || "NOT_STARTED"} />
+        </div>
+
+        <FieldGrid>
+          <Field label="Acknowledged" value={company.participationAcknowledged} />
+          <Field label="Acknowledged At" value={company.participationAcknowledgedAt ? new Date(company.participationAcknowledgedAt).toLocaleString() : null} />
+          <Field label="Acknowledged IP" value={company.participationAcknowledgedIp} />
+          <Field label="Equity Percentage" value={company.participationEquityPercentage ? `${company.participationEquityPercentage}%` : null} />
+        </FieldGrid>
+
+        {(company.participationStatus === "EXECUTED" || company.participationStatus === "VERIFIED") && (
+          <div style={{ marginTop: 16 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "#C8A24D", marginBottom: 8 }}>Agreement Execution</div>
+            <FieldGrid>
+              <Field label="Founder Signature" value={company.participationExecutorSignature} />
+              <Field label="Executed At" value={company.participationExecutedAt ? new Date(company.participationExecutedAt).toLocaleString() : null} />
+              <Field label="Execution IP" value={company.participationExecutorIp} />
+            </FieldGrid>
+          </div>
+        )}
+
+        {company.participationStatus === "VERIFIED" && (
+          <div style={{ marginTop: 16 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "#C8A24D", marginBottom: 8 }}>Admin Verification</div>
+            <FieldGrid>
+              <Field label="Capvista Counter-Signed At" value={company.participationCapvistaSignedAt ? new Date(company.participationCapvistaSignedAt).toLocaleString() : null} />
+              <Field label="Capvista Signed By" value={company.participationCapvistaSignedBy} />
+              <Field label="Docs Reviewed At" value={company.issuanceDocsReviewedAt ? new Date(company.issuanceDocsReviewedAt).toLocaleString() : null} />
+            </FieldGrid>
+          </div>
+        )}
+
+        {/* Issuance Documents */}
+        {(company.participationStatus === "EXECUTED" || company.participationStatus === "VERIFIED") && (
+          <div style={{ marginTop: 16 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "#C8A24D", marginBottom: 8 }}>Issuance Documents</div>
+            <div style={{ display: "grid", gap: 8 }}>
+              {[
+                { label: "Board Resolution", url: company.boardResolutionUrl },
+                { label: "Share Certificate / Warrant", url: company.shareCertificateUrl },
+                { label: "Shareholder Register", url: company.shareholderRegisterUrl },
+                { label: "Cap Table Confirmation", url: company.capTableConfirmationUrl },
+              ].map((doc) => (
+                <div key={doc.label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", backgroundColor: "#0F1729", borderRadius: 8 }}>
+                  <span style={{ fontSize: 13, color: doc.url ? "#FFFFFF" : "#64748B" }}>{doc.label}</span>
+                  {doc.url ? (
+                    <a href={doc.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: "#3B82F6", textDecoration: "none" }}>
+                      View Document
+                    </a>
+                  ) : (
+                    <span style={{ fontSize: 12, color: "#64748B" }}>Not uploaded</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Admin Actions */}
+        {company.participationStatus === "EXECUTED" && company.boardResolutionUrl && company.shareCertificateUrl && company.shareholderRegisterUrl && company.capTableConfirmationUrl && (
+          <div style={{ marginTop: 20 }}>
+            <button
+              onClick={() => setShowVerifyModal(true)}
+              style={{ padding: "10px 24px", backgroundColor: "#10B981", border: "none", borderRadius: 8, color: "#FFFFFF", fontSize: 14, fontWeight: 600, cursor: "pointer" }}
+            >
+              Verify Issuance & Counter-Sign
+            </button>
+          </div>
+        )}
+
+        {company.participationStatus === "EXECUTED" && (!company.boardResolutionUrl || !company.shareCertificateUrl || !company.shareholderRegisterUrl || !company.capTableConfirmationUrl) && (
+          <div style={{ marginTop: 16, padding: "10px 14px", backgroundColor: "rgba(245, 158, 11, 0.1)", border: "1px solid rgba(245, 158, 11, 0.3)", borderRadius: 8 }}>
+            <span style={{ fontSize: 13, color: "#F59E0B" }}>
+              Waiting for founder to upload all issuance documents before verification.
+            </span>
+          </div>
+        )}
+      </Section>
+
       {/* Modals */}
+      {showVerifyModal && (
+        <VerifyParticipationModal
+          onClose={() => setShowVerifyModal(false)}
+          onSubmit={handleVerifyParticipation}
+        />
+      )}
       {modal === "approve" && (
         <ActionModal title="Approve Company" type="approve" onClose={() => setModal(null)} onSubmit={handleAction} />
       )}

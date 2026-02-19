@@ -268,6 +268,19 @@ export default function DealDetailPage() {
         </div>
       </div>
 
+      {/* Participation Warning */}
+      {company && company.participationStatus !== "VERIFIED" && (
+        <div style={{ marginBottom: 20, padding: "12px 16px", backgroundColor: "rgba(245, 158, 11, 0.1)", border: "1px solid rgba(245, 158, 11, 0.3)", borderRadius: 8, display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 18 }}>&#9888;</span>
+          <span style={{ fontSize: 13, color: "#F59E0B" }}>
+            Platform participation not yet verified. Deal cannot go live.{" "}
+            <Link href={`/companies/${company.id}`} style={{ color: "#3B82F6", textDecoration: "underline" }}>
+              View participation status
+            </Link>
+          </span>
+        </div>
+      )}
+
       {/* Deal Overview */}
       <Section title="Deal Overview">
         <FieldGrid>

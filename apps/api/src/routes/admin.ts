@@ -411,6 +411,80 @@ router.patch("/companies/:id/info", async (req: Request, res: Response) => {
   }
 });
 
+// PATCH /api/admin/companies/:id/verify-participation — Admin verifies and counter-signs
+router.patch("/companies/:id/verify-participation", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { adminSignature } = req.body;
+
+    if (!adminSignature || typeof adminSignature !== "string" || !adminSignature.trim()) {
+      return res.status(400).json({
+        success: false,
+        error: { code: "VALIDATION_ERROR", message: "Admin signature is required" },
+      });
+    }
+
+    const company = await prisma.company.findUnique({ where: { id } });
+    if (!company) {
+      return res.status(404).json({
+        success: false,
+        error: { code: "NOT_FOUND", message: "Company not found" },
+      });
+    }
+
+    if (company.participationStatus !== "EXECUTED") {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: "INVALID_STATE",
+          message: `Cannot verify participation. Current status: ${company.participationStatus}. Must be EXECUTED.`,
+        },
+      });
+    }
+
+    // Ensure all four documents are uploaded
+    if (!company.boardResolutionUrl || !company.shareCertificateUrl || !company.shareholderRegisterUrl || !company.capTableConfirmationUrl) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: "MISSING_DOCUMENTS",
+          message: "All four issuance documents must be uploaded before verification.",
+        },
+      });
+    }
+
+    await prisma.$transaction([
+      prisma.company.update({
+        where: { id },
+        data: {
+          participationCapvistaSignedAt: new Date(),
+          participationCapvistaSignedBy: req.user!.id,
+          issuanceDocsReviewedAt: new Date(),
+          issuanceDocsReviewedBy: req.user!.id,
+          participationStatus: "VERIFIED",
+        },
+      }),
+      prisma.adminAction.create({
+        data: {
+          adminId: req.user!.id,
+          actionType: "PARTICIPATION_VERIFIED",
+          targetType: "COMPANY",
+          targetId: id,
+          metadata: { adminSignature: adminSignature.trim() },
+        },
+      }),
+    ]);
+
+    return res.json({ success: true, message: "Participation verified and counter-signed" });
+  } catch (error) {
+    console.error("Admin verify participation error:", error);
+    return res.status(500).json({
+      success: false,
+      error: { code: "INTERNAL_ERROR", message: "Failed to verify participation" },
+    });
+  }
+});
+
 // ============================================================================
 // INVESTORS
 // ============================================================================
@@ -884,6 +958,19 @@ router.patch("/deals/:id/golive", async (req: Request, res: Response) => {
       return res.status(400).json({
         success: false,
         error: { code: "INVALID_STATE", message: "Deal must be APPROVED to go live" },
+      });
+    }
+
+    // Check participation gate
+    const company = await prisma.company.findUnique({ where: { id: deal.companyId } });
+
+    if (!company || company.participationStatus !== "VERIFIED") {
+      return res.status(403).json({
+        success: false,
+        error: {
+          code: "PARTICIPATION_NOT_VERIFIED",
+          message: "Deal cannot go live until platform participation agreement is executed and issuance documentation is verified.",
+        },
       });
     }
 

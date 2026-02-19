@@ -288,6 +288,28 @@ model Company {
   currentMonitoringStatus MonitoringMode @default(NORMAL)
   approvalStatus          String         @default("PENDING_REVIEW")
 
+  // Platform Participation
+  participationAcknowledged           Boolean   @default(false)
+  participationAcknowledgedAt         DateTime?
+  participationAcknowledgedIp         String?
+  participationStatus                 String    @default("NOT_STARTED") // NOT_STARTED, ACKNOWLEDGED, EXECUTED, VERIFIED
+  participationEquityPercentage       Decimal   @db.Decimal(5, 2) @default(1.00)
+  participationEquityType             String?   // e.g., "ordinary_shares", "warrant"
+  participationAgreementUrl           String?   // Stored signed agreement PDF
+  participationExecutedAt             DateTime?
+  participationExecutorSignature      String?   // Founder typed name
+  participationExecutorIp             String?
+  participationCapvistaSignedAt       DateTime? // Admin counter-signature
+  participationCapvistaSignedBy       String?   // Admin user ID
+
+  // Issuance Documentation
+  boardResolutionUrl                  String?
+  shareCertificateUrl                 String?
+  shareholderRegisterUrl              String?
+  capTableConfirmationUrl             String?
+  issuanceDocsReviewedAt              DateTime?
+  issuanceDocsReviewedBy              String?   // Admin user ID
+
   founders            CompanyFounder[]
   verificationRecords VerificationRecord[]
   deals               Deal[]
@@ -678,6 +700,7 @@ enum AdminActionType {
   CONFIRM_FUNDING
   CANCEL_INVESTMENT
   CLOSE_DEAL
+  PARTICIPATION_VERIFIED
 }
 
 model AdminAction {

@@ -92,6 +92,8 @@ const createCompanySchema = z.object({
   yearsExperience: z.string().optional(),
   founderNIN: z.string().optional(),
   founderBVN: z.string().optional(),
+  // Platform Participation Acknowledgement
+  participationAcknowledged: z.boolean().optional(),
 });
 
 const updateCompanySchema = createCompanySchema.partial();
@@ -194,6 +196,15 @@ router.get(
           targetRaiseRange: true,
           currentMonitoringStatus: true,
           approvalStatus: true,
+          participationStatus: true,
+          participationAcknowledged: true,
+          participationExecutedAt: true,
+          participationExecutorSignature: true,
+          boardResolutionUrl: true,
+          shareCertificateUrl: true,
+          shareholderRegisterUrl: true,
+          capTableConfirmationUrl: true,
+          countryOfIncorporation: true,
           createdAt: true,
           logoUrl: true,
           deals: {
@@ -444,6 +455,11 @@ router.post(
           preferredInstrument: body.preferredInstrument,
           targetRaiseRange: body.targetRaiseRange,
           primaryUseOfFunds: body.primaryUseOfFunds,
+          // Platform Participation
+          participationAcknowledged: body.participationAcknowledged || false,
+          participationAcknowledgedAt: body.participationAcknowledged ? new Date() : undefined,
+          participationAcknowledgedIp: body.participationAcknowledged ? String(req.ip || req.headers["x-forwarded-for"] || "unknown") : undefined,
+          participationStatus: body.participationAcknowledged ? "ACKNOWLEDGED" : "NOT_STARTED",
           founders: {
             create: {
               founderId: founderProfile.id,
@@ -597,6 +613,172 @@ router.patch(
       return res.status(500).json({
         success: false,
         error: { code: "INTERNAL_ERROR", message: "Failed to update company" },
+      });
+    }
+  },
+);
+
+// PATCH /api/companies/:id/sign-participation — Founder signs the participation agreement
+router.patch(
+  "/:id/sign-participation",
+  requireAuth,
+  requireRole("FOUNDER"),
+  async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { signature } = req.body;
+
+      if (!signature || typeof signature !== "string" || !signature.trim()) {
+        return res.status(400).json({
+          success: false,
+          error: { code: "VALIDATION_ERROR", message: "Signature (typed full name) is required" },
+        });
+      }
+
+      const founderProfile = await prisma.founderProfile.findUnique({
+        where: { userId: req.user!.id },
+      });
+
+      if (!founderProfile) {
+        return res.status(400).json({
+          success: false,
+          error: { code: "NO_PROFILE", message: "Founder profile not found" },
+        });
+      }
+
+      const company = await prisma.company.findUnique({ where: { id } });
+
+      if (!company) {
+        return res.status(404).json({
+          success: false,
+          error: { code: "COMPANY_NOT_FOUND", message: "Company not found" },
+        });
+      }
+
+      if (company.ownerId !== founderProfile.id) {
+        return res.status(403).json({
+          success: false,
+          error: { code: "FORBIDDEN", message: "You are not authorized to sign for this company" },
+        });
+      }
+
+      if (company.participationStatus !== "ACKNOWLEDGED") {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: "INVALID_STATE",
+            message: `Cannot sign agreement. Current status: ${company.participationStatus}. Must be ACKNOWLEDGED.`,
+          },
+        });
+      }
+
+      const clientIp = req.ip || req.headers["x-forwarded-for"] || "unknown";
+
+      const updated = await prisma.company.update({
+        where: { id },
+        data: {
+          participationExecutorSignature: signature.trim(),
+          participationExecutedAt: new Date(),
+          participationExecutorIp: String(clientIp),
+          participationStatus: "EXECUTED",
+        },
+      });
+
+      return res.json({
+        success: true,
+        data: {
+          participationStatus: updated.participationStatus,
+          participationExecutedAt: updated.participationExecutedAt,
+        },
+      });
+    } catch (error) {
+      console.error("Sign participation error:", error);
+      return res.status(500).json({
+        success: false,
+        error: { code: "INTERNAL_ERROR", message: "Failed to sign participation agreement" },
+      });
+    }
+  },
+);
+
+// PATCH /api/companies/:id/upload-issuance-docs — Founder uploads issuance documentation
+router.patch(
+  "/:id/upload-issuance-docs",
+  requireAuth,
+  requireRole("FOUNDER"),
+  async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { boardResolutionUrl, shareCertificateUrl, shareholderRegisterUrl, capTableConfirmationUrl } = req.body;
+
+      if (!boardResolutionUrl || !shareCertificateUrl || !shareholderRegisterUrl || !capTableConfirmationUrl) {
+        return res.status(400).json({
+          success: false,
+          error: { code: "VALIDATION_ERROR", message: "All four document URLs are required" },
+        });
+      }
+
+      const founderProfile = await prisma.founderProfile.findUnique({
+        where: { userId: req.user!.id },
+      });
+
+      if (!founderProfile) {
+        return res.status(400).json({
+          success: false,
+          error: { code: "NO_PROFILE", message: "Founder profile not found" },
+        });
+      }
+
+      const company = await prisma.company.findUnique({ where: { id } });
+
+      if (!company) {
+        return res.status(404).json({
+          success: false,
+          error: { code: "COMPANY_NOT_FOUND", message: "Company not found" },
+        });
+      }
+
+      if (company.ownerId !== founderProfile.id) {
+        return res.status(403).json({
+          success: false,
+          error: { code: "FORBIDDEN", message: "You are not authorized to upload documents for this company" },
+        });
+      }
+
+      if (company.participationStatus !== "EXECUTED") {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: "INVALID_STATE",
+            message: `Cannot upload documents. Current status: ${company.participationStatus}. Must be EXECUTED.`,
+          },
+        });
+      }
+
+      const updated = await prisma.company.update({
+        where: { id },
+        data: {
+          boardResolutionUrl,
+          shareCertificateUrl,
+          shareholderRegisterUrl,
+          capTableConfirmationUrl,
+        },
+      });
+
+      return res.json({
+        success: true,
+        data: {
+          boardResolutionUrl: updated.boardResolutionUrl,
+          shareCertificateUrl: updated.shareCertificateUrl,
+          shareholderRegisterUrl: updated.shareholderRegisterUrl,
+          capTableConfirmationUrl: updated.capTableConfirmationUrl,
+        },
+      });
+    } catch (error) {
+      console.error("Upload issuance docs error:", error);
+      return res.status(500).json({
+        success: false,
+        error: { code: "INTERNAL_ERROR", message: "Failed to upload issuance documents" },
       });
     }
   },

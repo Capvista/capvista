@@ -79,6 +79,7 @@ type FormData = {
   acknowledgeAccuracy: boolean;
   acknowledgeEquity: boolean;
   acknowledgeNoGuarantee: boolean;
+  participationAcknowledged: boolean;
 };
 
 const STEPS = [
@@ -90,6 +91,7 @@ const STEPS = [
   "Risks",
   "Fundraising Intent",
   "Legal Representations",
+  "Platform Participation",
   "Review & Submit",
 ];
 
@@ -437,6 +439,11 @@ function validateStep(step: number, formData: FormData): string[] {
       if (!formData.acknowledgeNoGuarantee)
         errors.push("acknowledgeNoGuarantee");
       break;
+
+    case 8: // Platform Participation Agreement
+      if (!formData.participationAcknowledged)
+        errors.push("participationAcknowledged");
+      break;
   }
 
   return errors;
@@ -535,6 +542,7 @@ export default function CompanyOnboarding() {
     acknowledgeAccuracy: false,
     acknowledgeEquity: false,
     acknowledgeNoGuarantee: false,
+    participationAcknowledged: false,
   });
 
   const updateField = (field: keyof FormData, value: any) => {
@@ -652,6 +660,7 @@ export default function CompanyOnboarding() {
         yearsExperience: formData.yearsExperience || undefined,
         founderNIN: formData.founderNIN || undefined,
         founderBVN: formData.founderBVN || undefined,
+        participationAcknowledged: formData.participationAcknowledged,
       };
 
       console.log("📤 Sending payload to API...");
@@ -822,7 +831,14 @@ export default function CompanyOnboarding() {
               errors={validationErrors}
             />
           )}
-          {currentStep === 8 && <Step9Review formData={formData} />}
+          {currentStep === 8 && (
+            <Step9Participation
+              formData={formData}
+              updateField={updateField}
+              errors={validationErrors}
+            />
+          )}
+          {currentStep === 9 && <Step10Review formData={formData} />}
 
           <div className="flex items-center justify-between mt-8 pt-8 border-t border-gray-200">
             <button
@@ -2173,9 +2189,103 @@ function Step8Legal({ formData, updateField, errors }: StepProps) {
 }
 
 // ============================================================================
-// STEP 9: REVIEW & SUBMIT
+// STEP 9: PLATFORM PARTICIPATION AGREEMENT
 // ============================================================================
-function Step9Review({ formData }: { formData: FormData }) {
+function Step9Participation({ formData, updateField, errors }: StepProps) {
+  const has = (f: string) => errors.includes(f);
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold text-primary-950 mb-2">
+          Capvista Platform Participation Agreement
+        </h2>
+        <p className="text-gray-600">
+          Please review and acknowledge the following agreement
+        </p>
+      </div>
+
+      <div className="p-6 bg-gray-50 rounded-lg space-y-4">
+        <p className="text-sm text-gray-800 leading-relaxed">
+          As a condition of accessing Capvista&apos;s capital infrastructure, listing services,
+          and qualified investor network, the Company agrees to issue 1% of its fully
+          diluted equity to Capvista Holdings.
+        </p>
+        <p className="text-sm text-gray-800 leading-relaxed">
+          This issuance is consideration for platform access and is required prior to
+          deal publication.
+        </p>
+
+        <div className="mt-4">
+          <h4 className="text-sm font-semibold text-gray-900 mb-2">Key Terms:</h4>
+          <ul className="list-disc list-inside text-sm text-gray-700 space-y-1.5">
+            <li>Capvista Holdings receives 1% of fully diluted equity</li>
+            <li>Equity is issued as ordinary shares (or warrant, as agreed)</li>
+            <li>Issuance must be duly authorized by the Company&apos;s board of directors</li>
+            <li>
+              The Company must provide documentary proof of issuance before any deal
+              can be published
+            </li>
+          </ul>
+        </div>
+
+        <div className="mt-4">
+          <h4 className="text-sm font-semibold text-gray-900 mb-2">Required Documents (after approval):</h4>
+          <ul className="list-disc list-inside text-sm text-gray-700 space-y-1.5">
+            <li>Board Resolution</li>
+            <li>Share Certificate or Warrant Agreement</li>
+            <li>Updated Shareholder Register</li>
+            <li>Updated Cap Table</li>
+          </ul>
+        </div>
+
+        <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <h4 className="text-sm font-semibold text-blue-900 mb-1">Representation</h4>
+          <p className="text-sm text-blue-800">
+            &ldquo;The Company represents that it has the authority to issue equity and
+            that any issuance to Capvista Holdings will be duly authorized and
+            recorded in accordance with applicable corporate law.&rdquo;
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-4">
+        {errors.length > 0 && (
+          <div className="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg text-sm font-medium mb-4">
+            You must accept the Platform Participation Agreement to proceed
+          </div>
+        )}
+        <div
+          className={`flex items-start gap-3 p-4 rounded-lg border-2 ${
+            has("participationAcknowledged")
+              ? "bg-red-50 border-red-300"
+              : formData.participationAcknowledged
+                ? "bg-green-50 border-green-300"
+                : "bg-white border-gray-200"
+          }`}
+        >
+          <input
+            type="checkbox"
+            checked={formData.participationAcknowledged}
+            onChange={(e) =>
+              updateField("participationAcknowledged", e.target.checked)
+            }
+            className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-2 focus:ring-primary-600 mt-0.5"
+          />
+          <p className="text-sm text-gray-800 leading-relaxed">
+            <strong>I acknowledge and agree</strong> to the Capvista Platform
+            Participation Agreement, including the issuance of 1% fully diluted
+            equity to Capvista Holdings as consideration for platform access.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// STEP 10: REVIEW & SUBMIT
+// ============================================================================
+function Step10Review({ formData }: { formData: FormData }) {
   return (
     <div className="space-y-6">
       <div>
