@@ -188,6 +188,7 @@ router.get(
           sector: true,
           subsector: true,
           stage: true,
+          incorporationDate: true,
           preferredLane: true,
           preferredInstrument: true,
           targetRaiseRange: true,

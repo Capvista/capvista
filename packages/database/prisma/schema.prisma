@@ -373,6 +373,49 @@ model Deal {
   financialDocsUrl String?
   termsSheetUrl    String?
 
+  // Overview fields
+  jurisdiction      String?
+  entityType        String?
+  offeringStructure String?
+  closingType       String?
+  leadInvestor      String?
+
+  // Financials
+  softCap                 Decimal?  @db.Decimal(12, 2)
+  closeDate               DateTime?
+  rollingClose            Boolean   @default(false)
+  useOfFunds              String?   @db.Text
+  currentRevenue          String?
+  previousCapitalRaised   String?
+  expectedReturnStructure String?   @db.Text
+  paymentFrequency        String?
+  capitalProtection       String?   @db.Text
+  maturityTerms           String?   @db.Text
+
+  // Disclosure & Risks (stored as JSON)
+  companyDisclosure Json?
+  dealRisks         Json?
+
+  // Additional document URLs
+  incorporationDocsUrl     String?
+  instrumentTemplateUrl    String?
+  riskDisclosureDocUrl     String?
+  subscriptionAgreementUrl String?
+  capTableDocUrl           String?
+  financialStatementsUrl   String?
+  founderBackgroundDocsUrl String?
+  customerContractsUrl     String?
+  bankStatementsUrl        String?
+
+  // Metadata (backend only)
+  dealApprovalDate       DateTime?
+  complianceReviewStatus String?
+  internalRiskScore      String?
+  verificationCompleted  Boolean   @default(false)
+  amlCleared             Boolean   @default(false)
+  investorCount          Int       @default(0)
+  jurisdictionFlags      String[]  @default([])
+
   currentMonitoringStatus MonitoringMode @default(NORMAL)
 
   company            Company            @relation(fields: [companyId], references: [id])

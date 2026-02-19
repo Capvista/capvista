@@ -20,10 +20,44 @@ const createDealSchema = z.object({
   targetAmount: z.number().positive(),
   minimumInvestment: z.number().positive(),
   terms: z.any(), // JSON object with instrument-specific terms
-  duration: z.number().int().positive().optional(),
-  pitchDeckUrl: z.string().url().optional(),
-  financialDocsUrl: z.string().url().optional(),
-  termsSheetUrl: z.string().url().optional(),
+  duration: z.number().int().positive().optional().nullable(),
+
+  // Overview fields
+  jurisdiction: z.string().optional().nullable(),
+  entityType: z.string().optional().nullable(),
+  offeringStructure: z.string().optional().nullable(),
+  closingType: z.string().optional().nullable(),
+  leadInvestor: z.string().optional().nullable(),
+
+  // Financials
+  softCap: z.number().positive().optional().nullable(),
+  closeDate: z.string().optional().nullable(), // ISO date string
+  rollingClose: z.boolean().optional(),
+  useOfFunds: z.string().optional().nullable(),
+  currentRevenue: z.string().optional().nullable(),
+  previousCapitalRaised: z.string().optional().nullable(),
+  expectedReturnStructure: z.string().optional().nullable(),
+  paymentFrequency: z.string().optional().nullable(),
+  capitalProtection: z.string().optional().nullable(),
+  maturityTerms: z.string().optional().nullable(),
+
+  // Disclosure & Risks (JSON)
+  companyDisclosure: z.any().optional().nullable(),
+  dealRisks: z.any().optional().nullable(),
+
+  // Document URLs
+  pitchDeckUrl: z.string().optional().nullable(),
+  financialDocsUrl: z.string().optional().nullable(),
+  termsSheetUrl: z.string().optional().nullable(),
+  incorporationDocsUrl: z.string().optional().nullable(),
+  instrumentTemplateUrl: z.string().optional().nullable(),
+  riskDisclosureDocUrl: z.string().optional().nullable(),
+  subscriptionAgreementUrl: z.string().optional().nullable(),
+  capTableDocUrl: z.string().optional().nullable(),
+  financialStatementsUrl: z.string().optional().nullable(),
+  founderBackgroundDocsUrl: z.string().optional().nullable(),
+  customerContractsUrl: z.string().optional().nullable(),
+  bankStatementsUrl: z.string().optional().nullable(),
 });
 
 const updateDealSchema = createDealSchema.partial().omit({ companyId: true });
@@ -146,11 +180,45 @@ router.post(
           targetAmount: body.targetAmount,
           minimumInvestment: body.minimumInvestment,
           terms: body.terms,
-          duration: body.duration,
-          pitchDeckUrl: body.pitchDeckUrl,
-          financialDocsUrl: body.financialDocsUrl,
-          termsSheetUrl: body.termsSheetUrl,
+          duration: body.duration ?? undefined,
           status: "DRAFT",
+
+          // Overview
+          jurisdiction: body.jurisdiction ?? undefined,
+          entityType: body.entityType ?? undefined,
+          offeringStructure: body.offeringStructure ?? undefined,
+          closingType: body.closingType ?? undefined,
+          leadInvestor: body.leadInvestor ?? undefined,
+
+          // Financials
+          softCap: body.softCap ?? undefined,
+          closeDate: body.closeDate ? new Date(body.closeDate) : undefined,
+          rollingClose: body.rollingClose ?? false,
+          useOfFunds: body.useOfFunds ?? undefined,
+          currentRevenue: body.currentRevenue ?? undefined,
+          previousCapitalRaised: body.previousCapitalRaised ?? undefined,
+          expectedReturnStructure: body.expectedReturnStructure ?? undefined,
+          paymentFrequency: body.paymentFrequency ?? undefined,
+          capitalProtection: body.capitalProtection ?? undefined,
+          maturityTerms: body.maturityTerms ?? undefined,
+
+          // Disclosure & Risks
+          companyDisclosure: body.companyDisclosure ?? undefined,
+          dealRisks: body.dealRisks ?? undefined,
+
+          // Document URLs
+          pitchDeckUrl: body.pitchDeckUrl ?? undefined,
+          financialDocsUrl: body.financialDocsUrl ?? undefined,
+          termsSheetUrl: body.termsSheetUrl ?? undefined,
+          incorporationDocsUrl: body.incorporationDocsUrl ?? undefined,
+          instrumentTemplateUrl: body.instrumentTemplateUrl ?? undefined,
+          riskDisclosureDocUrl: body.riskDisclosureDocUrl ?? undefined,
+          subscriptionAgreementUrl: body.subscriptionAgreementUrl ?? undefined,
+          capTableDocUrl: body.capTableDocUrl ?? undefined,
+          financialStatementsUrl: body.financialStatementsUrl ?? undefined,
+          founderBackgroundDocsUrl: body.founderBackgroundDocsUrl ?? undefined,
+          customerContractsUrl: body.customerContractsUrl ?? undefined,
+          bankStatementsUrl: body.bankStatementsUrl ?? undefined,
         },
         include: {
           company: {
@@ -242,6 +310,11 @@ router.get("/", requireAuth, async (req: Request, res: Response) => {
           status: true,
           currentMonitoringStatus: true,
           createdAt: true,
+          jurisdiction: true,
+          entityType: true,
+          offeringStructure: true,
+          closingType: true,
+          closeDate: true,
           company: {
             select: {
               id: true,
@@ -343,7 +416,6 @@ router.get("/:id", requireAuth, async (req: Request, res: Response) => {
     }
 
     // Calculate progress
-    // Calculate progress
     const targetAmount = Number(deal.targetAmount);
     const raisedAmount = Number(deal.raisedAmount);
     const progress = targetAmount > 0 ? (raisedAmount / targetAmount) * 100 : 0;
@@ -427,10 +499,16 @@ router.patch(
         });
       }
 
+      // Build update data, converting closeDate string to Date if present
+      const updateData: any = { ...body };
+      if (body.closeDate) {
+        updateData.closeDate = new Date(body.closeDate);
+      }
+
       // Update deal
       const updatedDeal = await prisma.deal.update({
         where: { id },
-        data: body,
+        data: updateData,
       });
 
       return res.json({
