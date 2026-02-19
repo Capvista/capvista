@@ -349,12 +349,50 @@ export default function BrowseCompanies() {
                 Capvista
               </span>
             </Link>
-            <Link
-              href="/dashboard/investor"
-              className="text-sm text-gray-600 hover:text-gray-900"
-            >
-              ← Back to Dashboard
-            </Link>
+            <nav className="hidden md:flex items-center space-x-8">
+              <a
+                href="/#how-it-works"
+                className="text-gray-700 hover:text-gray-900 font-medium transition-colors text-sm"
+              >
+                How It Works
+              </a>
+              <Link
+                href="/about"
+                className="text-gray-700 hover:text-gray-900 font-medium transition-colors text-sm"
+              >
+                About Us
+              </Link>
+              <Link
+                href="/login"
+                className="text-gray-700 hover:text-gray-900 font-medium transition-colors text-sm"
+              >
+                Log In
+              </Link>
+              <Link
+                href="/signup"
+                className="inline-block px-6 py-2.5 rounded-lg font-semibold text-sm transition-all hover:opacity-90"
+                style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
+              >
+                Sign Up
+              </Link>
+            </nav>
+
+            {/* Mobile menu */}
+            <div className="md:hidden flex items-center space-x-4">
+              <Link
+                href="/login"
+                className="text-gray-700 hover:text-gray-900 font-medium transition-colors text-sm"
+              >
+                Log In
+              </Link>
+              <Link
+                href="/signup"
+                className="inline-block px-5 py-2 rounded-lg font-semibold text-sm transition-all hover:opacity-90"
+                style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
+              >
+                Sign Up
+              </Link>
+            </div>
           </div>
         </div>
       </header>
