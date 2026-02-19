@@ -10,6 +10,7 @@ const navItems = [
   { label: "Companies", href: "/companies", icon: "building" },
   { label: "Deals", href: "/deals", icon: "deals" },
   { label: "Investors", href: "/investors", icon: "users" },
+  { label: "Investments", href: "/investments", icon: "investments" },
   { label: "Users", href: "/users", icon: "people" },
   { label: "Activity Log", href: "/activity", icon: "clock" },
 ];
@@ -58,6 +59,13 @@ function NavIcon({ icon, size = 20 }: { icon: string; size?: number }) {
           <line x1="16" y1="13" x2="8" y2="13" />
           <line x1="16" y1="17" x2="8" y2="17" />
           <polyline points="10 9 9 9 8 9" />
+        </svg>
+      );
+    case "investments":
+      return (
+        <svg {...s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="12" y1="1" x2="12" y2="23" />
+          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
         </svg>
       );
     case "clock":

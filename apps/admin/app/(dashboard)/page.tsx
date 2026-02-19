@@ -11,6 +11,7 @@ type Stats = {
   investors: { total: number; pending: number; verified: number; rejected: number };
   users: number;
   deals: { total: number; underReview: number; approved: number; live: number };
+  investments: { total: number; pendingFunding: number; funded: number; active: number };
 };
 
 type FeedItem = {
@@ -112,6 +113,16 @@ export default function DashboardPage() {
             { label: "Live", value: stats.deals.live, color: "#3B82F6" },
           ],
           href: "/deals",
+        },
+        {
+          title: "Investments",
+          total: stats.investments.total,
+          subs: [
+            { label: "Pending", value: stats.investments.pendingFunding, color: "#F59E0B" },
+            { label: "Funded", value: stats.investments.funded, color: "#10B981" },
+            { label: "Active", value: stats.investments.active, color: "#3B82F6" },
+          ],
+          href: "/investments",
         },
       ]
     : [];

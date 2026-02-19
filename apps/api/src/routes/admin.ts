@@ -28,6 +28,10 @@ router.get("/stats", async (req: Request, res: Response) => {
       underReviewDeals,
       approvedDeals,
       liveDeals,
+      totalInvestments,
+      pendingFundingInvestments,
+      fundedInvestments,
+      activeInvestments,
     ] = await Promise.all([
       prisma.company.count(),
       prisma.company.count({ where: { approvalStatus: "PENDING_REVIEW" } }),
@@ -42,6 +46,10 @@ router.get("/stats", async (req: Request, res: Response) => {
       prisma.deal.count({ where: { status: "UNDER_REVIEW" } }),
       prisma.deal.count({ where: { status: "APPROVED" } }),
       prisma.deal.count({ where: { status: "LIVE" } }),
+      prisma.investment.count(),
+      prisma.investment.count({ where: { status: "PENDING_FUNDING" } }),
+      prisma.investment.count({ where: { status: "FUNDED" } }),
+      prisma.investment.count({ where: { status: "ACTIVE" } }),
     ]);
 
     return res.json({
@@ -51,6 +59,7 @@ router.get("/stats", async (req: Request, res: Response) => {
         investors: { total: totalInvestors, pending: pendingInvestors, verified: verifiedInvestors, rejected: rejectedInvestors },
         users: totalUsers,
         deals: { total: totalDeals, underReview: underReviewDeals, approved: approvedDeals, live: liveDeals },
+        investments: { total: totalInvestments, pendingFunding: pendingFundingInvestments, funded: fundedInvestments, active: activeInvestments },
       },
     });
   } catch (error) {
