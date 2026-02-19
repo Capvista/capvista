@@ -37,13 +37,43 @@ router.post(
     try {
       const body = createDealSchema.parse(req.body);
 
-      // Verify user is founder of the company
-      // Look up founder profile first, then check company ownership
+      // Verify user is founder of the company (check both owner and companyFounder)
       const founderProfile = await prisma.founderProfile.findUnique({
         where: { userId: req.user!.id },
       });
 
-      const companyFounder = founderProfile
+      if (!founderProfile) {
+        return res.status(403).json({
+          success: false,
+          error: {
+            code: "FORBIDDEN",
+            message: "Founder profile not found",
+          },
+        });
+      }
+
+      const company = await prisma.company.findUnique({
+        where: { id: body.companyId },
+        select: {
+          ownerId: true,
+          approvalStatus: true,
+          equityAcknowledgementAccepted: true,
+        },
+      });
+
+      if (!company) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: "COMPANY_NOT_FOUND",
+            message: "Company not found",
+          },
+        });
+      }
+
+      // Check ownership or founder membership
+      const isOwner = company.ownerId === founderProfile.id;
+      const companyFounder = !isOwner
         ? await prisma.companyFounder.findFirst({
             where: {
               companyId: body.companyId,
@@ -52,7 +82,7 @@ router.post(
           })
         : null;
 
-      if (!companyFounder) {
+      if (!isOwner && !companyFounder) {
         return res.status(403).json({
           success: false,
           error: {
@@ -62,19 +92,13 @@ router.post(
         });
       }
 
-      // Verify company has completed equity acknowledgement
-      const company = await prisma.company.findUnique({
-        where: { id: body.companyId },
-        select: { equityAcknowledgementAccepted: true },
-      });
-
-      if (!company?.equityAcknowledgementAccepted) {
+      // Verify company is approved
+      if (company.approvalStatus !== "APPROVED") {
         return res.status(400).json({
           success: false,
           error: {
-            code: "ACKNOWLEDGEMENT_REQUIRED",
-            message:
-              "Company must accept platform equity terms before creating deals",
+            code: "COMPANY_NOT_APPROVED",
+            message: "Company must be approved before creating deals",
           },
         });
       }
@@ -169,10 +193,11 @@ router.post(
   },
 );
 
-// GET /v1/deals - Browse deals (public with filters)
-router.get("/", async (req: Request, res: Response) => {
+// GET /v1/deals - Browse deals (authenticated, with filters)
+router.get("/", requireAuth, async (req: Request, res: Response) => {
   try {
     const {
+      companyId,
       lane,
       sector,
       stage,
@@ -181,10 +206,14 @@ router.get("/", async (req: Request, res: Response) => {
       limit = "20",
     } = req.query;
 
-    const where: any = {
-      status: status, // Default to LIVE deals only
-    };
+    const where: any = {};
 
+    // Allow status=ALL to skip status filter (useful for founders viewing their own deals)
+    if (status && status !== "ALL") {
+      where.status = status;
+    }
+
+    if (companyId) where.companyId = companyId;
     if (lane) where.lane = lane;
     if (sector) {
       where.company = { sector };
@@ -258,7 +287,7 @@ router.get("/", async (req: Request, res: Response) => {
 });
 
 // GET /v1/deals/:id - Get deal details
-router.get("/:id", async (req: Request, res: Response) => {
+router.get("/:id", requireAuth, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -432,8 +461,8 @@ router.patch(
   },
 );
 
-// POST /v1/deals/:id/submit - Submit deal for review (founders only)
-router.post(
+// PATCH /v1/deals/:id/submit - Submit deal for review (founders only)
+router.patch(
   "/:id/submit",
   requireAuth,
   requireRole("FOUNDER"),

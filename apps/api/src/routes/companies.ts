@@ -195,6 +195,19 @@ router.get(
           approvalStatus: true,
           createdAt: true,
           logoUrl: true,
+          deals: {
+            select: {
+              id: true,
+              name: true,
+              lane: true,
+              instrumentType: true,
+              status: true,
+              targetAmount: true,
+              raisedAmount: true,
+              createdAt: true,
+            },
+            orderBy: { createdAt: "desc" },
+          },
         },
         orderBy: { createdAt: "desc" },
       });

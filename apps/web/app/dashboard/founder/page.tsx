@@ -12,6 +12,17 @@ type AdminAction = {
   createdAt: string;
 };
 
+type Deal = {
+  id: string;
+  name: string;
+  lane: string;
+  instrumentType: string;
+  status: string;
+  targetAmount: string;
+  raisedAmount: string;
+  createdAt: string;
+};
+
 type Company = {
   id: string;
   legalName: string;
@@ -34,6 +45,7 @@ export default function FounderDashboard() {
   const [adminActions, setAdminActions] = useState<
     Record<string, AdminAction | null>
   >({});
+  const [companyDeals, setCompanyDeals] = useState<Record<string, Deal[]>>({});
 
   useEffect(() => {
     if (!loading && !user) {
@@ -55,6 +67,31 @@ export default function FounderDashboard() {
         const data = await res.json();
         if (data.success) {
           setCompanies(data.data);
+
+          // Fetch deals for approved companies
+          const approvedCompanies = (data.data as Company[]).filter(
+            (c) => c.approvalStatus === "APPROVED",
+          );
+          if (approvedCompanies.length > 0) {
+            const dealsResults: Record<string, Deal[]> = {};
+            await Promise.all(
+              approvedCompanies.map(async (c) => {
+                try {
+                  const dealsRes = await fetch(
+                    `${API_URL}/api/deals?companyId=${c.id}&status=ALL`,
+                    { headers: { Authorization: `Bearer ${accessToken}` } },
+                  );
+                  const dealsData = await dealsRes.json();
+                  if (dealsData.success) {
+                    dealsResults[c.id] = dealsData.data;
+                  }
+                } catch {
+                  // Silently fail for individual deal fetches
+                }
+              }),
+            );
+            setCompanyDeals(dealsResults);
+          }
 
           // Fetch admin actions for companies that are REJECTED or INFO_REQUESTED
           const needsAction = (data.data as Company[]).filter(
@@ -201,6 +238,16 @@ export default function FounderDashboard() {
                 key={company.id}
                 company={company}
                 adminAction={adminActions[company.id] || null}
+                deals={companyDeals[company.id] || []}
+                accessToken={accessToken}
+                onDealUpdated={(companyId: string, updatedDeal: Deal) => {
+                  setCompanyDeals((prev) => ({
+                    ...prev,
+                    [companyId]: (prev[companyId] || []).map((d) =>
+                      d.id === updatedDeal.id ? updatedDeal : d,
+                    ),
+                  }));
+                }}
               />
             ))}
 
@@ -267,9 +314,15 @@ export default function FounderDashboard() {
 function CompanyCard({
   company,
   adminAction,
+  deals,
+  accessToken,
+  onDealUpdated,
 }: {
   company: Company;
   adminAction: AdminAction | null;
+  deals: Deal[];
+  accessToken: string | null;
+  onDealUpdated: (companyId: string, updatedDeal: Deal) => void;
 }) {
   const statusConfig: Record<
     string,
@@ -496,6 +549,56 @@ function CompanyCard({
         </div>
       </div>
 
+      {/* Deals Section — only for approved companies */}
+      {company.approvalStatus === "APPROVED" && (
+        <div className="mt-2 bg-white rounded-xl border border-gray-200 p-4">
+          {deals.length > 0 ? (
+            <>
+              <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+                Deals ({deals.length})
+              </h4>
+              <div className="space-y-2">
+                {deals.map((deal) => (
+                  <DealRow
+                    key={deal.id}
+                    deal={deal}
+                    companyId={company.id}
+                    accessToken={accessToken}
+                    onSubmitted={(updatedDeal) =>
+                      onDealUpdated(company.id, updatedDeal)
+                    }
+                  />
+                ))}
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-4">
+              <p className="text-sm text-gray-400 mb-3">No deals yet</p>
+              <Link
+                href={`/dashboard/founder/deals/create?companyId=${company.id}`}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all hover:opacity-90"
+                style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+                Create Deal
+              </Link>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Admin Message Banner */}
       {showAdminMessage && (
         <div
@@ -548,6 +651,170 @@ function CompanyCard({
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// ============================================================================
+// DEAL ROW COMPONENT
+// ============================================================================
+function DealRow({
+  deal,
+  companyId,
+  accessToken,
+  onSubmitted,
+}: {
+  deal: Deal;
+  companyId: string;
+  accessToken: string | null;
+  onSubmitted: (updatedDeal: Deal) => void;
+}) {
+  const [submitting, setSubmitting] = useState(false);
+
+  const dealStatusConfig: Record<
+    string,
+    { label: string; color: string; bg: string }
+  > = {
+    DRAFT: {
+      label: "Draft",
+      color: "text-gray-600",
+      bg: "bg-gray-100",
+    },
+    UNDER_REVIEW: {
+      label: "Under Review",
+      color: "text-amber-700",
+      bg: "bg-amber-50",
+    },
+    APPROVED: {
+      label: "Approved",
+      color: "text-green-700",
+      bg: "bg-green-50",
+    },
+    LIVE: {
+      label: "Live",
+      color: "text-green-700",
+      bg: "bg-green-50",
+    },
+    CLOSED: {
+      label: "Closed",
+      color: "text-gray-600",
+      bg: "bg-gray-100",
+    },
+    DEFAULTED: {
+      label: "Defaulted",
+      color: "text-red-700",
+      bg: "bg-red-50",
+    },
+  };
+
+  const instrumentLabels: Record<string, string> = {
+    REVENUE_SHARE_NOTE: "Revenue Share Note",
+    ASSET_BACKED_PARTICIPATION: "Asset-Backed Participation",
+    CONVERTIBLE_NOTE: "Convertible Note",
+    SAFE: "SAFE",
+    SPV_EQUITY: "SPV Equity",
+  };
+
+  const laneConfig: Record<string, { label: string; color: string; bg: string }> = {
+    YIELD: { label: "Yield", color: "text-emerald-700", bg: "bg-emerald-50" },
+    VENTURES: { label: "Ventures", color: "text-blue-700", bg: "bg-blue-50" },
+  };
+
+  const status = dealStatusConfig[deal.status] || dealStatusConfig.DRAFT;
+  const lane = laneConfig[deal.lane] || { label: deal.lane, color: "text-gray-600", bg: "bg-gray-100" };
+  const targetAmount = parseFloat(deal.targetAmount);
+  const formattedTarget = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,
+  }).format(targetAmount);
+
+  async function handleSubmitForReview() {
+    if (!accessToken || submitting) return;
+    setSubmitting(true);
+    try {
+      const API_URL =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+      const res = await fetch(`${API_URL}/api/deals/${deal.id}/submit`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+      const data = await res.json();
+      if (data.success) {
+        onSubmitted({ ...deal, status: "UNDER_REVIEW" });
+      }
+    } catch (err) {
+      console.error("Failed to submit deal:", err);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="flex items-center justify-between py-3 px-3 rounded-lg hover:bg-gray-50 transition-colors">
+      <div className="flex items-center gap-3 min-w-0 flex-1">
+        <div
+          className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+          style={{ backgroundColor: "rgba(11, 28, 45, 0.06)" }}
+        >
+          <svg
+            className="w-4 h-4 text-gray-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
+          </svg>
+        </div>
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="text-sm font-medium text-gray-900">{deal.name}</p>
+            <span
+              className={`px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide ${lane.bg} ${lane.color}`}
+            >
+              {lane.label}
+            </span>
+          </div>
+          <p className="text-xs text-gray-500 mt-0.5">
+            {instrumentLabels[deal.instrumentType] || deal.instrumentType} &middot;{" "}
+            {formattedTarget}
+          </p>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2 flex-shrink-0 ml-3">
+        {deal.status === "DRAFT" && (
+          <>
+            <Link
+              href={`/dashboard/founder/deals/create?dealId=${deal.id}&companyId=${companyId}`}
+              className="px-3 py-1.5 rounded-lg text-xs font-medium border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              Edit
+            </Link>
+            <button
+              onClick={handleSubmitForReview}
+              disabled={submitting}
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-colors disabled:opacity-50"
+              style={{ backgroundColor: "#0B1C2D" }}
+            >
+              {submitting ? "Submitting..." : "Submit for Review"}
+            </button>
+          </>
+        )}
+        <span
+          className={`px-3 py-1 rounded-full text-xs font-medium ${status.bg} ${status.color}`}
+        >
+          {status.label}
+        </span>
+      </div>
     </div>
   );
 }
