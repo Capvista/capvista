@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import { prisma } from "@capvista/database";
+import { prisma } from "../lib/prisma";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
