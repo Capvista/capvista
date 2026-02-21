@@ -18,9 +18,22 @@ import investmentsRoutes from "./routes/investments";
 const app = express();
 const PORT = process.env.PORT || 4000;
 
+// CORS configuration
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:3100",
+  process.env.WEB_URL,
+  process.env.ADMIN_URL,
+].filter(Boolean) as string[];
+
 // Middleware
 app.use(helmet()); // Security headers
-app.use(cors()); // Enable CORS
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+  })
+);
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 app.use("/api/investors", investorsRoutes);
