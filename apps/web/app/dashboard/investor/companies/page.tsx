@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import CustomSelect from "@/components/CustomSelect";
+import { useAuth } from "@/lib/contexts/AuthContext";
 
 type Company = {
   id: string;
@@ -198,12 +200,18 @@ const laneLabels: Record<string, string> = {
 // ============================================================================
 
 export default function BrowseCompanies() {
+  const { user, signOut } = useAuth();
+  const router = useRouter();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [filteredCompanies, setFilteredCompanies] = useState<Company[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"card" | "list">("list");
   const [watchlist, setWatchlist] = useState<Set<string>>(new Set());
+
+  const isLoggedIn = !!user;
+  const userInitial = user?.firstName?.charAt(0).toUpperCase() || "U";
+  const userFullName = `${user?.firstName || ""} ${user?.lastName || ""}`.trim();
 
   const [quickFilter, setQuickFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -326,14 +334,12 @@ export default function BrowseCompanies() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#F6F8FA" }}>
-      {/* Header */}
+      {/* Header - Dashboard nav when logged in, public nav when not */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div className="container">
           <div className="flex items-center justify-between py-4">
-            <Link
-              href="/"
-              className="flex items-center space-x-2"
-            >
+            {/* Logo */}
+            <Link href="/" className="flex items-center space-x-2">
               <div
                 className="h-9 w-9 rounded-lg flex items-center justify-center"
                 style={{ backgroundColor: "#C8A24D" }}
@@ -349,50 +355,164 @@ export default function BrowseCompanies() {
                 Capvista
               </span>
             </Link>
-            <nav className="hidden md:flex items-center space-x-8">
-              <a
-                href="/#how-it-works"
-                className="text-gray-700 hover:text-gray-900 font-medium transition-colors text-sm"
-              >
-                How It Works
-              </a>
-              <Link
-                href="/about"
-                className="text-gray-700 hover:text-gray-900 font-medium transition-colors text-sm"
-              >
-                About Us
-              </Link>
-              <Link
-                href="/login"
-                className="text-gray-700 hover:text-gray-900 font-medium transition-colors text-sm"
-              >
-                Log In
-              </Link>
-              <Link
-                href="/signup"
-                className="inline-block px-6 py-2.5 rounded-lg font-semibold text-sm transition-all hover:opacity-90"
-                style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
-              >
-                Sign Up
-              </Link>
-            </nav>
 
-            {/* Mobile menu */}
-            <div className="md:hidden flex items-center space-x-4">
-              <Link
-                href="/login"
-                className="text-gray-700 hover:text-gray-900 font-medium transition-colors text-sm"
-              >
-                Log In
-              </Link>
-              <Link
-                href="/signup"
-                className="inline-block px-5 py-2 rounded-lg font-semibold text-sm transition-all hover:opacity-90"
-                style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
-              >
-                Sign Up
-              </Link>
-            </div>
+            {isLoggedIn ? (
+              /* Dashboard Navigation & Profile */
+              <div className="flex items-center gap-8">
+                <nav className="hidden md:flex items-center space-x-8">
+                  {/* Explore Dropdown */}
+                  <div className="relative group">
+                    <button className="flex items-center gap-1 font-medium text-gray-600 hover:text-primary-950 transition-colors">
+                      Explore
+                      <svg
+                        className="w-4 h-4 group-hover:rotate-180 transition-transform"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </button>
+
+                    <div className="absolute top-full right-0 mt-2 w-72 bg-white rounded-lg shadow-lg border border-gray-200 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                      <button
+                        onClick={() => router.push("/dashboard/investor/companies")}
+                        className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-start gap-3"
+                      >
+                        <svg className="w-5 h-5 text-gray-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        <div>
+                          <p className="font-semibold text-gray-900">Browse Companies</p>
+                          <p className="text-sm text-gray-600">Explore our curated list of private companies</p>
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => router.push("/dashboard/investor")}
+                        className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-start gap-3"
+                      >
+                        <svg className="w-5 h-5 text-gray-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                        <div>
+                          <p className="font-semibold text-gray-900">Market Opportunities</p>
+                          <p className="text-sm text-gray-600">Find active opportunities to invest in</p>
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => router.push("/dashboard/investor")}
+                        className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-start gap-3"
+                      >
+                        <svg className="w-5 h-5 text-gray-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                        </svg>
+                        <div>
+                          <p className="font-semibold text-gray-900">Watchlist</p>
+                          <p className="text-sm text-gray-600">Track the private companies that matter to you</p>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Dashboard Link */}
+                  <button
+                    onClick={() => router.push("/dashboard/investor")}
+                    className="font-medium text-gray-600 hover:text-primary-950 transition-colors"
+                  >
+                    Dashboard
+                  </button>
+                </nav>
+
+                {/* Profile Button */}
+                <div className="relative group">
+                  <div className="w-10 h-10 rounded-full bg-primary-950 text-white font-semibold flex items-center justify-center hover:bg-primary-900 transition-colors cursor-pointer">
+                    {userInitial}
+                  </div>
+
+                  <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                    <div className="px-4 py-3 border-b border-gray-200">
+                      <p className="font-semibold text-gray-900">{userFullName}</p>
+                      <p className="text-sm text-gray-600">Investor</p>
+                    </div>
+
+                    <button
+                      onClick={() => {}}
+                      className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3"
+                    >
+                      <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                      <span className="font-medium text-gray-900">Manage Profile</span>
+                    </button>
+
+                    <button
+                      onClick={signOut}
+                      className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3"
+                    >
+                      <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      </svg>
+                      <span className="font-medium text-gray-900">Log Out</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* Public Navigation */
+              <>
+                <nav className="hidden md:flex items-center space-x-8">
+                  <a
+                    href="/#how-it-works"
+                    className="text-gray-700 hover:text-gray-900 font-medium transition-colors text-sm"
+                  >
+                    How It Works
+                  </a>
+                  <Link
+                    href="/about"
+                    className="text-gray-700 hover:text-gray-900 font-medium transition-colors text-sm"
+                  >
+                    About Us
+                  </Link>
+                  <Link
+                    href="/login"
+                    className="text-gray-700 hover:text-gray-900 font-medium transition-colors text-sm"
+                  >
+                    Log In
+                  </Link>
+                  <Link
+                    href="/signup"
+                    className="inline-block px-6 py-2.5 rounded-lg font-semibold text-sm transition-all hover:opacity-90"
+                    style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
+                  >
+                    Sign Up
+                  </Link>
+                </nav>
+
+                {/* Mobile menu */}
+                <div className="md:hidden flex items-center space-x-4">
+                  <Link
+                    href="/login"
+                    className="text-gray-700 hover:text-gray-900 font-medium transition-colors text-sm"
+                  >
+                    Log In
+                  </Link>
+                  <Link
+                    href="/signup"
+                    className="inline-block px-5 py-2 rounded-lg font-semibold text-sm transition-all hover:opacity-90"
+                    style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
+                  >
+                    Sign Up
+                  </Link>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </header>
