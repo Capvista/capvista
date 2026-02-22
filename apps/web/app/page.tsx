@@ -1,73 +1,11 @@
 import Link from "next/link";
+import LandingNav from "./components/LandingNav";
 
 export default function HomePage() {
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#F6F8FA" }}>
       {/* Navigation */}
-      <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/95 backdrop-blur-md">
-        <div className="container flex items-center justify-between py-4">
-          <Link href="/" className="flex items-center space-x-2">
-            <div
-              className="h-9 w-9 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: "#C8A24D" }}
-            >
-              <span
-                className="font-bold text-base"
-                style={{ color: "#0B1C2D" }}
-              >
-                CV
-              </span>
-            </div>
-            <span className="text-xl font-bold" style={{ color: "#0B1C2D" }}>
-              Capvista
-            </span>
-          </Link>
-          <nav className="hidden md:flex items-center space-x-8">
-            <a
-              href="#how-it-works"
-              className="text-gray-700 hover:text-gray-900 font-medium transition-colors text-sm"
-            >
-              How It Works
-            </a>
-            <Link
-              href="/about"
-              className="text-gray-700 hover:text-gray-900 font-medium transition-colors text-sm"
-            >
-              About Us
-            </Link>
-            <Link
-              href="/login"
-              className="text-gray-700 hover:text-gray-900 font-medium transition-colors text-sm"
-            >
-              Log In
-            </Link>
-            <Link
-              href="/signup"
-              className="inline-block px-6 py-2.5 rounded-lg font-semibold text-sm transition-all hover:opacity-90"
-              style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
-            >
-              Sign Up
-            </Link>
-          </nav>
-
-          {/* Mobile menu button */}
-          <div className="md:hidden flex items-center space-x-4">
-            <Link
-              href="/login"
-              className="text-gray-700 hover:text-gray-900 font-medium transition-colors text-sm"
-            >
-              Log In
-            </Link>
-            <Link
-              href="/signup"
-              className="inline-block px-5 py-2 rounded-lg font-semibold text-sm transition-all hover:opacity-90"
-              style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
-            >
-              Sign Up
-            </Link>
-          </div>
-        </div>
-      </header>
+      <LandingNav />
 
       {/* Hero Section */}
       <section
