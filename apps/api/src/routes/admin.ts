@@ -1,6 +1,15 @@
 import { Router, Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { requireAuth, requireRole } from "../middleware/auth";
+import { sendEmail } from "../lib/email";
+import {
+  companyApprovedEmail,
+  companyRejectedEmail,
+  investorVerifiedEmail,
+  investorRejectedEmail,
+  dealLiveEmail,
+  fundingConfirmedEmail,
+} from "../lib/emailTemplates";
 
 const router = Router();
 
@@ -307,6 +316,22 @@ router.patch("/companies/:id/approve", async (req: Request, res: Response) => {
       }),
     ]);
 
+    // Fire and forget — company approved email to founder
+    (async () => {
+      try {
+        const companyWithOwner = await prisma.company.findUnique({
+          where: { id },
+          select: { legalName: true, owner: { select: { user: { select: { email: true } } } } },
+        });
+        if (companyWithOwner) {
+          const { subject, html } = companyApprovedEmail(companyWithOwner.legalName);
+          await sendEmail({ to: companyWithOwner.owner.user.email, subject, html });
+        }
+      } catch (err) {
+        console.error("Company approved email failed:", err);
+      }
+    })();
+
     return res.json({ success: true, message: "Company approved" });
   } catch (error) {
     console.error("Admin approve company error:", error);
@@ -353,6 +378,22 @@ router.patch("/companies/:id/reject", async (req: Request, res: Response) => {
         },
       }),
     ]);
+
+    // Fire and forget — company rejected email to founder
+    (async () => {
+      try {
+        const companyWithOwner = await prisma.company.findUnique({
+          where: { id },
+          select: { legalName: true, owner: { select: { user: { select: { email: true } } } } },
+        });
+        if (companyWithOwner) {
+          const { subject, html } = companyRejectedEmail(companyWithOwner.legalName, reason);
+          await sendEmail({ to: companyWithOwner.owner.user.email, subject, html });
+        }
+      } catch (err) {
+        console.error("Company rejected email failed:", err);
+      }
+    })();
 
     return res.json({ success: true, message: "Company rejected" });
   } catch (error) {
@@ -595,6 +636,22 @@ router.patch("/investors/:id/verify", async (req: Request, res: Response) => {
       }),
     ]);
 
+    // Fire and forget — investor verified email
+    (async () => {
+      try {
+        const investorWithUser = await prisma.investorProfile.findUnique({
+          where: { id },
+          select: { user: { select: { email: true } } },
+        });
+        if (investorWithUser) {
+          const { subject, html } = investorVerifiedEmail();
+          await sendEmail({ to: investorWithUser.user.email, subject, html });
+        }
+      } catch (err) {
+        console.error("Investor verified email failed:", err);
+      }
+    })();
+
     return res.json({ success: true, message: "Investor verified" });
   } catch (error) {
     console.error("Admin verify investor error:", error);
@@ -641,6 +698,22 @@ router.patch("/investors/:id/reject", async (req: Request, res: Response) => {
         },
       }),
     ]);
+
+    // Fire and forget — investor rejected email
+    (async () => {
+      try {
+        const investorWithUser = await prisma.investorProfile.findUnique({
+          where: { id },
+          select: { user: { select: { email: true } } },
+        });
+        if (investorWithUser) {
+          const { subject, html } = investorRejectedEmail(reason);
+          await sendEmail({ to: investorWithUser.user.email, subject, html });
+        }
+      } catch (err) {
+        console.error("Investor rejected email failed:", err);
+      }
+    })();
 
     return res.json({ success: true, message: "Investor rejected" });
   } catch (error) {
@@ -991,6 +1064,22 @@ router.patch("/deals/:id/golive", async (req: Request, res: Response) => {
       }),
     ]);
 
+    // Fire and forget — deal live email to founder
+    (async () => {
+      try {
+        const dealWithCompany = await prisma.deal.findUnique({
+          where: { id },
+          select: { name: true, company: { select: { owner: { select: { user: { select: { email: true } } } } } } },
+        });
+        if (dealWithCompany) {
+          const { subject, html } = dealLiveEmail(dealWithCompany.name);
+          await sendEmail({ to: dealWithCompany.company.owner.user.email, subject, html });
+        }
+      } catch (err) {
+        console.error("Deal live email failed:", err);
+      }
+    })();
+
     return res.json({ success: true, message: "Deal is now live" });
   } catch (error) {
     console.error("Admin go-live deal error:", error);
@@ -1305,6 +1394,30 @@ router.patch("/investments/:id/confirm-funding", async (req: Request, res: Respo
         },
       }),
     ]);
+
+    // Fire and forget — funding confirmed email to investor
+    (async () => {
+      try {
+        const investmentWithDetails = await prisma.investment.findUnique({
+          where: { id },
+          select: {
+            fundedAmount: true,
+            investor: { select: { user: { select: { email: true } } } },
+            deal: { select: { name: true, company: { select: { legalName: true } } } },
+          },
+        });
+        if (investmentWithDetails) {
+          const { subject, html } = fundingConfirmedEmail(
+            investmentWithDetails.deal.name,
+            investmentWithDetails.deal.company.legalName,
+            Number(investmentWithDetails.fundedAmount),
+          );
+          await sendEmail({ to: investmentWithDetails.investor.user.email, subject, html });
+        }
+      } catch (err) {
+        console.error("Funding confirmed email failed:", err);
+      }
+    })();
 
     return res.json({
       success: true,

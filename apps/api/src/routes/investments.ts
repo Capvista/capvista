@@ -2,6 +2,8 @@ import { Router, Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { z } from "zod";
 import { requireAuth, requireRole } from "../middleware/auth";
+import { sendEmail } from "../lib/email";
+import { investmentCommitmentEmail, fundingInstructionsEmail } from "../lib/emailTemplates";
 
 const router = Router();
 
@@ -424,6 +426,28 @@ router.patch(
         },
       });
 
+      // Fire and forget — investment commitment email
+      (async () => {
+        try {
+          const investorUser = await prisma.investorProfile.findUnique({
+            where: { id: investment.investorId },
+            select: { user: { select: { email: true } } },
+          });
+          if (investorUser) {
+            const companyName = updated.deal.company.legalName || updated.deal.company.tradingName || "";
+            const { subject, html } = investmentCommitmentEmail(
+              updated.deal.name,
+              companyName,
+              body.commitmentAmount,
+              updated.deal.id,
+            );
+            await sendEmail({ to: investorUser.user.email, subject, html });
+          }
+        } catch (err) {
+          console.error("Investment commitment email failed:", err);
+        }
+      })();
+
       return res.json({
         success: true,
         data: updated,
@@ -673,6 +697,25 @@ router.patch(
           },
         },
       });
+
+      // Fire and forget — funding instructions email
+      (async () => {
+        try {
+          const investorUser = await prisma.investorProfile.findUnique({
+            where: { id: investment.investorId },
+            select: { user: { select: { email: true } } },
+          });
+          if (investorUser) {
+            const { subject, html } = fundingInstructionsEmail(
+              investment.deal.name,
+              wireInstructions,
+            );
+            await sendEmail({ to: investorUser.user.email, subject, html });
+          }
+        } catch (err) {
+          console.error("Funding instructions email failed:", err);
+        }
+      })();
 
       return res.json({
         success: true,

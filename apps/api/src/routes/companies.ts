@@ -2,6 +2,8 @@ import { Router, Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { z } from "zod";
 import { requireAuth, requireRole } from "../middleware/auth";
+import { sendEmail } from "../lib/email";
+import { companySubmissionEmail } from "../lib/emailTemplates";
 
 const router = Router();
 
@@ -490,6 +492,19 @@ router.post(
       });
 
       console.log(`✅ Company created: ${company.legalName} (${company.id})`);
+
+      // Fire and forget — company submission email
+      (async () => {
+        try {
+          const emailUser = await prisma.user.findUnique({ where: { id: req.user!.id }, select: { email: true } });
+          if (emailUser) {
+            const { subject, html } = companySubmissionEmail(company.legalName);
+            await sendEmail({ to: emailUser.email, subject, html });
+          }
+        } catch (err) {
+          console.error("Company submission email failed:", err);
+        }
+      })();
 
       // Update FounderProfile with data from the onboarding form
       await prisma.founderProfile.update({

@@ -2,6 +2,8 @@ import { Router, Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { z } from "zod";
 import { requireAuth, requireRole } from "../middleware/auth";
+import { sendEmail } from "../lib/email";
+import { dealSubmittedEmail } from "../lib/emailTemplates";
 
 const router = Router();
 
@@ -302,6 +304,21 @@ router.post(
           },
         },
       });
+
+      // Fire and forget — deal submission email (only if submitted for review)
+      if (dealStatus === "UNDER_REVIEW") {
+        (async () => {
+          try {
+            const emailUser = await prisma.user.findUnique({ where: { id: req.user!.id }, select: { email: true } });
+            if (emailUser) {
+              const { subject, html } = dealSubmittedEmail(deal.name, deal.company.legalName);
+              await sendEmail({ to: emailUser.email, subject, html });
+            }
+          } catch (err) {
+            console.error("Deal submission email failed:", err);
+          }
+        })();
+      }
 
       return res.status(201).json({
         success: true,
@@ -670,6 +687,20 @@ router.patch(
         where: { id },
         data: { status: "UNDER_REVIEW" },
       });
+
+      // Fire and forget — deal submission email
+      (async () => {
+        try {
+          const emailUser = await prisma.user.findUnique({ where: { id: req.user!.id }, select: { email: true } });
+          const dealCompany = await prisma.company.findUnique({ where: { id: deal.companyId }, select: { legalName: true } });
+          if (emailUser && dealCompany) {
+            const { subject, html } = dealSubmittedEmail(deal.name, dealCompany.legalName);
+            await sendEmail({ to: emailUser.email, subject, html });
+          }
+        } catch (err) {
+          console.error("Deal submission email failed:", err);
+        }
+      })();
 
       return res.json({
         success: true,
