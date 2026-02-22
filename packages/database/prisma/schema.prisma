@@ -41,6 +41,7 @@ model User {
 
   verificationRecords VerificationRecord[]
   adminActions        AdminAction[]
+  watchlist           Watchlist[]
 
   @@index([email])
   @@index([role])
@@ -318,6 +319,7 @@ model Company {
   deals               Deal[]
   monitoringStatuses  MonitoringStatus[]
   capvistaEquity      CapvistaHoldingsEquity?
+  watchlist           Watchlist[]
 
   @@index([incorporationNumber])
   @@index([sector])
@@ -748,4 +750,21 @@ model CapvistaHoldingsEquity {
 
   @@index([companyId])
   @@index([investorId])
+}
+
+// ============================================================================
+// WATCHLIST
+// ============================================================================
+
+model Watchlist {
+  id        String   @id @default(cuid())
+  userId    String
+  companyId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, companyId])
+  @@index([userId])
 }

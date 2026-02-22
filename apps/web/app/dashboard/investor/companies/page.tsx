@@ -238,6 +238,9 @@ export default function BrowseCompanies() {
 
   useEffect(() => {
     fetchCompanies();
+    if (isLoggedIn) {
+      fetchWatchlist();
+    }
   }, []);
 
   useEffect(() => {
@@ -274,18 +277,80 @@ export default function BrowseCompanies() {
     }
   };
 
-  const toggleWatchlist = (companyId: string, e: React.MouseEvent) => {
+  const fetchWatchlist = async () => {
+    try {
+      const API_URL =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+      const token = localStorage.getItem("capvista_token");
+      if (!token) return;
+      const response = await fetch(`${API_URL}/api/watchlist`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const result = await response.json();
+      if (result.success) {
+        setWatchlist(new Set(result.data));
+      }
+    } catch (err) {
+      console.error("Error fetching watchlist:", err);
+    }
+  };
+
+  const toggleWatchlist = async (companyId: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+
+    if (!isLoggedIn) return;
+
+    const isWatchlisted = watchlist.has(companyId);
+
+    // Optimistic update
     setWatchlist((prev) => {
       const next = new Set(prev);
-      if (next.has(companyId)) {
+      if (isWatchlisted) {
         next.delete(companyId);
       } else {
         next.add(companyId);
       }
       return next;
     });
+
+    // Persist to backend
+    try {
+      const API_URL =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+      const token = localStorage.getItem("capvista_token");
+      if (!token) return;
+
+      const response = await fetch(`${API_URL}/api/watchlist/${companyId}`, {
+        method: isWatchlisted ? "DELETE" : "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!response.ok) {
+        // Revert on failure
+        setWatchlist((prev) => {
+          const next = new Set(prev);
+          if (isWatchlisted) {
+            next.add(companyId);
+          } else {
+            next.delete(companyId);
+          }
+          return next;
+        });
+      }
+    } catch (err) {
+      console.error("Error updating watchlist:", err);
+      // Revert on error
+      setWatchlist((prev) => {
+        const next = new Set(prev);
+        if (isWatchlisted) {
+          next.add(companyId);
+        } else {
+          next.delete(companyId);
+        }
+        return next;
+      });
+    }
   };
 
   const applyFilters = () => {
