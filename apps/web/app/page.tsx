@@ -3,7 +3,7 @@ import LandingNav from "./components/LandingNav";
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "#F6F8FA" }}>
+    <div className="min-h-screen bg-[#F8FAFC]">
       {/* Navigation */}
       <LandingNav />
 
@@ -12,17 +12,16 @@ export default function HomePage() {
         className="relative overflow-hidden py-28 md:py-36"
         style={{
           background:
-            "linear-gradient(135deg, #0B1C2D 0%, #142B4F 50%, #1a3356 100%)",
+            "linear-gradient(135deg, #0A1F44 0%, #0F2D5E 50%, #153570 100%)",
         }}
       >
-        <div className="container relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight tracking-tight">
               Institutional Capital Infrastructure
               <br />
               <span
-                className="inline-block border-b-2 pb-2 mt-2"
-                style={{ borderColor: "#C8A24D" }}
+                className="inline-block border-b-2 pb-2 mt-2 border-[#10B981]"
               >
                 for African Private Companies
               </span>
@@ -36,8 +35,7 @@ export default function HomePage() {
             <div className="flex flex-col items-center gap-4">
               <Link
                 href="/dashboard/investor/companies"
-                className="inline-block px-10 py-4 rounded-lg font-semibold text-lg transition-all hover:opacity-90"
-                style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
+                className="inline-block px-10 py-4 rounded-lg font-semibold text-lg transition-all bg-[#10B981] text-white hover:bg-[#059669]"
               >
                 Browse Companies
               </Link>
@@ -53,15 +51,11 @@ export default function HomePage() {
       {/* How Capital Flows Through Capvista */}
       <section
         id="how-it-works"
-        className="py-24"
-        style={{ backgroundColor: "#F6F8FA" }}
+        className="py-24 bg-[#F8FAFC]"
       >
-        <div className="container">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2
-              className="text-3xl md:text-4xl font-bold mb-4"
-              style={{ color: "#0B1C2D" }}
-            >
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-[#0A1F44]">
               How Capital Flows Through Capvista
             </h2>
           </div>
@@ -70,23 +64,13 @@ export default function HomePage() {
           <div className="max-w-6xl mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-0 relative">
               {/* Connecting line (desktop) */}
-              <div
-                className="hidden md:block absolute top-16 left-[12.5%] right-[12.5%] h-px"
-                style={{ backgroundColor: "#C8A24D", opacity: 0.3 }}
-              />
+              <div className="hidden md:block absolute top-16 left-[12.5%] right-[12.5%] h-px bg-[#10B981] opacity-30" />
 
               {/* Step 1 */}
               <div className="relative flex flex-col items-center text-center px-6 pb-8 md:pb-0">
-                <div
-                  className="w-14 h-14 rounded-full flex items-center justify-center mb-6 relative z-10"
-                  style={{
-                    backgroundColor: "#0B1C2D",
-                    border: "2px solid #C8A24D",
-                  }}
-                >
+                <div className="w-14 h-14 rounded-full flex items-center justify-center mb-6 relative z-10 bg-[#0A1F44] border-2 border-[#10B981]">
                   <svg
-                    className="w-6 h-6"
-                    style={{ color: "#C8A24D" }}
+                    className="w-6 h-6 text-[#10B981]"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -99,16 +83,10 @@ export default function HomePage() {
                     />
                   </svg>
                 </div>
-                <div
-                  className="text-xs font-bold uppercase tracking-widest mb-2"
-                  style={{ color: "#C8A24D" }}
-                >
+                <div className="text-xs font-bold uppercase tracking-widest mb-2 text-[#10B981]">
                   Step 1
                 </div>
-                <h3
-                  className="text-lg font-bold mb-3"
-                  style={{ color: "#0B1C2D" }}
-                >
+                <h3 className="text-lg font-bold mb-3 text-[#0A1F44]">
                   Company Verification
                 </h3>
                 <p className="text-sm text-gray-600 leading-relaxed">
@@ -119,16 +97,9 @@ export default function HomePage() {
 
               {/* Step 2 */}
               <div className="relative flex flex-col items-center text-center px-6 pb-8 md:pb-0">
-                <div
-                  className="w-14 h-14 rounded-full flex items-center justify-center mb-6 relative z-10"
-                  style={{
-                    backgroundColor: "#0B1C2D",
-                    border: "2px solid #C8A24D",
-                  }}
-                >
+                <div className="w-14 h-14 rounded-full flex items-center justify-center mb-6 relative z-10 bg-[#0A1F44] border-2 border-[#10B981]">
                   <svg
-                    className="w-6 h-6"
-                    style={{ color: "#C8A24D" }}
+                    className="w-6 h-6 text-[#10B981]"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -141,16 +112,10 @@ export default function HomePage() {
                     />
                   </svg>
                 </div>
-                <div
-                  className="text-xs font-bold uppercase tracking-widest mb-2"
-                  style={{ color: "#C8A24D" }}
-                >
+                <div className="text-xs font-bold uppercase tracking-widest mb-2 text-[#10B981]">
                   Step 2
                 </div>
-                <h3
-                  className="text-lg font-bold mb-3"
-                  style={{ color: "#0B1C2D" }}
-                >
+                <h3 className="text-lg font-bold mb-3 text-[#0A1F44]">
                   Offering Creation
                 </h3>
                 <p className="text-sm text-gray-600 leading-relaxed">
@@ -161,16 +126,9 @@ export default function HomePage() {
 
               {/* Step 3 */}
               <div className="relative flex flex-col items-center text-center px-6 pb-8 md:pb-0">
-                <div
-                  className="w-14 h-14 rounded-full flex items-center justify-center mb-6 relative z-10"
-                  style={{
-                    backgroundColor: "#0B1C2D",
-                    border: "2px solid #C8A24D",
-                  }}
-                >
+                <div className="w-14 h-14 rounded-full flex items-center justify-center mb-6 relative z-10 bg-[#0A1F44] border-2 border-[#10B981]">
                   <svg
-                    className="w-6 h-6"
-                    style={{ color: "#C8A24D" }}
+                    className="w-6 h-6 text-[#10B981]"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -183,16 +141,10 @@ export default function HomePage() {
                     />
                   </svg>
                 </div>
-                <div
-                  className="text-xs font-bold uppercase tracking-widest mb-2"
-                  style={{ color: "#C8A24D" }}
-                >
+                <div className="text-xs font-bold uppercase tracking-widest mb-2 text-[#10B981]">
                   Step 3
                 </div>
-                <h3
-                  className="text-lg font-bold mb-3"
-                  style={{ color: "#0B1C2D" }}
-                >
+                <h3 className="text-lg font-bold mb-3 text-[#0A1F44]">
                   Qualified Investor Access
                 </h3>
                 <p className="text-sm text-gray-600 leading-relaxed">
@@ -203,16 +155,9 @@ export default function HomePage() {
 
               {/* Step 4 */}
               <div className="relative flex flex-col items-center text-center px-6">
-                <div
-                  className="w-14 h-14 rounded-full flex items-center justify-center mb-6 relative z-10"
-                  style={{
-                    backgroundColor: "#0B1C2D",
-                    border: "2px solid #C8A24D",
-                  }}
-                >
+                <div className="w-14 h-14 rounded-full flex items-center justify-center mb-6 relative z-10 bg-[#0A1F44] border-2 border-[#10B981]">
                   <svg
-                    className="w-6 h-6"
-                    style={{ color: "#C8A24D" }}
+                    className="w-6 h-6 text-[#10B981]"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -225,16 +170,10 @@ export default function HomePage() {
                     />
                   </svg>
                 </div>
-                <div
-                  className="text-xs font-bold uppercase tracking-widest mb-2"
-                  style={{ color: "#C8A24D" }}
-                >
+                <div className="text-xs font-bold uppercase tracking-widest mb-2 text-[#10B981]">
                   Step 4
                 </div>
-                <h3
-                  className="text-lg font-bold mb-3"
-                  style={{ color: "#0B1C2D" }}
-                >
+                <h3 className="text-lg font-bold mb-3 text-[#0A1F44]">
                   Controlled Execution & Reporting
                 </h3>
                 <p className="text-sm text-gray-600 leading-relaxed">
@@ -248,8 +187,8 @@ export default function HomePage() {
       </section>
 
       {/* Two Structured Investment Lanes */}
-      <section className="py-24" style={{ backgroundColor: "#0B1C2D" }}>
-        <div className="container">
+      <section className="py-24 bg-[#0A1F44]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
               Two Structured Investment Lanes
@@ -259,14 +198,7 @@ export default function HomePage() {
           <div className="grid md:grid-cols-2 gap-10 max-w-5xl mx-auto">
             {/* Yield Lane */}
             <div className="bg-white/5 rounded-2xl p-8 border border-white/10">
-              <div
-                className="inline-block px-4 py-1.5 rounded-full text-xs font-bold tracking-wider mb-6 uppercase"
-                style={{
-                  backgroundColor: "rgba(59, 130, 246, 0.15)",
-                  color: "#60A5FA",
-                  border: "1px solid rgba(59, 130, 246, 0.3)",
-                }}
-              >
+              <div className="inline-block px-4 py-1.5 rounded-full text-xs font-bold tracking-wider mb-6 uppercase bg-blue-500/15 text-blue-400 border border-blue-500/30">
                 Yield Lane
               </div>
 
@@ -291,8 +223,7 @@ export default function HomePage() {
                     className="flex items-center gap-3 text-gray-300 text-sm"
                   >
                     <svg
-                      className="w-4 h-4 flex-shrink-0"
-                      style={{ color: "#C8A24D" }}
+                      className="w-4 h-4 flex-shrink-0 text-[#10B981]"
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
@@ -317,14 +248,7 @@ export default function HomePage() {
 
             {/* Ventures Lane */}
             <div className="bg-white/5 rounded-2xl p-8 border border-white/10">
-              <div
-                className="inline-block px-4 py-1.5 rounded-full text-xs font-bold tracking-wider mb-6 uppercase"
-                style={{
-                  backgroundColor: "rgba(139, 92, 246, 0.15)",
-                  color: "#A78BFA",
-                  border: "1px solid rgba(139, 92, 246, 0.3)",
-                }}
-              >
+              <div className="inline-block px-4 py-1.5 rounded-full text-xs font-bold tracking-wider mb-6 uppercase bg-purple-500/15 text-purple-400 border border-purple-500/30">
                 Ventures Lane
               </div>
 
@@ -349,8 +273,7 @@ export default function HomePage() {
                     className="flex items-center gap-3 text-gray-300 text-sm"
                   >
                     <svg
-                      className="w-4 h-4 flex-shrink-0"
-                      style={{ color: "#C8A24D" }}
+                      className="w-4 h-4 flex-shrink-0 text-[#10B981]"
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
@@ -377,13 +300,10 @@ export default function HomePage() {
       </section>
 
       {/* Capital Governance Framework */}
-      <section className="py-24" style={{ backgroundColor: "#F6F8FA" }}>
-        <div className="container">
+      <section className="py-24 bg-[#F8FAFC]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2
-              className="text-3xl md:text-4xl font-bold mb-4"
-              style={{ color: "#0B1C2D" }}
-            >
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-[#0A1F44]">
               Capital Governance Framework
             </h2>
             <p className="text-gray-600 max-w-3xl mx-auto leading-relaxed">
@@ -396,17 +316,9 @@ export default function HomePage() {
           <div className="grid md:grid-cols-3 gap-10 max-w-5xl mx-auto">
             {/* Pillar 1 */}
             <div className="text-center">
-              <div
-                className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6"
-                style={{
-                  background:
-                    "linear-gradient(to bottom right, rgba(200, 162, 77, 0.08), rgba(200, 162, 77, 0.16))",
-                  border: "1px solid rgba(200, 162, 77, 0.15)",
-                }}
-              >
+              <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 bg-gradient-to-br from-[#10B981]/10 to-[#10B981]/20 border border-[#10B981]/15">
                 <svg
-                  className="w-8 h-8"
-                  style={{ color: "#C8A24D" }}
+                  className="w-8 h-8 text-[#10B981]"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -419,10 +331,7 @@ export default function HomePage() {
                   />
                 </svg>
               </div>
-              <h3
-                className="text-xl font-bold mb-3"
-                style={{ color: "#0B1C2D" }}
-              >
+              <h3 className="text-xl font-bold mb-3 text-[#0A1F44]">
                 Issuer Verification
               </h3>
               <p className="text-gray-600 leading-relaxed text-sm">
@@ -433,17 +342,9 @@ export default function HomePage() {
 
             {/* Pillar 2 */}
             <div className="text-center">
-              <div
-                className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6"
-                style={{
-                  background:
-                    "linear-gradient(to bottom right, rgba(200, 162, 77, 0.08), rgba(200, 162, 77, 0.16))",
-                  border: "1px solid rgba(200, 162, 77, 0.15)",
-                }}
-              >
+              <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 bg-gradient-to-br from-[#10B981]/10 to-[#10B981]/20 border border-[#10B981]/15">
                 <svg
-                  className="w-8 h-8"
-                  style={{ color: "#C8A24D" }}
+                  className="w-8 h-8 text-[#10B981]"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -456,10 +357,7 @@ export default function HomePage() {
                   />
                 </svg>
               </div>
-              <h3
-                className="text-xl font-bold mb-3"
-                style={{ color: "#0B1C2D" }}
-              >
+              <h3 className="text-xl font-bold mb-3 text-[#0A1F44]">
                 Deal Structure Review
               </h3>
               <p className="text-gray-600 leading-relaxed text-sm">
@@ -470,17 +368,9 @@ export default function HomePage() {
 
             {/* Pillar 3 */}
             <div className="text-center">
-              <div
-                className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6"
-                style={{
-                  background:
-                    "linear-gradient(to bottom right, rgba(200, 162, 77, 0.08), rgba(200, 162, 77, 0.16))",
-                  border: "1px solid rgba(200, 162, 77, 0.15)",
-                }}
-              >
+              <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 bg-gradient-to-br from-[#10B981]/10 to-[#10B981]/20 border border-[#10B981]/15">
                 <svg
-                  className="w-8 h-8"
-                  style={{ color: "#C8A24D" }}
+                  className="w-8 h-8 text-[#10B981]"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -493,10 +383,7 @@ export default function HomePage() {
                   />
                 </svg>
               </div>
-              <h3
-                className="text-xl font-bold mb-3"
-                style={{ color: "#0B1C2D" }}
-              >
+              <h3 className="text-xl font-bold mb-3 text-[#0A1F44]">
                 Ongoing Monitoring
               </h3>
               <p className="text-gray-600 leading-relaxed text-sm">
@@ -509,22 +396,19 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="py-16" style={{ backgroundColor: "#0B1C2D" }}>
-        <div className="container">
+      <footer className="py-16 bg-[#0A1F44]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-14">
             {/* Brand Column */}
             <div className="col-span-2 md:col-span-1">
               <div className="flex items-center space-x-2 mb-5">
                 <div
                   className="h-9 w-9 rounded-lg flex items-center justify-center"
-                  style={{ backgroundColor: "#C8A24D" }}
+                  style={{
+                    background: "linear-gradient(135deg, #10B981 0%, #0A1F44 100%)",
+                  }}
                 >
-                  <span
-                    className="font-bold text-sm"
-                    style={{ color: "#0B1C2D" }}
-                  >
-                    CV
-                  </span>
+                  <span className="font-bold text-sm text-white">CV</span>
                 </div>
                 <span className="text-lg font-bold text-white tracking-tight">
                   Capvista

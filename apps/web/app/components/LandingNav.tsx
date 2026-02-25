@@ -7,6 +7,7 @@ import { useState, useRef, useEffect } from "react";
 export default function LandingNav() {
   const { user, loading, signOut } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -21,56 +22,73 @@ export default function LandingNav() {
 
   const displayName = user ? `${user.firstName} ${user.lastName}` : "";
 
+  const navLinks = [
+    { label: "For Founders", href: "#for-founders" },
+    { label: "For Investors", href: "#for-investors" },
+    { label: "How It Works", href: "#how-it-works" },
+    { label: "About", href: "/about" },
+  ];
+
   return (
-    <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/95 backdrop-blur-md">
-      <div className="container flex items-center justify-between py-4">
+    <header className="sticky top-0 z-50 border-b border-gray-200 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
+        {/* Left: Logo */}
         <Link href="/" className="flex items-center space-x-2">
           <div
-            className="h-9 w-9 rounded-lg flex items-center justify-center"
-            style={{ backgroundColor: "#C8A24D" }}
+            className="h-8 w-8 rounded-lg flex items-center justify-center"
+            style={{
+              background: "linear-gradient(135deg, #10B981 0%, #0A1F44 100%)",
+            }}
           >
-            <span
-              className="font-bold text-base"
-              style={{ color: "#0B1C2D" }}
-            >
-              CV
-            </span>
+            <span className="font-bold text-xs text-white">CV</span>
           </div>
-          <span className="text-xl font-bold" style={{ color: "#0B1C2D" }}>
+          <span className="text-xl font-bold" style={{ color: "#0A1F44" }}>
             Capvista
           </span>
         </Link>
 
-        {/* Desktop nav */}
+        {/* Center: Nav links (desktop) */}
         <nav className="hidden md:flex items-center space-x-8">
-          <a
-            href="#how-it-works"
-            className="text-gray-700 hover:text-gray-900 font-medium transition-colors text-sm"
-          >
-            How It Works
-          </a>
-          <Link
-            href="/about"
-            className="text-gray-700 hover:text-gray-900 font-medium transition-colors text-sm"
-          >
-            About Us
-          </Link>
+          {navLinks.map((link) =>
+            link.href.startsWith("#") ? (
+              <a
+                key={link.label}
+                href={link.href}
+                className="text-sm font-medium transition-colors hover:text-[#10B981]"
+                style={{ color: "#0A1F44" }}
+              >
+                {link.label}
+              </a>
+            ) : (
+              <Link
+                key={link.label}
+                href={link.href}
+                className="text-sm font-medium transition-colors hover:text-[#10B981]"
+                style={{ color: "#0A1F44" }}
+              >
+                {link.label}
+              </Link>
+            )
+          )}
+        </nav>
 
+        {/* Right: Auth actions (desktop) */}
+        <div className="hidden md:flex items-center space-x-4">
           {loading ? (
             <div className="w-20" />
           ) : user ? (
             <>
               <Link
                 href="/dashboard"
-                className="text-gray-700 hover:text-gray-900 font-medium transition-colors text-sm"
+                className="text-sm font-medium transition-colors hover:text-[#10B981]"
+                style={{ color: "#0A1F44" }}
               >
                 Dashboard
               </Link>
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setDropdownOpen(!dropdownOpen)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm transition-all hover:opacity-90"
-                  style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
+                  className="flex items-center gap-2 bg-[#10B981] text-white px-6 py-2 rounded-full text-sm font-semibold transition-colors hover:bg-[#059669]"
                 >
                   {displayName}
                   <svg
@@ -113,35 +131,35 @@ export default function LandingNav() {
             <>
               <Link
                 href="/login"
-                className="text-gray-700 hover:text-gray-900 font-medium transition-colors text-sm"
+                className="text-sm font-medium transition-colors hover:text-[#10B981]"
+                style={{ color: "#0A1F44" }}
               >
-                Log In
+                Sign In
               </Link>
               <Link
                 href="/signup"
-                className="inline-block px-6 py-2.5 rounded-lg font-semibold text-sm transition-all hover:opacity-90"
-                style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
+                className="bg-[#10B981] text-white px-6 py-2 rounded-full text-sm font-semibold transition-colors hover:bg-[#059669]"
               >
-                Sign Up
+                Get Started
               </Link>
             </>
           )}
-        </nav>
+        </div>
 
-        {/* Mobile nav */}
-        <div className="md:hidden flex items-center space-x-4">
+        {/* Mobile: Hamburger + actions */}
+        <div className="md:hidden flex items-center space-x-3">
           {loading ? null : user ? (
             <>
               <Link
                 href="/dashboard"
-                className="text-gray-700 hover:text-gray-900 font-medium transition-colors text-sm"
+                className="text-sm font-medium transition-colors hover:text-[#10B981]"
+                style={{ color: "#0A1F44" }}
               >
                 Dashboard
               </Link>
               <button
                 onClick={signOut}
-                className="inline-block px-5 py-2 rounded-lg font-semibold text-sm transition-all hover:opacity-90"
-                style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
+                className="bg-[#10B981] text-white px-5 py-2 rounded-full text-sm font-semibold transition-colors hover:bg-[#059669]"
               >
                 Log Out
               </button>
@@ -150,21 +168,70 @@ export default function LandingNav() {
             <>
               <Link
                 href="/login"
-                className="text-gray-700 hover:text-gray-900 font-medium transition-colors text-sm"
+                className="text-sm font-medium transition-colors hover:text-[#10B981]"
+                style={{ color: "#0A1F44" }}
               >
-                Log In
+                Sign In
               </Link>
               <Link
                 href="/signup"
-                className="inline-block px-5 py-2 rounded-lg font-semibold text-sm transition-all hover:opacity-90"
-                style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
+                className="bg-[#10B981] text-white px-5 py-2 rounded-full text-sm font-semibold transition-colors hover:bg-[#059669]"
               >
-                Sign Up
+                Get Started
               </Link>
             </>
           )}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="p-2 rounded-md hover:bg-gray-100 transition-colors"
+            aria-label="Toggle menu"
+          >
+            <svg
+              className="w-5 h-5"
+              style={{ color: "#0A1F44" }}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+            >
+              {mobileMenuOpen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+              )}
+            </svg>
+          </button>
         </div>
       </div>
+
+      {/* Mobile menu dropdown */}
+      {mobileMenuOpen && (
+        <div className="md:hidden border-t border-gray-200 bg-white px-4 py-4 space-y-3">
+          {navLinks.map((link) =>
+            link.href.startsWith("#") ? (
+              <a
+                key={link.label}
+                href={link.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-sm font-medium py-2 transition-colors hover:text-[#10B981]"
+                style={{ color: "#0A1F44" }}
+              >
+                {link.label}
+              </a>
+            ) : (
+              <Link
+                key={link.label}
+                href={link.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-sm font-medium py-2 transition-colors hover:text-[#10B981]"
+                style={{ color: "#0A1F44" }}
+              >
+                {link.label}
+              </Link>
+            )
+          )}
+        </div>
+      )}
     </header>
   );
 }
