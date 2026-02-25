@@ -476,6 +476,49 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* CTA Block */}
+      <section className="py-20 bg-[#F8FAFC]">
+        <div className="bg-gradient-to-br from-[#0A1F44] to-[#1A3A6B] rounded-3xl p-12 md:p-16 text-center text-white max-w-5xl mx-auto">
+          <span className="bg-white/10 border border-white/20 rounded-full px-6 py-2 text-sm inline-block mb-6">
+            Join Thousands of Successful Investors &amp; Founders
+          </span>
+
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            Ready to Access the Future of Private Markets?
+          </h2>
+
+          <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
+            Whether you&apos;re raising capital or deploying it, Capvista gives you
+            the tools, network, and transparency to succeed. Get started today.
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+            <Link
+              href="/signup/founder"
+              className="inline-block px-8 py-4 rounded-lg font-semibold text-white bg-[#10B981] hover:bg-[#059669] transition-colors text-center"
+            >
+              Get Started as Founder &rarr;
+            </Link>
+            <Link
+              href="/signup/investor"
+              className="inline-block px-8 py-4 rounded-lg font-semibold text-[#0A1F44] bg-white hover:bg-gray-100 transition-colors text-center"
+            >
+              Explore as Investor &rarr;
+            </Link>
+          </div>
+
+          <p className="text-gray-400 text-sm">
+            Questions? Contact our team at{" "}
+            <a
+              href="mailto:hello@capvista.com"
+              className="text-[#10B981] hover:underline"
+            >
+              hello@capvista.com
+            </a>
+          </p>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="py-16 bg-[#0A1F44]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
