@@ -387,6 +387,95 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Built on Trust and Transparency */}
+      <section className="py-24 bg-[#0A1F44]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Built on Trust and Transparency
+            </h2>
+            <p className="text-gray-300 max-w-3xl mx-auto leading-relaxed">
+              Every layer of Capvista is designed to protect investors and founders
+              with institutional-grade security, compliance, and verification standards.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-4 gap-6">
+            {/* SEC Compliant */}
+            <div className="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-6 text-center">
+              <div className="w-16 h-16 rounded-full bg-[#10B981] flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                </svg>
+              </div>
+              <h3 className="text-white font-semibold mb-2">SEC Compliant</h3>
+              <p className="text-gray-400 text-sm">
+                All offerings are structured to comply with applicable securities
+                regulations and exemption frameworks.
+              </p>
+            </div>
+
+            {/* Data Encryption */}
+            <div className="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-6 text-center">
+              <div className="w-16 h-16 rounded-full bg-[#10B981] flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                </svg>
+              </div>
+              <h3 className="text-white font-semibold mb-2">Data Encryption</h3>
+              <p className="text-gray-400 text-sm">
+                Enterprise-grade encryption protects all sensitive data, documents,
+                and transactions on the platform.
+              </p>
+            </div>
+
+            {/* Vetted Opportunities */}
+            <div className="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-6 text-center">
+              <div className="w-16 h-16 rounded-full bg-[#10B981] flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m5.231 13.481L15 17.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v16.5c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9zm3.75 11.625a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                </svg>
+              </div>
+              <h3 className="text-white font-semibold mb-2">Vetted Opportunities</h3>
+              <p className="text-gray-400 text-sm">
+                Every company undergoes rigorous verification and due diligence
+                before being listed on the platform.
+              </p>
+            </div>
+
+            {/* Accredited Network */}
+            <div className="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-6 text-center">
+              <div className="w-16 h-16 rounded-full bg-[#10B981] flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+                </svg>
+              </div>
+              <h3 className="text-white font-semibold mb-2">Accredited Network</h3>
+              <p className="text-gray-400 text-sm">
+                Access is restricted to verified, qualified investors ensuring a
+                serious and professional investment community.
+              </p>
+            </div>
+          </div>
+
+          {/* Stats Row */}
+          <div className="mt-12 grid grid-cols-3 gap-8 text-center">
+            <div>
+              <div className="text-4xl font-bold text-white">99.9%</div>
+              <div className="text-gray-400 mt-1">Platform Uptime</div>
+            </div>
+            <div>
+              <div className="text-4xl font-bold text-white">100%</div>
+              <div className="text-gray-400 mt-1">Verified Companies</div>
+            </div>
+            <div>
+              <div className="text-4xl font-bold text-white">24/7</div>
+              <div className="text-gray-400 mt-1">Support Available</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="py-16 bg-[#0A1F44]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
