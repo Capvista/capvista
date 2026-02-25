@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Linkedin, Twitter, Mail } from "lucide-react";
 import LandingNav from "./components/LandingNav";
 import HowCapvistaWorks from "./components/HowCapvistaWorks";
 
@@ -522,126 +523,150 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="py-16 bg-[#0A1F44]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-14">
-            {/* Brand Column */}
+          {/* Top area — 5 column grid */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-10 mb-14">
+            {/* Col 1: Brand */}
             <div className="col-span-2 md:col-span-1">
-              <div className="flex items-center space-x-2 mb-5">
-                <div
-                  className="h-9 w-9 rounded-lg flex items-center justify-center"
-                  style={{
-                    background: "linear-gradient(135deg, #10B981 0%, #0A1F44 100%)",
-                  }}
-                >
-                  <span className="font-bold text-sm text-white">CV</span>
-                </div>
-                <span className="text-lg font-bold text-white tracking-tight">
-                  Capvista
-                </span>
-              </div>
-              <p className="text-sm text-gray-400 leading-relaxed">
-                Institutional capital infrastructure for African private markets.
+              <span className="text-lg font-bold text-white tracking-tight">
+                Capvista
+              </span>
+              <p className="text-sm text-gray-400 leading-relaxed mt-4 mb-5">
+                Connecting capital with innovation. The modern platform for
+                private market investing.
               </p>
+              <div className="flex items-center space-x-3">
+                <a
+                  href="#"
+                  className="h-9 w-9 rounded-full bg-gray-700 flex items-center justify-center hover:bg-gray-600 transition-colors"
+                >
+                  <Linkedin className="h-4 w-4 text-gray-300" />
+                </a>
+                <a
+                  href="#"
+                  className="h-9 w-9 rounded-full bg-gray-700 flex items-center justify-center hover:bg-gray-600 transition-colors"
+                >
+                  <Twitter className="h-4 w-4 text-gray-300" />
+                </a>
+                <a
+                  href="mailto:info@capvista.com"
+                  className="h-9 w-9 rounded-full bg-gray-700 flex items-center justify-center hover:bg-gray-600 transition-colors"
+                >
+                  <Mail className="h-4 w-4 text-gray-300" />
+                </a>
+              </div>
             </div>
 
-            {/* Platform */}
+            {/* Col 2: Product */}
             <div>
               <h3 className="text-xs font-semibold text-white mb-4 uppercase tracking-widest">
-                Platform
+                Product
               </h3>
               <ul className="space-y-3">
                 <li>
-                  <Link
-                    href="/dashboard/investor/companies"
-                    className="text-sm text-gray-400 hover:text-white transition-colors"
-                  >
-                    Browse Companies
+                  <Link href="/signup" className="text-sm text-gray-400 hover:text-white transition-colors">
+                    For Founders
                   </Link>
                 </li>
                 <li>
-                  <Link
-                    href="/signup"
-                    className="text-sm text-gray-400 hover:text-white transition-colors"
-                  >
+                  <Link href="/signup" className="text-sm text-gray-400 hover:text-white transition-colors">
                     For Investors
                   </Link>
                 </li>
                 <li>
-                  <Link
-                    href="/signup"
-                    className="text-sm text-gray-400 hover:text-white transition-colors"
-                  >
-                    For Companies
-                  </Link>
-                </li>
-                <li>
-                  <a
-                    href="#how-it-works"
-                    className="text-sm text-gray-400 hover:text-white transition-colors"
-                  >
+                  <a href="#how-it-works" className="text-sm text-gray-400 hover:text-white transition-colors">
                     How It Works
                   </a>
+                </li>
+                <li>
+                  <Link href="/pricing" className="text-sm text-gray-400 hover:text-white transition-colors">
+                    Pricing
+                  </Link>
                 </li>
               </ul>
             </div>
 
-            {/* Company */}
+            {/* Col 3: Company */}
             <div>
               <h3 className="text-xs font-semibold text-white mb-4 uppercase tracking-widest">
                 Company
               </h3>
               <ul className="space-y-3">
                 <li>
-                  <Link
-                    href="/about"
-                    className="text-sm text-gray-400 hover:text-white transition-colors"
-                  >
+                  <Link href="/about" className="text-sm text-gray-400 hover:text-white transition-colors">
                     About Us
                   </Link>
                 </li>
                 <li>
-                  <a
-                    href="mailto:info@capvista.com"
-                    className="text-sm text-gray-400 hover:text-white transition-colors"
-                  >
-                    Contact
-                  </a>
+                  <Link href="/careers" className="text-sm text-gray-400 hover:text-white transition-colors">
+                    Careers
+                  </Link>
                 </li>
                 <li>
-                  <span className="text-sm text-gray-500">
-                    Careers — Coming Soon
-                  </span>
+                  <Link href="/blog" className="text-sm text-gray-400 hover:text-white transition-colors">
+                    Blog
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/press" className="text-sm text-gray-400 hover:text-white transition-colors">
+                    Press
+                  </Link>
                 </li>
               </ul>
             </div>
 
-            {/* Legal */}
+            {/* Col 4: Resources */}
+            <div>
+              <h3 className="text-xs font-semibold text-white mb-4 uppercase tracking-widest">
+                Resources
+              </h3>
+              <ul className="space-y-3">
+                <li>
+                  <Link href="/help" className="text-sm text-gray-400 hover:text-white transition-colors">
+                    Help Center
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/docs" className="text-sm text-gray-400 hover:text-white transition-colors">
+                    Documentation
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/api-reference" className="text-sm text-gray-400 hover:text-white transition-colors">
+                    API Reference
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/community" className="text-sm text-gray-400 hover:text-white transition-colors">
+                    Community
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Col 5: Legal */}
             <div>
               <h3 className="text-xs font-semibold text-white mb-4 uppercase tracking-widest">
                 Legal
               </h3>
               <ul className="space-y-3">
                 <li>
-                  <Link
-                    href="/terms"
-                    className="text-sm text-gray-400 hover:text-white transition-colors"
-                  >
-                    Terms of Service
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/privacy"
-                    className="text-sm text-gray-400 hover:text-white transition-colors"
-                  >
+                  <Link href="/privacy" className="text-sm text-gray-400 hover:text-white transition-colors">
                     Privacy Policy
                   </Link>
                 </li>
                 <li>
-                  <Link
-                    href="/risk-disclosure"
-                    className="text-sm text-gray-400 hover:text-white transition-colors"
-                  >
-                    Risk Disclosure
+                  <Link href="/terms" className="text-sm text-gray-400 hover:text-white transition-colors">
+                    Terms of Service
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/compliance" className="text-sm text-gray-400 hover:text-white transition-colors">
+                    Compliance
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/security" className="text-sm text-gray-400 hover:text-white transition-colors">
+                    Security
                   </Link>
                 </li>
               </ul>
@@ -649,14 +674,13 @@ export default function HomePage() {
           </div>
 
           {/* Bottom bar */}
-          <div className="border-t border-white/10 pt-8">
-            <p className="text-xs text-gray-500 text-center mb-3">
-              &copy; 2026 Capvista Holdings. All rights reserved.
+          <div className="border-t border-white/10 pt-8 mt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <p className="text-sm text-gray-400">
+              &copy; 2026 Capvista. All rights reserved.
             </p>
-            <p className="text-xs text-gray-600 text-center max-w-3xl mx-auto leading-relaxed">
-              Capvista is not a registered broker-dealer or investment adviser.
-              Securities offered through the platform are subject to
-              restrictions and available only to qualified investors.
+            <p className="text-sm text-gray-400">
+              Securities offered through registered broker-dealer. Member
+              FINRA/SIPC.
             </p>
           </div>
         </div>
