@@ -8,41 +8,66 @@ export default function HomePage() {
       <LandingNav />
 
       {/* Hero Section */}
-      <section
-        className="relative overflow-hidden py-28 md:py-36"
-        style={{
-          background:
-            "linear-gradient(135deg, #0A1F44 0%, #0F2D5E 50%, #153570 100%)",
-        }}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight tracking-tight">
-              Institutional Capital Infrastructure
-              <br />
-              <span
-                className="inline-block border-b-2 pb-2 mt-2 border-[#10B981]"
-              >
-                for African Private Companies
+      <section className="bg-[#0A1F44] w-full">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-28">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            {/* Left Column */}
+            <div>
+              <span className="inline-block px-4 py-1.5 rounded-full text-sm text-white bg-white/10 border border-white/20 mb-8">
+                Connecting Capital with Innovation
               </span>
-            </h1>
 
-            <p className="text-lg md:text-xl text-gray-300 mb-10 leading-relaxed max-w-3xl mx-auto">
-              Structured private placements. Verified issuers. Qualified global
-              investors.
-            </p>
+              <h1 className="text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
+                Private Market Investing,
+                <br />
+                <span className="text-[#10B981]">Simplified</span>
+              </h1>
 
-            <div className="flex flex-col items-center gap-4">
-              <Link
-                href="/dashboard/investor/companies"
-                className="inline-block px-10 py-4 rounded-lg font-semibold text-lg transition-all bg-[#10B981] text-white hover:bg-[#059669]"
-              >
-                Browse Companies
-              </Link>
-              <p className="text-sm text-gray-500">
-                Qualified investors only. Deal details visible after
-                verification.
+              <p className="text-lg text-gray-300 mb-10 leading-relaxed">
+                Capvista brings together ambitious founders and accredited
+                investors on one platform—streamlining deal flow, transparency,
+                and opportunity in early-stage investing.
               </p>
+
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Link
+                  href="/signup/founder"
+                  className="inline-block px-8 py-4 rounded-lg font-semibold text-white bg-[#10B981] hover:bg-[#059669] transition-colors text-center"
+                >
+                  I&apos;m a Founder &rarr;
+                </Link>
+                <Link
+                  href="/signup/investor"
+                  className="inline-block px-8 py-4 rounded-lg font-semibold text-white border border-white/30 hover:bg-white/5 transition-colors text-center"
+                >
+                  I&apos;m an Investor &rarr;
+                </Link>
+              </div>
+            </div>
+
+            {/* Right Column */}
+            <div>
+              <img
+                src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=600&h=400&fit=crop"
+                alt="Person analyzing trading charts"
+                className="rounded-xl shadow-2xl w-full"
+              />
+            </div>
+          </div>
+
+          {/* Stats Row */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 mt-20 pt-12 border-t border-white/10">
+            <div className="text-center">
+              <div className="text-4xl font-bold text-[#10B981]">$2.5B+</div>
+              <div className="text-gray-400 mt-1">Capital Deployed</div>
+            </div>
+            <div className="text-center">
+              <div className="text-4xl font-bold text-[#10B981]">500+</div>
+              <div className="text-gray-400 mt-1">Active Startups</div>
+            </div>
+            <div className="text-center">
+              <div className="text-4xl font-bold text-[#10B981]">2,000+</div>
+              <div className="text-gray-400 mt-1">Investors</div>
             </div>
           </div>
         </div>
