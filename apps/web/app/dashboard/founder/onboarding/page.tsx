@@ -665,7 +665,7 @@ export default function CompanyOnboarding() {
 
       console.log("📤 Sending payload to API...");
 
-      const response = await fetch("http://localhost:4000/api/companies", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/companies`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

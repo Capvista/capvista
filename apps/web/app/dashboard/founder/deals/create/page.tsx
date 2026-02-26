@@ -531,7 +531,7 @@ function CreateDealContent() {
       if (!accessToken) return;
       try {
         const API_URL =
-          process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+          process.env.NEXT_PUBLIC_API_URL;
         const res = await fetch(`${API_URL}/api/companies/my-companies`, {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
@@ -573,7 +573,7 @@ function CreateDealContent() {
       if (!accessToken || !editDealId) return;
       try {
         const API_URL =
-          process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+          process.env.NEXT_PUBLIC_API_URL;
         const res = await fetch(`${API_URL}/api/deals/${editDealId}`, {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
@@ -808,7 +808,7 @@ function CreateDealContent() {
       }
 
       const API_URL =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+        process.env.NEXT_PUBLIC_API_URL;
 
       const payload: Record<string, any> = {
         companyId: formData.companyId,
@@ -946,7 +946,7 @@ function CreateDealContent() {
       }
 
       const API_URL =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+        process.env.NEXT_PUBLIC_API_URL;
 
       const payload: Record<string, any> = {
         companyId: formData.companyId,

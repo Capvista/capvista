@@ -248,7 +248,7 @@ export default function CompanyDetailPage() {
     try {
       setIsLoading(true);
       const API_URL =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+        process.env.NEXT_PUBLIC_API_URL;
       const response = await fetch(`${API_URL}/api/companies/${companyId}`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });

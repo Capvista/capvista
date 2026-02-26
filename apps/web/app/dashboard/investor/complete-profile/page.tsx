@@ -878,7 +878,7 @@ export default function CompleteInvestorProfile() {
       };
 
       const API_URL =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+        process.env.NEXT_PUBLIC_API_URL;
       const response = await fetch(`${API_URL}/api/investors/profile`, {
         method: "PUT",
         headers: {

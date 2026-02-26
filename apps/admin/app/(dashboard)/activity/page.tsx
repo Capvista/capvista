@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/contexts/AuthContext";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 function ActionTypeBadge({ type }: { type: string }) {
   const isApproval = type.includes("APPROVED") || type.includes("VERIFIED");

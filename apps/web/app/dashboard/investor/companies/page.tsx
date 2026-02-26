@@ -292,7 +292,7 @@ export default function BrowseCompanies() {
     try {
       setIsLoading(true);
       const API_URL =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+        process.env.NEXT_PUBLIC_API_URL;
       const response = await fetch(`${API_URL}/api/companies`);
       const result = await response.json();
       if (result.success) {
@@ -312,7 +312,7 @@ export default function BrowseCompanies() {
   const fetchWatchlist = async () => {
     try {
       const API_URL =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+        process.env.NEXT_PUBLIC_API_URL;
       const token = localStorage.getItem("capvista_token");
       if (!token) return;
       const response = await fetch(`${API_URL}/api/watchlist`, {
@@ -349,7 +349,7 @@ export default function BrowseCompanies() {
     // Persist to backend
     try {
       const API_URL =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+        process.env.NEXT_PUBLIC_API_URL;
       const token = localStorage.getItem("capvista_token");
       if (!token) return;
 

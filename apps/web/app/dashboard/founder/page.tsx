@@ -103,7 +103,7 @@ export default function FounderDashboard() {
 
     try {
       const API_URL =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+        process.env.NEXT_PUBLIC_API_URL;
       const res = await fetch(`${API_URL}/api/companies/my-companies`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
@@ -495,7 +495,7 @@ function CompanyCard({
     capTable: null,
   });
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   const handleSignAgreement = async () => {
     if (!signingName.trim() || !signingConfirmed || !accessToken) return;

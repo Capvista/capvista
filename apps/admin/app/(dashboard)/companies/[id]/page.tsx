@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (

@@ -15,7 +15,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 type Stats = {
   companies: { total: number; pending: number; approved: number; rejected: number };
