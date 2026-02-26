@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Search, SlidersHorizontal, Star, TrendingUp, ArrowRight, MapPin, Building2, ChevronDown } from "lucide-react";
 import CustomSelect from "@/components/CustomSelect";
 import { useAuth } from "@/lib/contexts/AuthContext";
 
@@ -20,12 +21,15 @@ type Company = {
   currentMonitoringStatus: string;
   createdAt: string;
   logoUrl?: string;
+  incorporationCountry?: string;
   deals: Array<{
     id: string;
     name: string;
     lane: string;
     targetAmount: number;
     raisedAmount: number;
+    minimumInvestment?: number;
+    valuation?: number;
   }>;
 };
 
@@ -34,7 +38,7 @@ type Company = {
 // ============================================================================
 
 const sectorFilterOptions = [
-  { value: "all", label: "Sector" },
+  { value: "all", label: "All Industries" },
   { value: "FINTECH", label: "Financial Services" },
   { value: "ENERGY", label: "Energy & Climate" },
   { value: "LOGISTICS", label: "Logistics & Mobility" },
@@ -170,7 +174,7 @@ const subsectorLabels: Record<string, string> = Object.fromEntries(
 );
 
 const stageFilterOptions = [
-  { value: "all", label: "Stage" },
+  { value: "all", label: "All Stages" },
   { value: "PRE_REVENUE", label: "Pre-revenue" },
   { value: "EARLY_REVENUE", label: "Early Revenue" },
   { value: "GROWTH", label: "Growth" },
@@ -178,7 +182,7 @@ const stageFilterOptions = [
 ];
 
 const laneFilterOptions = [
-  { value: "all", label: "Lane" },
+  { value: "all", label: "All Lanes" },
   { value: "YIELD", label: "Yield Lane" },
   { value: "VENTURES", label: "Ventures Lane" },
 ];
@@ -195,6 +199,34 @@ const laneLabels: Record<string, string> = {
   VENTURES: "Ventures",
 };
 
+// Gradient colors for company logo placeholders
+const logoGradients = [
+  "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+  "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+  "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+  "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
+  "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
+  "linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)",
+  "linear-gradient(135deg, #fccb90 0%, #d57eeb 100%)",
+  "linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)",
+  "linear-gradient(135deg, #f5576c 0%, #ff6f3c 100%)",
+  "linear-gradient(135deg, #0ba360 0%, #3cba92 100%)",
+];
+
+function getGradient(id: string) {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = id.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return logoGradients[Math.abs(hash) % logoGradients.length];
+}
+
+function formatCurrency(amount: number): string {
+  if (amount >= 1_000_000) return `$${(amount / 1_000_000).toFixed(1)}M`;
+  if (amount >= 1_000) return `$${(amount / 1_000).toFixed(0)}K`;
+  return `$${amount.toLocaleString()}`;
+}
+
 // ============================================================================
 // MAIN COMPONENT
 // ============================================================================
@@ -206,8 +238,8 @@ export default function BrowseCompanies() {
   const [filteredCompanies, setFilteredCompanies] = useState<Company[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<"card" | "list">("list");
   const [watchlist, setWatchlist] = useState<Set<string>>(new Set());
+  const [showMoreFilters, setShowMoreFilters] = useState(false);
 
   const isLoggedIn = !!user;
   const userInitial = user?.firstName?.charAt(0).toUpperCase() || "U";
@@ -395,13 +427,21 @@ export default function BrowseCompanies() {
     setStageFilter("all");
     setLaneFilter("all");
     setQuickFilter("all");
+    setShowMoreFilters(false);
   };
+
+  const hasActiveFilters =
+    sectorFilter !== "all" ||
+    subsectorFilter !== "all" ||
+    stageFilter !== "all" ||
+    laneFilter !== "all" ||
+    searchQuery !== "";
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#F6F8FA" }}>
-      {/* Header - Dashboard nav when logged in, public nav when not */}
+      {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
-        <div className="container">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-4">
             {/* Logo */}
             <Link href="/" className="flex items-center space-x-2">
@@ -416,32 +456,18 @@ export default function BrowseCompanies() {
                   CV
                 </span>
               </div>
-              <span className="text-xl font-bold text-primary-950">
+              <span className="text-xl font-bold" style={{ color: "#0B1C2D" }}>
                 Capvista
               </span>
             </Link>
 
             {isLoggedIn ? (
-              /* Dashboard Navigation & Profile */
               <div className="flex items-center gap-8">
                 <nav className="hidden md:flex items-center space-x-8">
-                  {/* Explore Dropdown */}
                   <div className="relative group">
-                    <button className="flex items-center gap-1 font-medium text-gray-600 hover:text-primary-950 transition-colors">
+                    <button className="flex items-center gap-1 font-medium text-gray-600 hover:text-gray-900 transition-colors text-sm">
                       Explore
-                      <svg
-                        className="w-4 h-4 group-hover:rotate-180 transition-transform"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 9l-7 7-7-7"
-                        />
-                      </svg>
+                      <ChevronDown className="w-4 h-4 group-hover:rotate-180 transition-transform" />
                     </button>
 
                     <div className="absolute top-full right-0 mt-2 w-72 bg-white rounded-lg shadow-lg border border-gray-200 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
@@ -449,108 +475,74 @@ export default function BrowseCompanies() {
                         onClick={() => router.push("/dashboard/investor/companies")}
                         className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-start gap-3"
                       >
-                        <svg className="w-5 h-5 text-gray-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
+                        <Search className="w-5 h-5 text-gray-500 mt-0.5" />
                         <div>
-                          <p className="font-semibold text-gray-900">Browse Companies</p>
-                          <p className="text-sm text-gray-600">Explore our curated list of private companies</p>
+                          <p className="font-semibold text-gray-900 text-sm">Browse Companies</p>
+                          <p className="text-xs text-gray-500">Explore our curated list of private companies</p>
                         </div>
                       </button>
-
                       <button
                         onClick={() => router.push("/dashboard/investor")}
                         className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-start gap-3"
                       >
-                        <svg className="w-5 h-5 text-gray-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                        </svg>
+                        <TrendingUp className="w-5 h-5 text-gray-500 mt-0.5" />
                         <div>
-                          <p className="font-semibold text-gray-900">Market Opportunities</p>
-                          <p className="text-sm text-gray-600">Find active opportunities to invest in</p>
+                          <p className="font-semibold text-gray-900 text-sm">Market Opportunities</p>
+                          <p className="text-xs text-gray-500">Find active opportunities to invest in</p>
                         </div>
                       </button>
-
                       <button
-                        onClick={() => router.push("/dashboard/investor")}
+                        onClick={() => { setQuickFilter("watchlist"); }}
                         className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-start gap-3"
                       >
-                        <svg className="w-5 h-5 text-gray-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                        </svg>
+                        <Star className="w-5 h-5 text-gray-500 mt-0.5" />
                         <div>
-                          <p className="font-semibold text-gray-900">Watchlist</p>
-                          <p className="text-sm text-gray-600">Track the private companies that matter to you</p>
+                          <p className="font-semibold text-gray-900 text-sm">Watchlist</p>
+                          <p className="text-xs text-gray-500">Track companies that matter to you</p>
                         </div>
                       </button>
                     </div>
                   </div>
 
-                  {/* Dashboard Link */}
                   <button
                     onClick={() => router.push("/dashboard/investor")}
-                    className="font-medium text-gray-600 hover:text-primary-950 transition-colors"
+                    className="font-medium text-gray-600 hover:text-gray-900 transition-colors text-sm"
                   >
                     Dashboard
                   </button>
                 </nav>
 
-                {/* Profile Button */}
+                {/* Profile */}
                 <div className="relative group">
-                  <div className="w-10 h-10 rounded-full bg-primary-950 text-white font-semibold flex items-center justify-center hover:bg-primary-900 transition-colors cursor-pointer">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center font-semibold text-white cursor-pointer hover:opacity-90 transition-opacity" style={{ backgroundColor: "#0B1C2D" }}>
                     {userInitial}
                   </div>
-
                   <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
                     <div className="px-4 py-3 border-b border-gray-200">
-                      <p className="font-semibold text-gray-900">{userFullName}</p>
-                      <p className="text-sm text-gray-600">Investor</p>
+                      <p className="font-semibold text-gray-900 text-sm">{userFullName}</p>
+                      <p className="text-xs text-gray-500">Investor</p>
                     </div>
-
                     <button
                       onClick={() => {}}
-                      className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3"
+                      className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3 text-sm font-medium text-gray-700"
                     >
-                      <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
-                      <span className="font-medium text-gray-900">Manage Profile</span>
+                      Manage Profile
                     </button>
-
                     <button
                       onClick={signOut}
-                      className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3"
+                      className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3 text-sm font-medium text-gray-700"
                     >
-                      <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                      </svg>
-                      <span className="font-medium text-gray-900">Log Out</span>
+                      Log Out
                     </button>
                   </div>
                 </div>
               </div>
             ) : (
-              /* Public Navigation */
               <>
                 <nav className="hidden md:flex items-center space-x-8">
-                  <a
-                    href="/#how-it-works"
-                    className="text-gray-700 hover:text-gray-900 font-medium transition-colors text-sm"
-                  >
-                    How It Works
-                  </a>
-                  <Link
-                    href="/about"
-                    className="text-gray-700 hover:text-gray-900 font-medium transition-colors text-sm"
-                  >
-                    About Us
-                  </Link>
-                  <Link
-                    href="/login"
-                    className="text-gray-700 hover:text-gray-900 font-medium transition-colors text-sm"
-                  >
-                    Log In
-                  </Link>
+                  <a href="/#how-it-works" className="text-gray-700 hover:text-gray-900 font-medium transition-colors text-sm">How It Works</a>
+                  <Link href="/about" className="text-gray-700 hover:text-gray-900 font-medium transition-colors text-sm">About Us</Link>
+                  <Link href="/login" className="text-gray-700 hover:text-gray-900 font-medium transition-colors text-sm">Log In</Link>
                   <Link
                     href="/signup"
                     className="inline-block px-6 py-2.5 rounded-lg font-semibold text-sm transition-all hover:opacity-90"
@@ -559,15 +551,8 @@ export default function BrowseCompanies() {
                     Sign Up
                   </Link>
                 </nav>
-
-                {/* Mobile menu */}
                 <div className="md:hidden flex items-center space-x-4">
-                  <Link
-                    href="/login"
-                    className="text-gray-700 hover:text-gray-900 font-medium transition-colors text-sm"
-                  >
-                    Log In
-                  </Link>
+                  <Link href="/login" className="text-gray-700 hover:text-gray-900 font-medium transition-colors text-sm">Log In</Link>
                   <Link
                     href="/signup"
                     className="inline-block px-5 py-2 rounded-lg font-semibold text-sm transition-all hover:opacity-90"
@@ -582,393 +567,192 @@ export default function BrowseCompanies() {
         </div>
       </header>
 
-      <main className="container py-8">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-primary-950 mb-2">
-            Browse Companies
+      {/* Page Hero Header */}
+      <div style={{ background: "linear-gradient(135deg, #0B1C2D 0%, #1a3a5c 50%, #0B1C2D 100%)" }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: "rgba(200, 162, 77, 0.15)" }}>
+              <TrendingUp className="w-5 h-5" style={{ color: "#C8A24D" }} />
+            </div>
+            <span className="text-sm font-medium tracking-wide uppercase" style={{ color: "#C8A24D" }}>
+              Investment Opportunities
+            </span>
+          </div>
+          <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">
+            Discover Investment Opportunities
           </h1>
+          <p className="text-lg max-w-2xl" style={{ color: "rgba(255,255,255,0.6)" }}>
+            Browse verified African companies raising capital through structured, standardized instruments. Filter by industry, stage, and investment lane.
+          </p>
         </div>
+      </div>
 
-        {/* Quick Filter Pills */}
-        <div className="flex flex-wrap gap-3 mb-6">
-          <button
-            onClick={() => setQuickFilter("watchlist")}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${quickFilter === "watchlist" ? "bg-gray-900 text-white" : "bg-white text-gray-700 border border-gray-300 hover:border-gray-400"}`}
-          >
-            <svg
-              className="w-4 h-4 inline mr-1.5 -mt-0.5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
-              />
-            </svg>
-            Watchlist{watchlist.size > 0 ? ` (${watchlist.size})` : ""}
-          </button>
-          <button
-            onClick={() => setQuickFilter("all")}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${quickFilter === "all" ? "bg-gray-900 text-white" : "bg-white text-gray-700 border border-gray-300 hover:border-gray-400"}`}
-          >
-            All Companies
-          </button>
-          <button
-            onClick={() => setQuickFilter("recent")}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${quickFilter === "recent" ? "bg-gray-900 text-white" : "bg-white text-gray-700 border border-gray-300 hover:border-gray-400"}`}
-          >
-            Recently Added
-          </button>
-        </div>
-
-        {/* Search & Filters */}
-        <div className="mb-6">
-          <div className="flex flex-wrap gap-3 items-center">
-            <div className="relative flex-1 min-w-[200px]">
-              <svg
-                className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
+      {/* Search & Filter Bar */}
+      <div className="sticky top-[73px] z-40 bg-white border-b border-gray-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Search Input */}
+            <div className="relative flex-1 min-w-[260px]">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search for company"
-                className="w-full pl-12 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none h-11"
+                placeholder="Search companies by name or description..."
+                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white outline-none text-sm transition-all"
               />
             </div>
+
+            {/* Industry Filter */}
             <CustomSelect
               value={sectorFilter}
               onChange={setSectorFilter}
               options={sectorFilterOptions}
-              className="min-w-[160px]"
+              className="min-w-[170px]"
             />
-            <CustomSelect
-              value={subsectorFilter}
-              onChange={setSubsectorFilter}
-              options={subsectorFilterOptions}
-              className="min-w-[180px]"
-            />
+
+            {/* Stage Filter */}
             <CustomSelect
               value={stageFilter}
               onChange={setStageFilter}
               options={stageFilterOptions}
-              className="min-w-[130px]"
+              className="min-w-[140px]"
             />
-            <CustomSelect
-              value={laneFilter}
-              onChange={setLaneFilter}
-              options={laneFilterOptions}
-              className="min-w-[130px]"
-            />
+
+            {/* More Filters Button */}
             <button
-              onClick={clearFilters}
-              className="px-6 py-2.5 bg-white border border-gray-300 rounded-lg font-medium text-gray-700 hover:border-gray-400 transition-all h-11"
+              onClick={() => setShowMoreFilters(!showMoreFilters)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all h-11 border ${
+                showMoreFilters || laneFilter !== "all" || subsectorFilter !== "all"
+                  ? "bg-gray-900 text-white border-gray-900"
+                  : "bg-white text-gray-700 border-gray-200 hover:border-gray-300"
+              }`}
             >
-              Reset
+              <SlidersHorizontal className="w-4 h-4" />
+              More Filters
+              {(laneFilter !== "all" || subsectorFilter !== "all") && (
+                <span className="w-5 h-5 rounded-full bg-white text-gray-900 text-xs font-bold flex items-center justify-center">
+                  {(laneFilter !== "all" ? 1 : 0) + (subsectorFilter !== "all" ? 1 : 0)}
+                </span>
+              )}
             </button>
-            <div className="flex items-center gap-1 bg-white border border-gray-300 rounded-lg p-1">
-              <button
-                onClick={() => setViewMode("list")}
-                className={`p-2 rounded transition-all ${viewMode === "list" ? "bg-gray-900 text-white" : "text-gray-600 hover:bg-gray-100"}`}
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
-                </svg>
-              </button>
-              <button
-                onClick={() => setViewMode("card")}
-                className={`p-2 rounded transition-all ${viewMode === "card" ? "bg-gray-900 text-white" : "text-gray-600 hover:bg-gray-100"}`}
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
-                  />
-                </svg>
-              </button>
+
+            {/* Results Count */}
+            {!isLoading && !error && (
+              <div className="flex items-center gap-2 ml-auto">
+                <span className="text-sm text-gray-500">
+                  <span className="font-semibold text-gray-900">{filteredCompanies.length}</span>{" "}
+                  {filteredCompanies.length === 1 ? "result" : "results"}
+                </span>
+                {hasActiveFilters && (
+                  <button
+                    onClick={clearFilters}
+                    className="text-sm text-blue-600 hover:text-blue-700 font-medium ml-2"
+                  >
+                    Clear all
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Expanded Filters */}
+          {showMoreFilters && (
+            <div className="flex flex-wrap items-center gap-3 mt-3 pt-3 border-t border-gray-100">
+              <CustomSelect
+                value={laneFilter}
+                onChange={setLaneFilter}
+                options={laneFilterOptions}
+                className="min-w-[150px]"
+              />
+              <CustomSelect
+                value={subsectorFilter}
+                onChange={setSubsectorFilter}
+                options={subsectorFilterOptions}
+                className="min-w-[200px]"
+              />
+              <div className="flex gap-2 ml-auto">
+                {(["all", "recent", "watchlist"] as const).map((filter) => (
+                  <button
+                    key={filter}
+                    onClick={() => setQuickFilter(filter)}
+                    className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
+                      quickFilter === filter
+                        ? "bg-gray-900 text-white"
+                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    }`}
+                  >
+                    {filter === "all" ? "All" : filter === "recent" ? "Recently Added" : `Watchlist${watchlist.size > 0 ? ` (${watchlist.size})` : ""}`}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
+      </div>
 
-        {/* Results Count */}
-        {!isLoading && !error && (
-          <div className="mb-6">
-            <p className="text-sm text-gray-600">
-              Showing {filteredCompanies.length}{" "}
-              {filteredCompanies.length === 1 ? "company" : "companies"}
-            </p>
-          </div>
-        )}
-
-        {/* Content */}
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {isLoading ? (
-          <div className="text-center py-12">
-            <div className="w-16 h-16 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-slate">Loading companies...</p>
+          <div className="text-center py-20">
+            <div className="w-12 h-12 border-3 border-gray-300 border-t-gray-900 rounded-full animate-spin mx-auto mb-4" style={{ borderWidth: "3px" }}></div>
+            <p className="text-sm text-gray-500">Loading opportunities...</p>
           </div>
         ) : error ? (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12 text-center">
-            <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center bg-red-100">
-              <svg
-                className="w-8 h-8 text-red-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
+          <div className="bg-white rounded-2xl border border-gray-200 p-16 text-center">
+            <div className="w-14 h-14 rounded-full mx-auto mb-4 flex items-center justify-center bg-red-50">
+              <svg className="w-7 h-7 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Error Loading Companies
-            </h3>
-            <p className="text-gray-600 mb-4">{error}</p>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Unable to Load Companies</h3>
+            <p className="text-sm text-gray-500 mb-6">{error}</p>
             <button
               onClick={fetchCompanies}
-              className="px-6 py-3 rounded-lg font-semibold transition-all"
+              className="px-6 py-2.5 rounded-lg font-semibold text-sm transition-all hover:opacity-90"
               style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
             >
               Try Again
             </button>
           </div>
         ) : filteredCompanies.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12 text-center">
-            <div
-              className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center"
-              style={{ backgroundColor: "rgba(107, 124, 147, 0.1)" }}
-            >
-              <svg
-                className="w-8 h-8 text-slate-light"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                />
-              </svg>
+          <div className="bg-white rounded-2xl border border-gray-200 p-16 text-center">
+            <div className="w-14 h-14 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ backgroundColor: "rgba(11,28,45,0.05)" }}>
+              <Building2 className="w-7 h-7" style={{ color: "#0B1C2D" }} />
             </div>
-            <h3 className="text-lg font-semibold text-primary-950 mb-2">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
               {quickFilter === "watchlist"
                 ? "No Saved Companies"
                 : companies.length === 0
                   ? "No Companies Listed Yet"
                   : "No Companies Match Your Filters"}
             </h3>
-            <p className="text-gray-600 mb-6">
+            <p className="text-sm text-gray-500 mb-6 max-w-md mx-auto">
               {quickFilter === "watchlist"
-                ? "Save companies to your watchlist by clicking the bookmark icon"
+                ? "Star companies to add them to your watchlist and track them here."
                 : companies.length === 0
-                  ? "Check back soon for verified investment opportunities"
-                  : "Try adjusting your filters to see more companies"}
+                  ? "Check back soon for verified investment opportunities."
+                  : "Try adjusting your search or filter criteria to see more results."}
             </p>
             {(companies.length > 0 || quickFilter === "watchlist") && (
               <button
                 onClick={clearFilters}
-                className="px-6 py-3 rounded-lg font-semibold transition-all border-2 border-gray-300 text-gray-700 hover:border-gray-400"
+                className="px-6 py-2.5 rounded-lg font-medium text-sm transition-all border border-gray-300 text-gray-700 hover:bg-gray-50"
               >
-                {quickFilter === "watchlist"
-                  ? "Browse All Companies"
-                  : "Clear Filters"}
+                {quickFilter === "watchlist" ? "Browse All Companies" : "Clear Filters"}
               </button>
             )}
           </div>
-        ) : viewMode === "list" ? (
-          /* ============ TABLE VIEW ============ */
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="grid grid-cols-12 gap-4 px-6 py-4 border-b border-gray-200 bg-gray-50">
-              <div className="col-span-1">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide"></p>
-              </div>
-              <div className="col-span-3">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  Company
-                </p>
-              </div>
-              <div className="col-span-3">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  Sector & Subsector
-                </p>
-              </div>
-              <div className="col-span-2">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  Round
-                </p>
-              </div>
-              <div className="col-span-2">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  Lane
-                </p>
-              </div>
-              <div className="col-span-1">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide"></p>
-              </div>
-            </div>
-
-            {filteredCompanies.map((company, index) => (
-              <Link
-                key={company.id}
-                href={`/dashboard/investor/companies/${company.id}`}
-              >
-                <div
-                  className={`grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-gray-50 transition-colors cursor-pointer group ${index < filteredCompanies.length - 1 ? "border-b border-gray-100" : ""}`}
-                >
-                  {/* Watchlist Bookmark */}
-                  <div className="col-span-1">
-                    <button
-                      onClick={(e) => toggleWatchlist(company.id, e)}
-                      className="p-1.5 rounded-md hover:bg-gray-100 transition-colors"
-                    >
-                      {watchlist.has(company.id) ? (
-                        <svg
-                          className="w-5 h-5 text-yellow-500"
-                          fill="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                        </svg>
-                      ) : (
-                        <svg
-                          className="w-5 h-5 text-gray-300 hover:text-gray-500"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
-                          />
-                        </svg>
-                      )}
-                    </button>
-                  </div>
-
-                  {/* Company: Logo + Name */}
-                  <div className="col-span-3 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 border border-gray-200 flex items-center justify-center">
-                      {company.logoUrl ? (
-                        <img
-                          src={company.logoUrl}
-                          alt={company.legalName}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <span className="text-sm font-bold text-gray-400">
-                          {(company.tradingName || company.legalName)
-                            .charAt(0)
-                            .toUpperCase()}
-                        </span>
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="font-semibold text-gray-900 group-hover:text-primary-900 transition-colors truncate">
-                        {company.tradingName || company.legalName}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Sector & Subsector */}
-                  <div className="col-span-3">
-                    <p className="text-sm font-medium text-gray-900">
-                      {sectorLabels[company.sector] || company.sector}
-                    </p>
-                    {company.subsector && (
-                      <p className="text-xs text-gray-500">
-                        {subsectorLabels[company.subsector] ||
-                          company.subsector}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Round */}
-                  <div className="col-span-2">
-                    <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
-                      {stageLabels[company.stage] || company.stage}
-                    </span>
-                  </div>
-
-                  {/* Lane */}
-                  <div className="col-span-2">
-                    {company.preferredLane ? (
-                      <span
-                        className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${company.preferredLane === "YIELD" ? "bg-blue-50 text-blue-700" : "bg-purple-50 text-purple-700"}`}
-                      >
-                        {laneLabels[company.preferredLane] ||
-                          company.preferredLane}
-                      </span>
-                    ) : (
-                      <span className="text-xs text-gray-400">—</span>
-                    )}
-                  </div>
-
-                  {/* Arrow */}
-                  <div className="col-span-1 text-right">
-                    <svg
-                      className="w-5 h-5 text-gray-300 group-hover:text-gray-600 transition-colors inline"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
         ) : (
-          /* ============ CARD VIEW ============ */
+          /* ============ 3-COLUMN CARD GRID ============ */
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredCompanies.map((company) => (
               <CompanyCard
                 key={company.id}
                 company={company}
-                watchlist={watchlist}
+                isWatchlisted={watchlist.has(company.id)}
                 toggleWatchlist={toggleWatchlist}
+                isLoggedIn={isLoggedIn}
               />
             ))}
           </div>
@@ -979,133 +763,163 @@ export default function BrowseCompanies() {
 }
 
 // ============================================================================
-// Company Card Component
+// Company Card Component — Figma Design
 // ============================================================================
 function CompanyCard({
   company,
-  watchlist,
+  isWatchlisted,
   toggleWatchlist,
+  isLoggedIn,
 }: {
   company: Company;
-  watchlist: Set<string>;
+  isWatchlisted: boolean;
   toggleWatchlist: (id: string, e: React.MouseEvent) => void;
+  isLoggedIn: boolean;
 }) {
+  const activeDeal = company.deals?.[0];
+  const raising = activeDeal?.targetAmount;
+  const valuation = activeDeal?.valuation;
+  const minInvestment = activeDeal?.minimumInvestment;
+
   return (
     <Link href={`/dashboard/investor/companies/${company.id}`}>
-      <div className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md hover:border-gray-300 transition-all cursor-pointer group relative flex flex-col h-full">
-        {/* Bookmark - top right */}
-        <button
-          onClick={(e) => toggleWatchlist(company.id, e)}
-          className="absolute top-4 right-4 p-1 rounded hover:bg-gray-100 transition-colors z-10"
-        >
-          {watchlist.has(company.id) ? (
-            <svg
-              className="w-5 h-5 text-yellow-500"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-            </svg>
-          ) : (
-            <svg
-              className="w-5 h-5 text-gray-300 group-hover:text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
-              />
-            </svg>
-          )}
-        </button>
+      <div
+        className="bg-white rounded-xl border border-gray-200 overflow-hidden cursor-pointer group relative flex flex-col h-full"
+        style={{
+          transition: "all 0.2s ease",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = "translateY(-4px)";
+          e.currentTarget.style.boxShadow = "0 12px 40px rgba(0,0,0,0.12)";
+          e.currentTarget.style.borderColor = "#d1d5db";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = "translateY(0)";
+          e.currentTarget.style.boxShadow = "none";
+          e.currentTarget.style.borderColor = "#e5e7eb";
+        }}
+      >
+        {/* Card Top — Gradient Logo Area */}
+        <div className="relative px-5 pt-5 pb-4">
+          <div className="flex items-start justify-between">
+            {/* Logo + Company Info */}
+            <div className="flex items-center gap-3.5 min-w-0 flex-1 pr-2">
+              <div
+                className="w-12 h-12 rounded-xl flex-shrink-0 flex items-center justify-center overflow-hidden"
+                style={{
+                  background: company.logoUrl ? undefined : getGradient(company.id),
+                }}
+              >
+                {company.logoUrl ? (
+                  <img
+                    src={company.logoUrl}
+                    alt={company.legalName}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-lg font-bold text-white">
+                    {(company.tradingName || company.legalName).charAt(0).toUpperCase()}
+                  </span>
+                )}
+              </div>
+              <div className="min-w-0">
+                <h3 className="text-base font-semibold text-gray-900 truncate group-hover:text-blue-600 transition-colors">
+                  {company.tradingName || company.legalName}
+                </h3>
+                <p className="text-sm text-gray-500 truncate mt-0.5">
+                  {company.oneLineDescription}
+                </p>
+              </div>
+            </div>
 
-        {/* Logo + Name */}
-        <div className="flex items-center gap-3 mb-1 pr-8">
-          <div className="w-11 h-11 rounded-lg overflow-hidden flex-shrink-0 bg-gray-900 border border-gray-200 flex items-center justify-center">
-            {company.logoUrl ? (
-              <img
-                src={company.logoUrl}
-                alt={company.legalName}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <span className="text-base font-bold text-white">
-                {(company.tradingName || company.legalName)
-                  .charAt(0)
-                  .toUpperCase()}
-              </span>
+            {/* Star / Bookmark */}
+            {isLoggedIn && (
+              <button
+                onClick={(e) => toggleWatchlist(company.id, e)}
+                className="flex-shrink-0 p-1.5 rounded-lg hover:bg-gray-100 transition-colors mt-0.5"
+              >
+                <Star
+                  className={`w-5 h-5 transition-colors ${
+                    isWatchlisted
+                      ? "fill-yellow-400 text-yellow-400"
+                      : "text-gray-300 group-hover:text-gray-400"
+                  }`}
+                />
+              </button>
             )}
           </div>
-          <div className="min-w-0">
-            <h3 className="text-base font-bold text-gray-900 group-hover:text-primary-900 transition-colors truncate">
-              {company.tradingName || company.legalName}
-            </h3>
-            <p className="text-xs text-gray-500">
-              {sectorLabels[company.sector] || company.sector}
-              {company.subsector && (
-                <>
-                  {" "}
-                  / {subsectorLabels[company.subsector] || company.subsector}
-                </>
-              )}
-            </p>
-          </div>
+
+          {/* Location */}
+          {company.incorporationCountry && (
+            <div className="flex items-center gap-1.5 mt-3 text-xs text-gray-400">
+              <MapPin className="w-3.5 h-3.5" />
+              <span>{company.incorporationCountry}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Tags */}
+        <div className="px-5 pb-4 flex flex-wrap gap-2">
+          <span
+            className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium"
+            style={{ backgroundColor: "#f0f4ff", color: "#3b5998" }}
+          >
+            {sectorLabels[company.sector] || company.sector}
+          </span>
+          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-700">
+            {stageLabels[company.stage] || company.stage}
+          </span>
+          {company.preferredLane && (
+            <span
+              className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${
+                company.preferredLane === "YIELD"
+                  ? "bg-emerald-50 text-emerald-700"
+                  : "bg-purple-50 text-purple-700"
+              }`}
+            >
+              {laneLabels[company.preferredLane] || company.preferredLane} Lane
+            </span>
+          )}
         </div>
 
         {/* Divider */}
-        <div className="border-t border-gray-100 my-3"></div>
+        <div className="mx-5 border-t border-gray-100"></div>
 
-        {/* Description */}
-        <p className="text-sm text-gray-600 mb-3 line-clamp-2 leading-relaxed">
-          {company.oneLineDescription}
-        </p>
-
-        {/* Info rows */}
-        <div className="space-y-3 flex-1">
+        {/* Metrics */}
+        <div className="px-5 py-4 grid grid-cols-3 gap-3 flex-1">
           <div>
-            <p className="text-xs text-gray-400 mb-0.5">Round</p>
+            <p className="text-xs text-gray-400 mb-1">Raising</p>
             <p className="text-sm font-semibold text-gray-900">
-              {stageLabels[company.stage] || company.stage}
+              {raising ? formatCurrency(raising) : company.targetRaiseRange || "—"}
             </p>
           </div>
-
-          {company.targetRaiseRange && (
-            <div>
-              <p className="text-xs text-gray-400 mb-0.5">Target Raise</p>
-              <p className="text-sm font-semibold text-gray-900">
-                {company.targetRaiseRange}
-              </p>
-            </div>
-          )}
+          <div>
+            <p className="text-xs text-gray-400 mb-1">Valuation</p>
+            <p className="text-sm font-semibold text-gray-900">
+              {valuation ? formatCurrency(valuation) : "—"}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-400 mb-1">Active Deals</p>
+            <p className="text-sm font-semibold text-gray-900">
+              {company.deals?.length || 0}
+            </p>
+          </div>
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
-          {company.preferredLane ? (
-            <span
-              className={`inline-block px-2.5 py-1 rounded text-xs font-semibold ${company.preferredLane === "YIELD" ? "bg-blue-50 text-blue-700" : "bg-purple-50 text-purple-700"}`}
-            >
-              {laneLabels[company.preferredLane] || company.preferredLane}
-            </span>
+        <div className="px-5 py-3.5 border-t border-gray-100 flex items-center justify-between" style={{ backgroundColor: "#fafbfc" }}>
+          {minInvestment ? (
+            <p className="text-xs text-gray-500">
+              Min. <span className="font-semibold text-gray-700">{formatCurrency(minInvestment)}</span>
+            </p>
           ) : (
-            <span />
+            <p className="text-xs text-gray-400">—</p>
           )}
-
-          {company.deals && company.deals.length > 0 ? (
-            <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full bg-green-500"></div>
-              <p className="text-xs font-medium text-green-700">
-                {company.deals.length} active{" "}
-                {company.deals.length === 1 ? "deal" : "deals"}
-              </p>
-            </div>
-          ) : (
-            <span />
-          )}
+          <span className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 group-hover:text-blue-700 transition-colors">
+            View Details
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+          </span>
         </div>
       </div>
     </Link>
