@@ -752,7 +752,7 @@ export default function CompanyOnboarding() {
                 );
                 router.push("/dashboard/founder");
               }}
-              className="text-sm text-[#0A1F44] border border-gray-300 px-6 py-2 rounded-lg hover:bg-gray-50"
+              className="px-6 py-2 bg-[#10B981] hover:bg-[#059669] text-white rounded-lg transition-colors"
             >
               Save & Exit
             </button>

@@ -1070,17 +1070,7 @@ function CreateDealContent() {
               href="/dashboard/founder"
               className="flex items-center space-x-2"
             >
-              <div
-                className="h-9 w-9 rounded-lg flex items-center justify-center"
-                style={{ backgroundColor: "#C8A24D" }}
-              >
-                <span
-                  className="font-bold text-base"
-                  style={{ color: "#0B1C2D" }}
-                >
-                  CV
-                </span>
-              </div>
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#0A1F44] to-[#10B981]" />
               <span className="text-xl font-bold text-primary-950">
                 Capvista
               </span>
