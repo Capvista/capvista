@@ -16,6 +16,7 @@ import dealsRoutes from "./routes/deals";
 import investmentsRoutes from "./routes/investments";
 import watchlistRoutes from "./routes/watchlist";
 import companyManageRoutes from "./routes/company-manage";
+import investorProfileRoutes from "./routes/investor-profile";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -39,6 +40,7 @@ app.use(
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 app.use("/api/investors", investorsRoutes);
+app.use("/api/investors", investorProfileRoutes);
 
 // Request logging middleware (development only)
 if (process.env.NODE_ENV === "development") {

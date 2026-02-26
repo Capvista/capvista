@@ -176,6 +176,9 @@ model InvestorProfile {
   eSignatureTimestamp           DateTime?
   eSignatureIp                  String?
 
+  // Notification preferences (JSON)
+  notificationPreferences       Json?
+
   // Relationships
   investments    Investment[]
   capvistaEquity CapvistaHoldingsEquity[]

@@ -83,7 +83,7 @@ export default function InvestorDashboard() {
                     <p className="text-sm text-gray-500">Investor</p>
                   </div>
                   <button
-                    onClick={() => router.push("/dashboard/investor/complete-profile")}
+                    onClick={() => router.push("/dashboard/investor/profile/manage")}
                     className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3"
                   >
                     <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
