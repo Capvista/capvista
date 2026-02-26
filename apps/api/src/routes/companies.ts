@@ -59,7 +59,7 @@ const createCompanySchema = z.object({
   subsector: z.string().optional(),
   businessModel: z.enum(["B2B", "B2C", "B2B2C", "B2G", "Marketplace"]),
   revenueModel: z.enum(["TRANSACTIONAL", "SUBSCRIPTION", "ASSET_BACKED"]),
-  stage: z.enum(["PRE_REVENUE", "EARLY_REVENUE", "GROWTH", "PROFITABLE"]),
+  stage: z.enum(["PRE_SEED", "SEED", "SERIES_A", "SERIES_B", "SERIES_C", "SERIES_D_PLUS", "GROWTH_LATE", "PRE_IPO", "BOOTSTRAPPED"]),
   revenueStatus: z.string().optional(),
   revenueRange: z.string().optional(),
   primaryRevenueSource: z.string().optional(),

@@ -264,7 +264,7 @@ const updateCompanyInfoSchema = z.object({
     ])
     .optional(),
   subsector: z.string().optional(),
-  stage: z.enum(["PRE_REVENUE", "EARLY_REVENUE", "GROWTH", "PROFITABLE"]).optional(),
+  stage: z.enum(["PRE_SEED", "SEED", "SERIES_A", "SERIES_B", "SERIES_C", "SERIES_D_PLUS", "GROWTH_LATE", "PRE_IPO", "BOOTSTRAPPED"]).optional(),
   businessModel: z.enum(["B2B", "B2C", "B2B2C", "B2G", "Marketplace"]).optional(),
   teamSize: z.string().optional(),
   operatingCountries: z.array(z.string()).optional(),

@@ -6,6 +6,18 @@ import Link from "next/link";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
+const stageLabels: Record<string, string> = {
+  PRE_SEED: "Pre-Seed",
+  SEED: "Seed",
+  SERIES_A: "Series A",
+  SERIES_B: "Series B",
+  SERIES_C: "Series C",
+  SERIES_D_PLUS: "Series D+",
+  GROWTH_LATE: "Growth / Late Stage",
+  PRE_IPO: "Pre-IPO",
+  BOOTSTRAPPED: "Revenue-Generating (Bootstrapped)",
+};
+
 function StatusBadge({ status }: { status: string }) {
   const colors: Record<string, { bg: string; text: string }> = {
     PENDING_REVIEW: { bg: "rgba(245, 158, 11, 0.1)", text: "#F59E0B" },
@@ -151,7 +163,7 @@ export default function CompaniesPage() {
                       <div style={{ color: "#6B7280", fontSize: 12 }}>{c.owner?.user?.email}</div>
                     </td>
                     <td style={{ padding: "12px 16px", fontSize: 13, color: "#6B7280" }}>{c.sector?.replace(/_/g, " ")}</td>
-                    <td style={{ padding: "12px 16px", fontSize: 13, color: "#6B7280" }}>{c.stage?.replace(/_/g, " ")}</td>
+                    <td style={{ padding: "12px 16px", fontSize: 13, color: "#6B7280" }}>{stageLabels[c.stage] || c.stage}</td>
                     <td style={{ padding: "12px 16px", fontSize: 13, color: "#6B7280" }}>{c.preferredLane || "—"}</td>
                     <td style={{ padding: "12px 16px" }}><StatusBadge status={c.approvalStatus || "PENDING_REVIEW"} /></td>
                     <td style={{ padding: "12px 16px", fontSize: 13, color: "#6B7280" }}>{new Date(c.createdAt).toLocaleDateString()}</td>

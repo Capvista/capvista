@@ -193,10 +193,15 @@ model InvestorProfile {
 // ============================================================================
 
 enum CompanyStage {
-  PRE_REVENUE
-  EARLY_REVENUE
-  GROWTH
-  PROFITABLE
+  PRE_SEED
+  SEED
+  SERIES_A
+  SERIES_B
+  SERIES_C
+  SERIES_D_PLUS
+  GROWTH_LATE
+  PRE_IPO
+  BOOTSTRAPPED
 }
 
 enum BusinessModel {

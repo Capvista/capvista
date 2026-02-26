@@ -176,10 +176,15 @@ const subsectorLabels: Record<string, string> = Object.fromEntries(
 
 const stageFilterOptions = [
   { value: "all", label: "All Stages" },
-  { value: "PRE_REVENUE", label: "Pre-revenue" },
-  { value: "EARLY_REVENUE", label: "Early Revenue" },
-  { value: "GROWTH", label: "Growth" },
-  { value: "PROFITABLE", label: "Profitable" },
+  { value: "PRE_SEED", label: "Pre-Seed" },
+  { value: "SEED", label: "Seed" },
+  { value: "SERIES_A", label: "Series A" },
+  { value: "SERIES_B", label: "Series B" },
+  { value: "SERIES_C", label: "Series C" },
+  { value: "SERIES_D_PLUS", label: "Series D+" },
+  { value: "GROWTH_LATE", label: "Growth / Late Stage" },
+  { value: "PRE_IPO", label: "Pre-IPO" },
+  { value: "BOOTSTRAPPED", label: "Revenue-Generating (Bootstrapped)" },
 ];
 
 const laneFilterOptions = [
@@ -189,10 +194,15 @@ const laneFilterOptions = [
 ];
 
 const stageLabels: Record<string, string> = {
-  PRE_REVENUE: "Pre-revenue",
-  EARLY_REVENUE: "Early Revenue",
-  GROWTH: "Growth",
-  PROFITABLE: "Profitable",
+  PRE_SEED: "Pre-Seed",
+  SEED: "Seed",
+  SERIES_A: "Series A",
+  SERIES_B: "Series B",
+  SERIES_C: "Series C",
+  SERIES_D_PLUS: "Series D+",
+  GROWTH_LATE: "Growth / Late Stage",
+  PRE_IPO: "Pre-IPO",
+  BOOTSTRAPPED: "Revenue-Generating (Bootstrapped)",
 };
 
 const laneLabels: Record<string, string> = {

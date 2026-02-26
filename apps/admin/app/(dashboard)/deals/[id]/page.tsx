@@ -7,6 +7,18 @@ import Link from "next/link";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
+const stageLabels: Record<string, string> = {
+  PRE_SEED: "Pre-Seed",
+  SEED: "Seed",
+  SERIES_A: "Series A",
+  SERIES_B: "Series B",
+  SERIES_C: "Series C",
+  SERIES_D_PLUS: "Series D+",
+  GROWTH_LATE: "Growth / Late Stage",
+  PRE_IPO: "Pre-IPO",
+  BOOTSTRAPPED: "Revenue-Generating (Bootstrapped)",
+};
+
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div style={{ backgroundColor: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 12, marginBottom: 20, overflow: "hidden" }}>
@@ -364,7 +376,7 @@ export default function DealDetailPage() {
           <FieldGrid>
             <Field label="Legal Name" value={company.legalName} />
             <Field label="Sector" value={company.sector?.replace(/_/g, " ")} />
-            <Field label="Stage" value={company.stage?.replace(/_/g, " ")} />
+            <Field label="Stage" value={stageLabels[company.stage] || company.stage} />
             <Field label="Country" value={company.countryOfIncorporation} />
             <Field label="Approval Status" value={company.approvalStatus?.replace(/_/g, " ")} />
             <Field label="Founder" value={owner ? `${owner.firstName} ${owner.lastName}` : null} />

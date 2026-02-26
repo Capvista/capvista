@@ -43,10 +43,15 @@ const teamSizeOptions = [
 
 const stageOptions = [
   { value: "", label: "Select stage" },
-  { value: "PRE_REVENUE", label: "Pre-revenue" },
-  { value: "EARLY_REVENUE", label: "Early revenue" },
-  { value: "GROWTH", label: "Growth" },
-  { value: "PROFITABLE", label: "Profitable" },
+  { value: "PRE_SEED", label: "Pre-Seed" },
+  { value: "SEED", label: "Seed" },
+  { value: "SERIES_A", label: "Series A" },
+  { value: "SERIES_B", label: "Series B" },
+  { value: "SERIES_C", label: "Series C" },
+  { value: "SERIES_D_PLUS", label: "Series D+" },
+  { value: "GROWTH_LATE", label: "Growth / Late Stage" },
+  { value: "PRE_IPO", label: "Pre-IPO" },
+  { value: "BOOTSTRAPPED", label: "Revenue-Generating (Bootstrapped)" },
 ];
 
 const sectorOptions = [

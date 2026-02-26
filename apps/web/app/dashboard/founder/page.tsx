@@ -709,10 +709,15 @@ function CompanyCard({
   };
 
   const stageLabels: Record<string, string> = {
-    PRE_REVENUE: "Pre-revenue",
-    EARLY_REVENUE: "Early Revenue",
-    GROWTH: "Growth",
-    PROFITABLE: "Profitable",
+    PRE_SEED: "Pre-Seed",
+    SEED: "Seed",
+    SERIES_A: "Series A",
+    SERIES_B: "Series B",
+    SERIES_C: "Series C",
+    SERIES_D_PLUS: "Series D+",
+    GROWTH_LATE: "Growth / Late Stage",
+    PRE_IPO: "Pre-IPO",
+    BOOTSTRAPPED: "Revenue-Generating (Bootstrapped)",
   };
 
   const laneLabels: Record<string, string> = {
