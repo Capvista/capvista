@@ -536,7 +536,7 @@ export default function BrowseCompanies() {
                       <p className="text-xs text-gray-500">Investor</p>
                     </div>
                     <button
-                      onClick={() => {}}
+                      onClick={() => router.push("/dashboard/investor/profile/manage")}
                       className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3 text-sm font-medium text-gray-700"
                     >
                       Manage Profile
