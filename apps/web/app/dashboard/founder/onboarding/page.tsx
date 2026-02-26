@@ -733,7 +733,7 @@ export default function CompanyOnboarding() {
             </Link>
             <Link
               href="/dashboard/founder"
-              className="text-sm text-gray-600 hover:text-gray-900"
+              className="text-sm text-[#0A1F44] border border-gray-300 px-6 py-2 rounded-lg hover:bg-gray-50"
             >
               Save & Exit
             </Link>
