@@ -160,7 +160,7 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="bg-gray-50 min-h-[calc(100vh-64px)] -m-6 p-6">
+    <div className="min-h-[calc(100vh-64px)] -m-6 p-6">
       {/* Welcome Banner */}
       <div className="bg-gradient-to-r from-[#0A1F44] to-[#1A3A6B] rounded-2xl p-8 text-white mb-8">
         <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
@@ -295,7 +295,7 @@ export default function DashboardPage() {
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-900">Recent Activity</h2>
-          <Link href="/activity" className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1">
+          <Link href="/activity" className="text-sm text-[#0A1F44] hover:text-[#1A3A6B] font-medium flex items-center gap-1">
             View all <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>

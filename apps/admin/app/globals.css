@@ -3,22 +3,22 @@
 @tailwind utilities;
 
 body {
-  background-color: #0F1729;
-  color: #FFFFFF;
+  background-color: #F6F8FA;
+  color: #111827;
 }
 
-/* Custom scrollbar for dark theme */
+/* Custom scrollbar for light theme */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0B1220;
+  background: #F9FAFB;
 }
 ::-webkit-scrollbar-thumb {
-  background: #2A3444;
+  background: #D1D5DB;
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #3A4454;
+  background: #9CA3AF;
 }

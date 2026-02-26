@@ -9,9 +9,9 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div style={{ backgroundColor: "#1A2332", border: "1px solid #2A3444", borderRadius: 12, marginBottom: 20, overflow: "hidden" }}>
-      <div style={{ padding: "14px 20px", borderBottom: "1px solid #2A3444", backgroundColor: "rgba(200, 162, 77, 0.05)" }}>
-        <h3 style={{ fontSize: 14, fontWeight: 600, color: "#C8A24D", margin: 0 }}>{title}</h3>
+    <div style={{ backgroundColor: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 12, marginBottom: 20, overflow: "hidden" }}>
+      <div style={{ padding: "14px 20px", borderBottom: "1px solid #E5E7EB", backgroundColor: "#F9FAFB" }}>
+        <h3 style={{ fontSize: 14, fontWeight: 600, color: "#0A1F44", margin: 0 }}>{title}</h3>
       </div>
       <div style={{ padding: 20 }}>{children}</div>
     </div>
@@ -22,8 +22,8 @@ function Field({ label, value }: { label: string; value: any }) {
   const display = value === null || value === undefined || value === "" ? "—" : typeof value === "boolean" ? (value ? "Yes" : "No") : String(value);
   return (
     <div style={{ marginBottom: 12 }}>
-      <div style={{ fontSize: 12, color: "#94A3B8", marginBottom: 2 }}>{label}</div>
-      <div style={{ fontSize: 14, color: "#FFFFFF" }}>{display}</div>
+      <div style={{ fontSize: 12, color: "#6B7280", marginBottom: 2 }}>{label}</div>
+      <div style={{ fontSize: 14, color: "#111827" }}>{display}</div>
     </div>
   );
 }
@@ -42,7 +42,7 @@ function StatusBadge({ status }: { status: string }) {
     COMPLETED: { bg: "rgba(16, 185, 129, 0.15)", text: "#10B981" },
     DEFAULTED: { bg: "rgba(239, 68, 68, 0.15)", text: "#EF4444" },
     CANCELLED: { bg: "rgba(107, 114, 128, 0.15)", text: "#6B7280" },
-    WAITLISTED: { bg: "rgba(200, 162, 77, 0.15)", text: "#C8A24D" },
+    WAITLISTED: { bg: "rgba(245, 158, 11, 0.1)", text: "#F59E0B" },
   };
   const c = colors[status] || colors.INTERESTED;
   return (
@@ -85,24 +85,24 @@ function ConfirmFundingModal({
   const inputStyle: React.CSSProperties = {
     width: "100%",
     padding: 12,
-    backgroundColor: "#0F1729",
-    border: "1px solid #2A3444",
+    backgroundColor: "#F9FAFB",
+    border: "1px solid #E5E7EB",
     borderRadius: 8,
-    color: "#FFFFFF",
+    color: "#111827",
     fontSize: 14,
     boxSizing: "border-box",
   };
 
   return (
     <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
-      <div style={{ backgroundColor: "#1A2332", border: "1px solid #2A3444", borderRadius: 12, padding: 24, width: "100%", maxWidth: 480 }}>
-        <h3 style={{ fontSize: 18, fontWeight: 600, margin: "0 0 16px 0" }}>Confirm Funding</h3>
-        <p style={{ color: "#94A3B8", fontSize: 14, marginBottom: 16 }}>
-          Confirm that funds have been received for this investment. Commitment amount: <strong style={{ color: "#FFFFFF" }}>${commitmentAmount.toLocaleString()}</strong>
+      <div style={{ backgroundColor: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 12, padding: 24, width: "100%", maxWidth: 480 }}>
+        <h3 style={{ fontSize: 18, fontWeight: 600, margin: "0 0 16px 0", color: "#111827" }}>Confirm Funding</h3>
+        <p style={{ color: "#6B7280", fontSize: 14, marginBottom: 16 }}>
+          Confirm that funds have been received for this investment. Commitment amount: <strong style={{ color: "#111827" }}>${commitmentAmount.toLocaleString()}</strong>
         </p>
 
         <div style={{ marginBottom: 16 }}>
-          <label style={{ display: "block", fontSize: 13, color: "#94A3B8", marginBottom: 6 }}>Funded Amount ($) *</label>
+          <label style={{ display: "block", fontSize: 13, color: "#6B7280", marginBottom: 6 }}>Funded Amount ($) *</label>
           <input
             type="number"
             value={fundedAmount}
@@ -113,7 +113,7 @@ function ConfirmFundingModal({
         </div>
 
         <div style={{ marginBottom: 16 }}>
-          <label style={{ display: "block", fontSize: 13, color: "#94A3B8", marginBottom: 6 }}>External Reference (optional)</label>
+          <label style={{ display: "block", fontSize: 13, color: "#6B7280", marginBottom: 6 }}>External Reference (optional)</label>
           <input
             type="text"
             value={externalRef}
@@ -126,7 +126,7 @@ function ConfirmFundingModal({
         {error && <p style={{ color: "#EF4444", fontSize: 13, marginBottom: 12 }}>{error}</p>}
 
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 20 }}>
-          <button onClick={onClose} style={{ padding: "8px 20px", backgroundColor: "transparent", border: "1px solid #2A3444", borderRadius: 6, color: "#94A3B8", cursor: "pointer", fontSize: 14 }}>
+          <button onClick={onClose} style={{ padding: "8px 20px", backgroundColor: "transparent", border: "1px solid #E5E7EB", borderRadius: 6, color: "#6B7280", cursor: "pointer", fontSize: 14 }}>
             Cancel
           </button>
           <button
@@ -169,9 +169,9 @@ function CancelModal({
 
   return (
     <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
-      <div style={{ backgroundColor: "#1A2332", border: "1px solid #2A3444", borderRadius: 12, padding: 24, width: "100%", maxWidth: 480 }}>
-        <h3 style={{ fontSize: 18, fontWeight: 600, margin: "0 0 16px 0" }}>Cancel Investment</h3>
-        <p style={{ color: "#94A3B8", fontSize: 14, marginBottom: 16 }}>
+      <div style={{ backgroundColor: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 12, padding: 24, width: "100%", maxWidth: 480 }}>
+        <h3 style={{ fontSize: 18, fontWeight: 600, margin: "0 0 16px 0", color: "#111827" }}>Cancel Investment</h3>
+        <p style={{ color: "#6B7280", fontSize: 14, marginBottom: 16 }}>
           Are you sure you want to cancel this investment? This action cannot be undone.
         </p>
         <textarea
@@ -182,17 +182,17 @@ function CancelModal({
             width: "100%",
             minHeight: 100,
             padding: 12,
-            backgroundColor: "#0F1729",
-            border: "1px solid #2A3444",
+            backgroundColor: "#F9FAFB",
+            border: "1px solid #E5E7EB",
             borderRadius: 8,
-            color: "#FFFFFF",
+            color: "#111827",
             fontSize: 14,
             resize: "vertical",
             boxSizing: "border-box",
           }}
         />
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 20 }}>
-          <button onClick={onClose} style={{ padding: "8px 20px", backgroundColor: "transparent", border: "1px solid #2A3444", borderRadius: 6, color: "#94A3B8", cursor: "pointer", fontSize: 14 }}>
+          <button onClick={onClose} style={{ padding: "8px 20px", backgroundColor: "transparent", border: "1px solid #E5E7EB", borderRadius: 6, color: "#6B7280", cursor: "pointer", fontSize: 14 }}>
             Cancel
           </button>
           <button
@@ -284,7 +284,7 @@ export default function InvestmentDetailPage() {
   };
 
   if (loading) {
-    return <div style={{ color: "#94A3B8", padding: 40, textAlign: "center" }}>Loading investment details...</div>;
+    return <div style={{ color: "#6B7280", padding: 40, textAlign: "center" }}>Loading investment details...</div>;
   }
 
   if (!investment) {
@@ -315,18 +315,18 @@ export default function InvestmentDetailPage() {
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24, flexWrap: "wrap", gap: 16 }}>
         <div>
-          <Link href="/investments" style={{ color: "#94A3B8", fontSize: 13, textDecoration: "none", marginBottom: 8, display: "inline-block" }}>
+          <Link href="/investments" style={{ color: "#6B7280", fontSize: 13, textDecoration: "none", marginBottom: 8, display: "inline-block" }}>
             &larr; Back to Investments
           </Link>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 4 }}>
-            <h1 style={{ fontSize: 24, fontWeight: 700, margin: 0 }}>
+            <h1 style={{ fontSize: 24, fontWeight: 700, margin: 0, color: "#0A1F44" }}>
               Investment #{investment.id.slice(-8).toUpperCase()}
             </h1>
             <StatusBadge status={investment.status} />
           </div>
-          <p style={{ color: "#94A3B8", fontSize: 14, margin: "4px 0 0" }}>
+          <p style={{ color: "#6B7280", fontSize: 14, margin: "4px 0 0" }}>
             {investor?.fullName || "—"} &rarr;{" "}
-            <Link href={`/deals/${deal?.id}`} style={{ color: "#C8A24D", textDecoration: "none" }}>
+            <Link href={`/deals/${deal?.id}`} style={{ color: "#0A1F44", textDecoration: "none" }}>
               {deal?.name || "—"}
             </Link>
           </p>
@@ -405,7 +405,7 @@ export default function InvestmentDetailPage() {
             <Field label="Country" value={investor.country} />
             <Field label="Verification Status" value={investor.verificationStatus?.replace(/_/g, " ")} />
           </FieldGrid>
-          <Link href={`/investors/${investor.id}`} style={{ color: "#C8A24D", fontSize: 13, textDecoration: "none" }}>
+          <Link href={`/investors/${investor.id}`} style={{ color: "#0A1F44", fontSize: 13, textDecoration: "none" }}>
             View Full Investor Profile &rarr;
           </Link>
         </Section>
@@ -428,7 +428,7 @@ export default function InvestmentDetailPage() {
               <Field label="Sector" value={company.sector?.replace(/_/g, " ")} />
             </FieldGrid>
           )}
-          <Link href={`/deals/${deal.id}`} style={{ color: "#C8A24D", fontSize: 13, textDecoration: "none" }}>
+          <Link href={`/deals/${deal.id}`} style={{ color: "#0A1F44", fontSize: 13, textDecoration: "none" }}>
             View Full Deal Details &rarr;
           </Link>
         </Section>
@@ -437,7 +437,7 @@ export default function InvestmentDetailPage() {
       {/* Wire Instructions */}
       {investment.wireInstructions && (
         <Section title="Wire Instructions">
-          <pre style={{ color: "#94A3B8", fontSize: 13, whiteSpace: "pre-wrap", wordBreak: "break-word", margin: 0 }}>
+          <pre style={{ color: "#6B7280", fontSize: 13, whiteSpace: "pre-wrap", wordBreak: "break-word", margin: 0 }}>
             {typeof investment.wireInstructions === "object"
               ? JSON.stringify(investment.wireInstructions, null, 2)
               : String(investment.wireInstructions)}
@@ -448,7 +448,7 @@ export default function InvestmentDetailPage() {
       {/* Admin Notes */}
       {investment.adminNotes && (
         <Section title="Admin Notes">
-          <p style={{ color: "#94A3B8", fontSize: 14, margin: 0 }}>{investment.adminNotes}</p>
+          <p style={{ color: "#6B7280", fontSize: 14, margin: 0 }}>{investment.adminNotes}</p>
           {investment.reviewedBy && (
             <p style={{ color: "#64748B", fontSize: 12, marginTop: 8 }}>
               Reviewed at {formatDate(investment.reviewedAt)}
@@ -460,14 +460,14 @@ export default function InvestmentDetailPage() {
       {/* Escrow Transactions */}
       <Section title="Escrow Transactions">
         {escrowTxns.length === 0 ? (
-          <p style={{ color: "#94A3B8", fontSize: 14, margin: 0 }}>No escrow transactions recorded</p>
+          <p style={{ color: "#6B7280", fontSize: 14, margin: 0 }}>No escrow transactions recorded</p>
         ) : (
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
-                <tr style={{ borderBottom: "1px solid #2A3444" }}>
+                <tr style={{ borderBottom: "1px solid #E5E7EB" }}>
                   {["Direction", "Amount", "Status", "External Ref", "Date"].map((h) => (
-                    <th key={h} style={{ textAlign: "left", padding: "8px 12px", fontSize: 12, fontWeight: 500, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    <th key={h} style={{ textAlign: "left", padding: "8px 12px", fontSize: 12, fontWeight: 500, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                       {h}
                     </th>
                   ))}
@@ -475,11 +475,11 @@ export default function InvestmentDetailPage() {
               </thead>
               <tbody>
                 {escrowTxns.map((txn: any) => (
-                  <tr key={txn.id} style={{ borderBottom: "1px solid #2A3444" }}>
-                    <td style={{ padding: "8px 12px", fontSize: 13, color: "#FFFFFF" }}>
+                  <tr key={txn.id} style={{ borderBottom: "1px solid #E5E7EB" }}>
+                    <td style={{ padding: "8px 12px", fontSize: 13, color: "#111827" }}>
                       {txn.direction?.replace(/_/g, " ")}
                     </td>
-                    <td style={{ padding: "8px 12px", fontSize: 13, color: "#FFFFFF", fontWeight: 500 }}>
+                    <td style={{ padding: "8px 12px", fontSize: 13, color: "#111827", fontWeight: 500 }}>
                       {formatCurrency(txn.amount)}
                     </td>
                     <td style={{ padding: "8px 12px" }}>
@@ -494,10 +494,10 @@ export default function InvestmentDetailPage() {
                         {txn.status}
                       </span>
                     </td>
-                    <td style={{ padding: "8px 12px", fontSize: 13, color: "#94A3B8" }}>
+                    <td style={{ padding: "8px 12px", fontSize: 13, color: "#6B7280" }}>
                       {txn.externalRef || "—"}
                     </td>
-                    <td style={{ padding: "8px 12px", fontSize: 13, color: "#94A3B8" }}>
+                    <td style={{ padding: "8px 12px", fontSize: 13, color: "#6B7280" }}>
                       {new Date(txn.createdAt).toLocaleString()}
                     </td>
                   </tr>
@@ -514,9 +514,9 @@ export default function InvestmentDetailPage() {
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
-                <tr style={{ borderBottom: "1px solid #2A3444" }}>
+                <tr style={{ borderBottom: "1px solid #E5E7EB" }}>
                   {["Type", "Units/Shares", "Percentage", "Issued At"].map((h) => (
-                    <th key={h} style={{ textAlign: "left", padding: "8px 12px", fontSize: 12, fontWeight: 500, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    <th key={h} style={{ textAlign: "left", padding: "8px 12px", fontSize: 12, fontWeight: 500, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                       {h}
                     </th>
                   ))}
@@ -524,11 +524,11 @@ export default function InvestmentDetailPage() {
               </thead>
               <tbody>
                 {ownershipRecords.map((rec: any) => (
-                  <tr key={rec.id} style={{ borderBottom: "1px solid #2A3444" }}>
-                    <td style={{ padding: "8px 12px", fontSize: 13, color: "#FFFFFF" }}>{rec.ownershipType?.replace(/_/g, " ")}</td>
-                    <td style={{ padding: "8px 12px", fontSize: 13, color: "#FFFFFF" }}>{rec.units || rec.shares || "—"}</td>
-                    <td style={{ padding: "8px 12px", fontSize: 13, color: "#FFFFFF" }}>{rec.percentage ? `${rec.percentage}%` : "—"}</td>
-                    <td style={{ padding: "8px 12px", fontSize: 13, color: "#94A3B8" }}>{rec.issuedAt ? new Date(rec.issuedAt).toLocaleString() : "—"}</td>
+                  <tr key={rec.id} style={{ borderBottom: "1px solid #E5E7EB" }}>
+                    <td style={{ padding: "8px 12px", fontSize: 13, color: "#111827" }}>{rec.ownershipType?.replace(/_/g, " ")}</td>
+                    <td style={{ padding: "8px 12px", fontSize: 13, color: "#111827" }}>{rec.units || rec.shares || "—"}</td>
+                    <td style={{ padding: "8px 12px", fontSize: 13, color: "#111827" }}>{rec.percentage ? `${rec.percentage}%` : "—"}</td>
+                    <td style={{ padding: "8px 12px", fontSize: 13, color: "#6B7280" }}>{rec.issuedAt ? new Date(rec.issuedAt).toLocaleString() : "—"}</td>
                   </tr>
                 ))}
               </tbody>

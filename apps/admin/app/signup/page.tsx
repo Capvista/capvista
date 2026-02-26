@@ -118,10 +118,10 @@ export default function SignupPage() {
   const inputStyle = (hasError: boolean) => ({
     width: "100%",
     padding: "12px 16px",
-    backgroundColor: "#0F1729",
-    border: `1px solid ${hasError ? "#EF4444" : "#2A3444"}`,
+    backgroundColor: "#F9FAFB",
+    border: `1px solid ${hasError ? "#EF4444" : "#E5E7EB"}`,
     borderRadius: 8,
-    color: "#FFFFFF",
+    color: "#111827",
     fontSize: 14,
     outline: "none",
     boxSizing: "border-box" as const,
@@ -131,7 +131,7 @@ export default function SignupPage() {
     display: "block",
     fontSize: 14,
     fontWeight: 500,
-    color: "#94A3B8",
+    color: "#374151",
     marginBottom: 8,
   };
 
@@ -148,7 +148,7 @@ export default function SignupPage() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: "#0F1729",
+        backgroundColor: "#F6F8FA",
         padding: "20px",
       }}
     >
@@ -157,9 +157,10 @@ export default function SignupPage() {
           width: "100%",
           maxWidth: 420,
           padding: 40,
-          backgroundColor: "#1A2332",
+          backgroundColor: "#FFFFFF",
           borderRadius: 12,
-          border: "1px solid #2A3444",
+          border: "1px solid #E5E7EB",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
         }}
       >
         <div style={{ textAlign: "center", marginBottom: 32 }}>
@@ -170,11 +171,11 @@ export default function SignupPage() {
               justifyContent: "center",
               width: 48,
               height: 48,
-              backgroundColor: "#C8A24D",
+              backgroundColor: "#0A1F44",
               borderRadius: 8,
               fontSize: 20,
               fontWeight: 700,
-              color: "#0B1220",
+              color: "#FFFFFF",
               marginBottom: 16,
             }}
           >
@@ -184,13 +185,13 @@ export default function SignupPage() {
             style={{
               fontSize: 24,
               fontWeight: 700,
-              color: "#FFFFFF",
+              color: "#0A1F44",
               margin: 0,
             }}
           >
             Capvista Admin
           </h1>
-          <p style={{ color: "#94A3B8", marginTop: 8, fontSize: 14 }}>
+          <p style={{ color: "#6B7280", marginTop: 8, fontSize: 14 }}>
             Create your admin account
           </p>
         </div>
@@ -199,8 +200,8 @@ export default function SignupPage() {
           {error && (
             <div
               style={{
-                backgroundColor: "rgba(239, 68, 68, 0.1)",
-                border: "1px solid rgba(239, 68, 68, 0.3)",
+                backgroundColor: "rgba(239, 68, 68, 0.08)",
+                border: "1px solid rgba(239, 68, 68, 0.2)",
                 borderRadius: 8,
                 padding: "12px 16px",
                 marginBottom: 20,
@@ -336,8 +337,8 @@ export default function SignupPage() {
             style={{
               width: "100%",
               padding: "12px 16px",
-              backgroundColor: loading ? "#9A7B3A" : "#C8A24D",
-              color: "#0B1220",
+              backgroundColor: loading ? "#1A3A6B" : "#0A1F44",
+              color: "#FFFFFF",
               border: "none",
               borderRadius: 8,
               fontSize: 14,
@@ -352,7 +353,7 @@ export default function SignupPage() {
         <p
           style={{
             textAlign: "center",
-            color: "#94A3B8",
+            color: "#6B7280",
             fontSize: 13,
             marginTop: 24,
           }}
@@ -361,7 +362,7 @@ export default function SignupPage() {
           <Link
             href="/login"
             style={{
-              color: "#C8A24D",
+              color: "#0A1F44",
               textDecoration: "none",
               fontWeight: 500,
             }}

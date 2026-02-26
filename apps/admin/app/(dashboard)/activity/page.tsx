@@ -11,12 +11,12 @@ function ActionTypeBadge({ type }: { type: string }) {
   const isInfo = type.includes("INFO");
 
   const bg = isApproval
-    ? "rgba(16, 185, 129, 0.15)"
+    ? "rgba(16, 185, 129, 0.1)"
     : isRejection
-    ? "rgba(239, 68, 68, 0.15)"
+    ? "rgba(239, 68, 68, 0.1)"
     : isInfo
-    ? "rgba(59, 130, 246, 0.15)"
-    : "rgba(245, 158, 11, 0.15)";
+    ? "rgba(59, 130, 246, 0.1)"
+    : "rgba(245, 158, 11, 0.1)";
 
   const color = isApproval
     ? "#10B981"
@@ -64,15 +64,15 @@ export default function ActivityPage() {
 
   return (
     <div>
-      <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 24 }}>Activity Log</h1>
+      <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 24, color: "#0A1F44" }}>Activity Log</h1>
 
-      <div style={{ backgroundColor: "#1A2332", border: "1px solid #2A3444", borderRadius: 12, overflow: "hidden" }}>
+      <div style={{ backgroundColor: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 12, overflow: "hidden" }}>
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
-              <tr style={{ borderBottom: "1px solid #2A3444" }}>
+              <tr style={{ borderBottom: "1px solid #E5E7EB", backgroundColor: "#F9FAFB" }}>
                 {["Admin", "Action", "Target Type", "Target ID", "Reason", "Timestamp"].map((h) => (
-                  <th key={h} style={{ textAlign: "left", padding: "12px 16px", fontSize: 12, fontWeight: 500, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  <th key={h} style={{ textAlign: "left", padding: "12px 16px", fontSize: 12, fontWeight: 500, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                     {h}
                   </th>
                 ))}
@@ -80,26 +80,26 @@ export default function ActivityPage() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={6} style={{ padding: 24, textAlign: "center", color: "#94A3B8" }}>Loading...</td></tr>
+                <tr><td colSpan={6} style={{ padding: 24, textAlign: "center", color: "#6B7280" }}>Loading...</td></tr>
               ) : actions.length === 0 ? (
-                <tr><td colSpan={6} style={{ padding: 24, textAlign: "center", color: "#94A3B8" }}>No admin actions recorded yet</td></tr>
+                <tr><td colSpan={6} style={{ padding: 24, textAlign: "center", color: "#6B7280" }}>No admin actions recorded yet</td></tr>
               ) : (
                 actions.map((a) => (
-                  <tr key={a.id} style={{ borderBottom: "1px solid #2A3444" }}>
-                    <td style={{ padding: "12px 16px", fontSize: 14, color: "#FFFFFF" }}>
+                  <tr key={a.id} style={{ borderBottom: "1px solid #E5E7EB" }} onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#F9FAFB")} onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}>
+                    <td style={{ padding: "12px 16px", fontSize: 14, color: "#111827" }}>
                       {a.admin?.firstName} {a.admin?.lastName}
                     </td>
                     <td style={{ padding: "12px 16px" }}>
                       <ActionTypeBadge type={a.actionType} />
                     </td>
-                    <td style={{ padding: "12px 16px", fontSize: 13, color: "#94A3B8" }}>{a.targetType}</td>
-                    <td style={{ padding: "12px 16px", fontSize: 12, color: "#94A3B8", fontFamily: "monospace" }}>
+                    <td style={{ padding: "12px 16px", fontSize: 13, color: "#6B7280" }}>{a.targetType}</td>
+                    <td style={{ padding: "12px 16px", fontSize: 12, color: "#6B7280", fontFamily: "monospace" }}>
                       {a.targetId?.substring(0, 12)}...
                     </td>
-                    <td style={{ padding: "12px 16px", fontSize: 13, color: "#94A3B8", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    <td style={{ padding: "12px 16px", fontSize: 13, color: "#6B7280", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {a.reason || "—"}
                     </td>
-                    <td style={{ padding: "12px 16px", fontSize: 13, color: "#94A3B8" }}>
+                    <td style={{ padding: "12px 16px", fontSize: 13, color: "#6B7280" }}>
                       {new Date(a.createdAt).toLocaleString()}
                     </td>
                   </tr>
@@ -110,7 +110,7 @@ export default function ActivityPage() {
         </div>
 
         {meta.totalPages > 1 && (
-          <div style={{ display: "flex", justifyContent: "center", gap: 8, padding: 16, borderTop: "1px solid #2A3444" }}>
+          <div style={{ display: "flex", justifyContent: "center", gap: 8, padding: 16, borderTop: "1px solid #E5E7EB" }}>
             {Array.from({ length: meta.totalPages }, (_, i) => (
               <button
                 key={i}
@@ -118,9 +118,9 @@ export default function ActivityPage() {
                 style={{
                   padding: "6px 12px",
                   borderRadius: 6,
-                  border: "1px solid #2A3444",
-                  backgroundColor: meta.page === i + 1 ? "#C8A24D" : "transparent",
-                  color: meta.page === i + 1 ? "#0B1220" : "#94A3B8",
+                  border: "1px solid #E5E7EB",
+                  backgroundColor: meta.page === i + 1 ? "#0A1F44" : "transparent",
+                  color: meta.page === i + 1 ? "#FFFFFF" : "#6B7280",
                   cursor: "pointer",
                   fontSize: 13,
                 }}

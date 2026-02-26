@@ -91,8 +91,8 @@ export default function DashboardLayout({
 
   if (loading) {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "#0F1729" }}>
-        <div style={{ color: "#94A3B8" }}>Loading...</div>
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "#F6F8FA" }}>
+        <div style={{ color: "#6B7280" }}>Loading...</div>
       </div>
     );
   }
@@ -100,12 +100,12 @@ export default function DashboardLayout({
   if (!user) return null;
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", backgroundColor: "#0F1729" }}>
+    <div style={{ display: "flex", minHeight: "100vh", backgroundColor: "#F6F8FA" }}>
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
           onClick={() => setSidebarOpen(false)}
-          style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", zIndex: 40 }}
+          style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.3)", zIndex: 40 }}
         />
       )}
 
@@ -113,8 +113,8 @@ export default function DashboardLayout({
       <aside
         style={{
           width: 240,
-          backgroundColor: "#0B1220",
-          borderRight: "1px solid #2A3444",
+          backgroundColor: "#FFFFFF",
+          borderRight: "1px solid #E5E7EB",
           display: "flex",
           flexDirection: "column",
           position: "fixed",
@@ -126,24 +126,24 @@ export default function DashboardLayout({
         }}
         className="sidebar-desktop"
       >
-        <div style={{ padding: "20px 24px", borderBottom: "1px solid #2A3444", display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ padding: "20px 24px", borderBottom: "1px solid #E5E7EB", display: "flex", alignItems: "center", gap: 12 }}>
           <div
             style={{
               width: 36,
               height: 36,
-              backgroundColor: "#C8A24D",
+              backgroundColor: "#0A1F44",
               borderRadius: 8,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               fontSize: 14,
               fontWeight: 700,
-              color: "#0B1220",
+              color: "#FFFFFF",
             }}
           >
             CV
           </div>
-          <span style={{ fontSize: 16, fontWeight: 600, color: "#FFFFFF" }}>Capvista Admin</span>
+          <span style={{ fontSize: 16, fontWeight: 600, color: "#0A1F44" }}>Capvista Admin</span>
         </div>
 
         <nav style={{ flex: 1, padding: "16px 12px" }}>
@@ -161,8 +161,8 @@ export default function DashboardLayout({
                   padding: "10px 12px",
                   borderRadius: 8,
                   marginBottom: 4,
-                  color: isActive ? "#C8A24D" : "#94A3B8",
-                  backgroundColor: isActive ? "rgba(200, 162, 77, 0.1)" : "transparent",
+                  color: isActive ? "#FFFFFF" : "#4B5563",
+                  backgroundColor: isActive ? "#0A1F44" : "transparent",
                   textDecoration: "none",
                   fontSize: 14,
                   fontWeight: isActive ? 600 : 400,
@@ -183,8 +183,8 @@ export default function DashboardLayout({
         <header
           style={{
             height: 64,
-            backgroundColor: "#0B1220",
-            borderBottom: "1px solid #2A3444",
+            backgroundColor: "#FFFFFF",
+            borderBottom: "1px solid #E5E7EB",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
@@ -203,7 +203,7 @@ export default function DashboardLayout({
                 display: "none",
                 background: "none",
                 border: "none",
-                color: "#94A3B8",
+                color: "#6B7280",
                 cursor: "pointer",
                 padding: 4,
               }}
@@ -217,7 +217,7 @@ export default function DashboardLayout({
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <span style={{ color: "#94A3B8", fontSize: 14 }}>
+            <span style={{ color: "#6B7280", fontSize: 14 }}>
               {user.firstName} {user.lastName}
             </span>
             <button
@@ -225,9 +225,9 @@ export default function DashboardLayout({
               style={{
                 padding: "6px 16px",
                 backgroundColor: "transparent",
-                border: "1px solid #2A3444",
+                border: "1px solid #E5E7EB",
                 borderRadius: 6,
-                color: "#94A3B8",
+                color: "#6B7280",
                 fontSize: 13,
                 cursor: "pointer",
               }}

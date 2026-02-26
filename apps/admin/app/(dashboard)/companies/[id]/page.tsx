@@ -9,9 +9,9 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div style={{ backgroundColor: "#1A2332", border: "1px solid #2A3444", borderRadius: 12, marginBottom: 20, overflow: "hidden" }}>
-      <div style={{ padding: "14px 20px", borderBottom: "1px solid #2A3444", backgroundColor: "rgba(200, 162, 77, 0.05)" }}>
-        <h3 style={{ fontSize: 14, fontWeight: 600, color: "#C8A24D", margin: 0 }}>{title}</h3>
+    <div style={{ backgroundColor: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 12, marginBottom: 20, overflow: "hidden" }}>
+      <div style={{ padding: "14px 20px", borderBottom: "1px solid #E5E7EB", backgroundColor: "#F9FAFB" }}>
+        <h3 style={{ fontSize: 14, fontWeight: 600, color: "#0A1F44", margin: 0 }}>{title}</h3>
       </div>
       <div style={{ padding: 20 }}>{children}</div>
     </div>
@@ -22,8 +22,8 @@ function Field({ label, value }: { label: string; value: any }) {
   const display = value === null || value === undefined || value === "" ? "—" : typeof value === "boolean" ? (value ? "Yes" : "No") : String(value);
   return (
     <div style={{ marginBottom: 12 }}>
-      <div style={{ fontSize: 12, color: "#94A3B8", marginBottom: 2 }}>{label}</div>
-      <div style={{ fontSize: 14, color: "#FFFFFF" }}>{display}</div>
+      <div style={{ fontSize: 12, color: "#6B7280", marginBottom: 2 }}>{label}</div>
+      <div style={{ fontSize: 14, color: "#111827" }}>{display}</div>
     </div>
   );
 }
@@ -71,8 +71,8 @@ function ActionModal({
 
   return (
     <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
-      <div style={{ backgroundColor: "#1A2332", border: "1px solid #2A3444", borderRadius: 12, padding: 24, width: "100%", maxWidth: 480 }}>
-        <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16, margin: "0 0 16px 0" }}>{title}</h3>
+      <div style={{ backgroundColor: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 12, padding: 24, width: "100%", maxWidth: 480 }}>
+        <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16, margin: "0 0 16px 0", color: "#111827" }}>{title}</h3>
         {type !== "approve" && (
           <textarea
             value={reason}
@@ -83,10 +83,10 @@ function ActionModal({
               width: "100%",
               minHeight: 100,
               padding: 12,
-              backgroundColor: "#0F1729",
-              border: "1px solid #2A3444",
+              backgroundColor: "#F9FAFB",
+              border: "1px solid #E5E7EB",
               borderRadius: 8,
-              color: "#FFFFFF",
+              color: "#111827",
               fontSize: 14,
               resize: "vertical",
               boxSizing: "border-box",
@@ -94,10 +94,10 @@ function ActionModal({
           />
         )}
         {type === "approve" && (
-          <p style={{ color: "#94A3B8", fontSize: 14 }}>Are you sure you want to approve this company? This will make it visible to investors.</p>
+          <p style={{ color: "#6B7280", fontSize: 14 }}>Are you sure you want to approve this company? This will make it visible to investors.</p>
         )}
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 20 }}>
-          <button onClick={onClose} style={{ padding: "8px 20px", backgroundColor: "transparent", border: "1px solid #2A3444", borderRadius: 6, color: "#94A3B8", cursor: "pointer", fontSize: 14 }}>
+          <button onClick={onClose} style={{ padding: "8px 20px", backgroundColor: "transparent", border: "1px solid #E5E7EB", borderRadius: 6, color: "#6B7280", cursor: "pointer", fontSize: 14 }}>
             Cancel
           </button>
           <button
@@ -108,7 +108,7 @@ function ActionModal({
               backgroundColor: colors[type],
               border: "none",
               borderRadius: 6,
-              color: type === "info" ? "#0B1220" : "#FFFFFF",
+              color: type === "info" ? "#FFFFFF" : "#FFFFFF",
               cursor: submitting ? "not-allowed" : "pointer",
               fontSize: 14,
               fontWeight: 600,
@@ -157,8 +157,8 @@ function VerifyParticipationModal({
 
   return (
     <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
-      <div style={{ backgroundColor: "#1A2332", border: "1px solid #2A3444", borderRadius: 12, padding: 24, width: "100%", maxWidth: 480 }}>
-        <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16, margin: "0 0 16px 0" }}>Verify Issuance & Counter-Sign</h3>
+      <div style={{ backgroundColor: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 12, padding: 24, width: "100%", maxWidth: 480 }}>
+        <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16, margin: "0 0 16px 0", color: "#111827" }}>Verify Issuance & Counter-Sign</h3>
         <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 16 }}>
           <input
             type="checkbox"
@@ -166,12 +166,12 @@ function VerifyParticipationModal({
             onChange={(e) => setConfirmed(e.target.checked)}
             style={{ marginTop: 3 }}
           />
-          <span style={{ fontSize: 14, color: "#94A3B8" }}>
+          <span style={{ fontSize: 14, color: "#6B7280" }}>
             I have reviewed the issuance documentation and confirm it meets requirements
           </span>
         </div>
         <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 13, color: "#94A3B8", display: "block", marginBottom: 4 }}>Admin Counter-Signature (type your name)</label>
+          <label style={{ fontSize: 13, color: "#6B7280", display: "block", marginBottom: 4 }}>Admin Counter-Signature (type your name)</label>
           <input
             type="text"
             value={signature}
@@ -180,17 +180,17 @@ function VerifyParticipationModal({
             style={{
               width: "100%",
               padding: 10,
-              backgroundColor: "#0F1729",
-              border: "1px solid #2A3444",
+              backgroundColor: "#F9FAFB",
+              border: "1px solid #E5E7EB",
               borderRadius: 8,
-              color: "#FFFFFF",
+              color: "#111827",
               fontSize: 14,
               boxSizing: "border-box",
             }}
           />
         </div>
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 12 }}>
-          <button onClick={onClose} style={{ padding: "8px 20px", backgroundColor: "transparent", border: "1px solid #2A3444", borderRadius: 6, color: "#94A3B8", cursor: "pointer", fontSize: 14 }}>
+          <button onClick={onClose} style={{ padding: "8px 20px", backgroundColor: "transparent", border: "1px solid #E5E7EB", borderRadius: 6, color: "#6B7280", cursor: "pointer", fontSize: 14 }}>
             Cancel
           </button>
           <button
@@ -291,7 +291,7 @@ export default function CompanyDetailPage() {
   };
 
   if (loading) {
-    return <div style={{ color: "#94A3B8", padding: 40, textAlign: "center" }}>Loading company details...</div>;
+    return <div style={{ color: "#6B7280", padding: 40, textAlign: "center" }}>Loading company details...</div>;
   }
 
   if (!company) {
@@ -306,14 +306,14 @@ export default function CompanyDetailPage() {
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24, flexWrap: "wrap", gap: 16 }}>
         <div>
-          <Link href="/companies" style={{ color: "#94A3B8", fontSize: 13, textDecoration: "none", marginBottom: 8, display: "inline-block" }}>
+          <Link href="/companies" style={{ color: "#6B7280", fontSize: 13, textDecoration: "none", marginBottom: 8, display: "inline-block" }}>
             &larr; Back to Companies
           </Link>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 4 }}>
-            <h1 style={{ fontSize: 24, fontWeight: 700, margin: 0 }}>{company.legalName}</h1>
+            <h1 style={{ fontSize: 24, fontWeight: 700, margin: 0, color: "#0A1F44" }}>{company.legalName}</h1>
             <StatusBadge status={company.approvalStatus || "PENDING_REVIEW"} />
           </div>
-          {company.tradingName && <p style={{ color: "#94A3B8", fontSize: 14, margin: "4px 0 0" }}>Trading as: {company.tradingName}</p>}
+          {company.tradingName && <p style={{ color: "#6B7280", fontSize: 14, margin: "4px 0 0" }}>Trading as: {company.tradingName}</p>}
         </div>
         <div style={{ display: "flex", gap: 10 }}>
           <button onClick={() => setModal("approve")} style={{ padding: "8px 20px", backgroundColor: "#10B981", border: "none", borderRadius: 6, color: "#FFFFFF", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
@@ -322,7 +322,7 @@ export default function CompanyDetailPage() {
           <button onClick={() => setModal("reject")} style={{ padding: "8px 20px", backgroundColor: "#EF4444", border: "none", borderRadius: 6, color: "#FFFFFF", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
             Reject
           </button>
-          <button onClick={() => setModal("info")} style={{ padding: "8px 20px", backgroundColor: "#F59E0B", border: "none", borderRadius: 6, color: "#0B1220", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+          <button onClick={() => setModal("info")} style={{ padding: "8px 20px", backgroundColor: "#F59E0B", border: "none", borderRadius: 6, color: "#FFFFFF", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
             Request More Info
           </button>
         </div>
@@ -432,7 +432,7 @@ export default function CompanyDetailPage() {
       {/* Platform Participation */}
       <Section title="Platform Participation">
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-          <span style={{ fontSize: 13, color: "#94A3B8" }}>Status:</span>
+          <span style={{ fontSize: 13, color: "#6B7280" }}>Status:</span>
           <ParticipationStatusBadge status={company.participationStatus || "NOT_STARTED"} />
         </div>
 
@@ -445,7 +445,7 @@ export default function CompanyDetailPage() {
 
         {(company.participationStatus === "EXECUTED" || company.participationStatus === "VERIFIED") && (
           <div style={{ marginTop: 16 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: "#C8A24D", marginBottom: 8 }}>Agreement Execution</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "#0A1F44", marginBottom: 8 }}>Agreement Execution</div>
             <FieldGrid>
               <Field label="Founder Signature" value={company.participationExecutorSignature} />
               <Field label="Executed At" value={company.participationExecutedAt ? new Date(company.participationExecutedAt).toLocaleString() : null} />
@@ -456,7 +456,7 @@ export default function CompanyDetailPage() {
 
         {company.participationStatus === "VERIFIED" && (
           <div style={{ marginTop: 16 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: "#C8A24D", marginBottom: 8 }}>Admin Verification</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "#0A1F44", marginBottom: 8 }}>Admin Verification</div>
             <FieldGrid>
               <Field label="Capvista Counter-Signed At" value={company.participationCapvistaSignedAt ? new Date(company.participationCapvistaSignedAt).toLocaleString() : null} />
               <Field label="Capvista Signed By" value={company.participationCapvistaSignedBy} />
@@ -468,7 +468,7 @@ export default function CompanyDetailPage() {
         {/* Issuance Documents */}
         {(company.participationStatus === "EXECUTED" || company.participationStatus === "VERIFIED") && (
           <div style={{ marginTop: 16 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: "#C8A24D", marginBottom: 8 }}>Issuance Documents</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "#0A1F44", marginBottom: 8 }}>Issuance Documents</div>
             <div style={{ display: "grid", gap: 8 }}>
               {[
                 { label: "Board Resolution", url: company.boardResolutionUrl },
@@ -476,8 +476,8 @@ export default function CompanyDetailPage() {
                 { label: "Shareholder Register", url: company.shareholderRegisterUrl },
                 { label: "Cap Table Confirmation", url: company.capTableConfirmationUrl },
               ].map((doc) => (
-                <div key={doc.label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", backgroundColor: "#0F1729", borderRadius: 8 }}>
-                  <span style={{ fontSize: 13, color: doc.url ? "#FFFFFF" : "#64748B" }}>{doc.label}</span>
+                <div key={doc.label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", backgroundColor: "#F9FAFB", borderRadius: 8 }}>
+                  <span style={{ fontSize: 13, color: doc.url ? "#111827" : "#64748B" }}>{doc.label}</span>
                   {doc.url ? (
                     <a href={doc.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: "#3B82F6", textDecoration: "none" }}>
                       View Document

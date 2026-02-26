@@ -9,9 +9,9 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div style={{ backgroundColor: "#1A2332", border: "1px solid #2A3444", borderRadius: 12, marginBottom: 20, overflow: "hidden" }}>
-      <div style={{ padding: "14px 20px", borderBottom: "1px solid #2A3444", backgroundColor: "rgba(200, 162, 77, 0.05)" }}>
-        <h3 style={{ fontSize: 14, fontWeight: 600, color: "#C8A24D", margin: 0 }}>{title}</h3>
+    <div style={{ backgroundColor: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 12, marginBottom: 20, overflow: "hidden" }}>
+      <div style={{ padding: "14px 20px", borderBottom: "1px solid #E5E7EB", backgroundColor: "#F9FAFB" }}>
+        <h3 style={{ fontSize: 14, fontWeight: 600, color: "#0A1F44", margin: 0 }}>{title}</h3>
       </div>
       <div style={{ padding: 20 }}>{children}</div>
     </div>
@@ -22,8 +22,8 @@ function Field({ label, value }: { label: string; value: any }) {
   const display = value === null || value === undefined || value === "" ? "—" : typeof value === "boolean" ? (value ? "Yes" : "No") : String(value);
   return (
     <div style={{ marginBottom: 12 }}>
-      <div style={{ fontSize: 12, color: "#94A3B8", marginBottom: 2 }}>{label}</div>
-      <div style={{ fontSize: 14, color: "#FFFFFF" }}>{display}</div>
+      <div style={{ fontSize: 12, color: "#6B7280", marginBottom: 2 }}>{label}</div>
+      <div style={{ fontSize: 14, color: "#111827" }}>{display}</div>
     </div>
   );
 }
@@ -70,7 +70,7 @@ function ActionModal({
 
   return (
     <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
-      <div style={{ backgroundColor: "#1A2332", border: "1px solid #2A3444", borderRadius: 12, padding: 24, width: "100%", maxWidth: 480 }}>
+      <div style={{ backgroundColor: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 12, padding: 24, width: "100%", maxWidth: 480 }}>
         <h3 style={{ fontSize: 18, fontWeight: 600, margin: "0 0 16px 0" }}>{title}</h3>
         {type !== "verify" && (
           <textarea
@@ -82,10 +82,10 @@ function ActionModal({
               width: "100%",
               minHeight: 100,
               padding: 12,
-              backgroundColor: "#0F1729",
-              border: "1px solid #2A3444",
+              backgroundColor: "#F9FAFB",
+              border: "1px solid #E5E7EB",
               borderRadius: 8,
-              color: "#FFFFFF",
+              color: "#111827",
               fontSize: 14,
               resize: "vertical",
               boxSizing: "border-box",
@@ -93,10 +93,10 @@ function ActionModal({
           />
         )}
         {type === "verify" && (
-          <p style={{ color: "#94A3B8", fontSize: 14 }}>Are you sure you want to verify this investor? This will grant them full platform access.</p>
+          <p style={{ color: "#6B7280", fontSize: 14 }}>Are you sure you want to verify this investor? This will grant them full platform access.</p>
         )}
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 20 }}>
-          <button onClick={onClose} style={{ padding: "8px 20px", backgroundColor: "transparent", border: "1px solid #2A3444", borderRadius: 6, color: "#94A3B8", cursor: "pointer", fontSize: 14 }}>
+          <button onClick={onClose} style={{ padding: "8px 20px", backgroundColor: "transparent", border: "1px solid #E5E7EB", borderRadius: 6, color: "#6B7280", cursor: "pointer", fontSize: 14 }}>
             Cancel
           </button>
           <button
@@ -107,7 +107,7 @@ function ActionModal({
               backgroundColor: colors[type],
               border: "none",
               borderRadius: 6,
-              color: type === "info" ? "#0B1220" : "#FFFFFF",
+              color: type === "info" ? "#FFFFFF" : "#FFFFFF",
               cursor: submitting ? "not-allowed" : "pointer",
               fontSize: 14,
               fontWeight: 600,
@@ -169,7 +169,7 @@ export default function InvestorDetailPage() {
   };
 
   if (loading) {
-    return <div style={{ color: "#94A3B8", padding: 40, textAlign: "center" }}>Loading investor details...</div>;
+    return <div style={{ color: "#6B7280", padding: 40, textAlign: "center" }}>Loading investor details...</div>;
   }
 
   if (!investor) {
@@ -181,16 +181,16 @@ export default function InvestorDetailPage() {
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24, flexWrap: "wrap", gap: 16 }}>
         <div>
-          <Link href="/investors" style={{ color: "#94A3B8", fontSize: 13, textDecoration: "none", marginBottom: 8, display: "inline-block" }}>
+          <Link href="/investors" style={{ color: "#6B7280", fontSize: 13, textDecoration: "none", marginBottom: 8, display: "inline-block" }}>
             &larr; Back to Investors
           </Link>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 4 }}>
-            <h1 style={{ fontSize: 24, fontWeight: 700, margin: 0 }}>
+            <h1 style={{ fontSize: 24, fontWeight: 700, margin: 0, color: "#0A1F44" }}>
               {investor.fullName || `${investor.user?.firstName || ""} ${investor.user?.lastName || ""}`}
             </h1>
             <StatusBadge status={investor.verificationStatus || "PENDING"} />
           </div>
-          <p style={{ color: "#94A3B8", fontSize: 14, margin: "4px 0 0" }}>{investor.user?.email}</p>
+          <p style={{ color: "#6B7280", fontSize: 14, margin: "4px 0 0" }}>{investor.user?.email}</p>
         </div>
         <div style={{ display: "flex", gap: 10 }}>
           <button onClick={() => setModal("verify")} style={{ padding: "8px 20px", backgroundColor: "#10B981", border: "none", borderRadius: 6, color: "#FFFFFF", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
@@ -199,7 +199,7 @@ export default function InvestorDetailPage() {
           <button onClick={() => setModal("reject")} style={{ padding: "8px 20px", backgroundColor: "#EF4444", border: "none", borderRadius: 6, color: "#FFFFFF", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
             Reject
           </button>
-          <button onClick={() => setModal("info")} style={{ padding: "8px 20px", backgroundColor: "#F59E0B", border: "none", borderRadius: 6, color: "#0B1220", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+          <button onClick={() => setModal("info")} style={{ padding: "8px 20px", backgroundColor: "#F59E0B", border: "none", borderRadius: 6, color: "#FFFFFF", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
             Request More Info
           </button>
         </div>
