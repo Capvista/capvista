@@ -475,6 +475,24 @@ export default function CompanyOnboarding() {
     }
   }, [user, loading, router]);
 
+  // Restore saved onboarding progress from localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("capvista_onboarding_progress");
+      if (saved) {
+        const { step, formData: savedData } = JSON.parse(saved);
+        if (typeof step === "number" && step >= 0 && step < STEPS.length) {
+          setCurrentStep(step);
+        }
+        if (savedData && typeof savedData === "object") {
+          setFormData((prev) => ({ ...prev, ...savedData, logoFile: null }));
+        }
+      }
+    } catch (e) {
+      console.error("Failed to restore onboarding progress:", e);
+    }
+  }, []);
+
   const [formData, setFormData] = useState<FormData>({
     logoFile: null,
     logoPreview: "",
@@ -679,6 +697,7 @@ export default function CompanyOnboarding() {
       console.log("📥 API response body:", result);
 
       if (result.success) {
+        localStorage.removeItem("capvista_onboarding_progress");
         router.push("/dashboard/founder/submission-success");
       } else {
         console.error("❌ API error:", result.error);
@@ -731,12 +750,22 @@ export default function CompanyOnboarding() {
                 Capvista
               </span>
             </Link>
-            <Link
-              href="/dashboard/founder"
+            <button
+              onClick={() => {
+                const { logoFile, ...serializableData } = formData;
+                localStorage.setItem(
+                  "capvista_onboarding_progress",
+                  JSON.stringify({
+                    step: currentStep,
+                    formData: serializableData,
+                  })
+                );
+                router.push("/dashboard/founder");
+              }}
               className="text-sm text-[#0A1F44] border border-gray-300 px-6 py-2 rounded-lg hover:bg-gray-50"
             >
               Save & Exit
-            </Link>
+            </button>
           </div>
         </div>
       </header>
