@@ -7,6 +7,18 @@ import Link from "next/link";
 import { ArrowLeft, Star, CheckCircle2, ExternalLink, Linkedin } from "lucide-react";
 import InvestorHeader from "@/components/InvestorHeader";
 
+type SimilarCompany = {
+  id: string;
+  legalName: string;
+  tradingName?: string;
+  oneLineDescription: string;
+  sector: string;
+  subsector?: string;
+  stage: string;
+  preferredLane?: string;
+  logoUrl?: string;
+};
+
 type Company = {
   id: string;
   legalName: string;
@@ -494,7 +506,7 @@ export default function CompanyDetailPage() {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Main Content — Left 2/3 */}
           <div className="flex-1 lg:w-2/3 space-y-8">
-            {activeTab === "overview" && <OverviewTab company={company} liveDeals={liveDeals} onViewDeals={() => setActiveTab("deals")} />}
+            {activeTab === "overview" && <OverviewTab company={company} liveDeals={liveDeals} onViewDeals={() => setActiveTab("deals")} companyId={companyId} accessToken={accessToken} />}
             {activeTab === "traction" && <TractionTab company={company} />}
             {activeTab === "team" && <TeamTab company={company} />}
             {activeTab === "capital" && <CapitalTab company={company} />}
@@ -652,7 +664,27 @@ function SidebarRow({ label, value }: { label: string; value: string }) {
 // ============================================================================
 // OVERVIEW TAB
 // ============================================================================
-function OverviewTab({ company, liveDeals, onViewDeals }: { company: Company; liveDeals: Company["deals"]; onViewDeals: () => void }) {
+function OverviewTab({ company, liveDeals, onViewDeals, companyId, accessToken }: { company: Company; liveDeals: Company["deals"]; onViewDeals: () => void; companyId: string; accessToken: string | null }) {
+  const [similarCompanies, setSimilarCompanies] = useState<SimilarCompany[]>([]);
+
+  useEffect(() => {
+    const fetchSimilar = async () => {
+      try {
+        const API_URL = process.env.NEXT_PUBLIC_API_URL;
+        const res = await fetch(`${API_URL}/api/companies/${companyId}/similar`, {
+          headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+        });
+        const result = await res.json();
+        if (result.success) {
+          setSimilarCompanies(result.data);
+        }
+      } catch {
+        // silently fail — section just won't render
+      }
+    };
+    if (companyId) fetchSimilar();
+  }, [companyId, accessToken]);
+
   return (
     <div className="space-y-8">
       {/* About */}
@@ -762,6 +794,75 @@ function OverviewTab({ company, liveDeals, onViewDeals }: { company: Company; li
             </div>
           </div>
         )}
+
+      {/* Similar Companies */}
+      {similarCompanies.length > 0 && (
+        <div className="bg-white rounded-lg border border-[#E5E7EB] p-6 shadow-sm">
+          <h3 className="text-xl font-bold text-[#111827] mb-1">Similar Companies</h3>
+          <p className="text-[#6B7280] text-sm mb-4">
+            Other companies in {sectorLabels[company.sector] || company.sector}
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {similarCompanies.map((sc) => {
+              const name = sc.tradingName || sc.legalName;
+              return (
+                <Link
+                  key={sc.id}
+                  href={`/dashboard/investor/companies/${sc.id}`}
+                  className="bg-white rounded-lg border border-[#E5E7EB] p-4 hover:shadow-md transition-shadow cursor-pointer block"
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    {sc.logoUrl ? (
+                      <img
+                        src={sc.logoUrl}
+                        alt={name}
+                        className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-lg bg-[#0A1F44] flex items-center justify-center flex-shrink-0">
+                        <span className="text-sm font-bold text-white">
+                          {name.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                    )}
+                    <p className="font-bold text-[#111827] truncate">{name}</p>
+                  </div>
+                  <p className="text-[#6B7280] text-sm truncate mb-3">
+                    {sc.oneLineDescription}
+                  </p>
+                  <div className="flex flex-wrap gap-1.5 mb-3">
+                    <span className="px-2 py-0.5 bg-[#F9FAFB] border border-[#E5E7EB] text-[#6B7280] rounded text-xs">
+                      {sectorLabels[sc.sector] || sc.sector}
+                    </span>
+                    {sc.subsector && (
+                      <span className="px-2 py-0.5 bg-[#F9FAFB] border border-[#E5E7EB] text-[#6B7280] rounded text-xs">
+                        {subsectorLabels[sc.subsector] || sc.subsector}
+                      </span>
+                    )}
+                    <span className="px-2 py-0.5 bg-[#F9FAFB] border border-[#E5E7EB] text-[#6B7280] rounded text-xs">
+                      {stageLabels[sc.stage] || sc.stage}
+                    </span>
+                    {sc.preferredLane && (
+                      <span
+                        className={`px-2 py-0.5 rounded text-xs font-medium ${
+                          sc.preferredLane === "YIELD"
+                            ? "bg-blue-50 text-blue-700 border border-blue-200"
+                            : "bg-purple-50 text-purple-700 border border-purple-200"
+                        }`}
+                      >
+                        {laneLabels[sc.preferredLane] || sc.preferredLane}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[#0A1F44] text-sm font-medium">
+                    View Details →
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

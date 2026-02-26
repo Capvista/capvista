@@ -299,6 +299,68 @@ router.get(
   },
 );
 
+// GET /api/companies/:id/similar - Get similar companies (same sector)
+router.get("/:id/similar", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    // First, get the current company's sector and subsector
+    const company = await prisma.company.findUnique({
+      where: { id },
+      select: { sector: true, subsector: true },
+    });
+
+    if (!company) {
+      return res.status(404).json({
+        success: false,
+        error: { code: "COMPANY_NOT_FOUND", message: "Company not found" },
+      });
+    }
+
+    // Find similar companies: same sector, approved, exclude current
+    const similarCompanies = await prisma.company.findMany({
+      where: {
+        sector: company.sector,
+        id: { not: id },
+        approvalStatus: "APPROVED",
+      },
+      select: {
+        id: true,
+        legalName: true,
+        tradingName: true,
+        oneLineDescription: true,
+        sector: true,
+        subsector: true,
+        stage: true,
+        preferredLane: true,
+        logoUrl: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: "desc" },
+      take: 12, // fetch extra to re-sort by subsector match
+    });
+
+    // Sort: matching subsector first, then by createdAt desc
+    const sorted = similarCompanies.sort((a, b) => {
+      const aMatch = a.subsector === company.subsector ? 1 : 0;
+      const bMatch = b.subsector === company.subsector ? 1 : 0;
+      if (bMatch !== aMatch) return bMatch - aMatch;
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+
+    return res.json({
+      success: true,
+      data: sorted.slice(0, 6),
+    });
+  } catch (error) {
+    console.error("Get similar companies error:", error);
+    return res.status(500).json({
+      success: false,
+      error: { code: "INTERNAL_ERROR", message: "Failed to fetch similar companies" },
+    });
+  }
+});
+
 // GET /api/companies/:id - Get company details
 router.get("/:id", async (req: Request, res: Response) => {
   try {
