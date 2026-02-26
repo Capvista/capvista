@@ -4,6 +4,7 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import Link from "next/link";
+import InvestorHeader from "@/components/InvestorHeader";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -396,7 +397,7 @@ export default function InvestCommitmentFlow() {
   if (error && !deal) {
     return (
       <div className="min-h-screen" style={{ backgroundColor: "#F6F8FA" }}>
-        <PageHeader />
+        <InvestorHeader />
         <main className="max-w-2xl mx-auto px-4 py-16 text-center">
           <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center bg-red-100">
             <svg
@@ -439,7 +440,7 @@ export default function InvestCommitmentFlow() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#F6F8FA" }}>
-      <PageHeader />
+      <InvestorHeader />
 
       {/* Deal Summary Bar */}
       <div className="bg-white border-b border-gray-200">
@@ -588,45 +589,6 @@ export default function InvestCommitmentFlow() {
   );
 }
 
-// ============================================================================
-// PAGE HEADER
-// ============================================================================
-
-function PageHeader() {
-  return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
-      <div className="max-w-3xl mx-auto px-4">
-        <div className="flex items-center justify-between py-4">
-          <Link
-            href="/dashboard/investor"
-            className="flex items-center space-x-2"
-          >
-            <div
-              className="h-9 w-9 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: "#0A1F44" }}
-            >
-              <span
-                className="font-bold text-base"
-                style={{ color: "#0B1C2D" }}
-              >
-                CV
-              </span>
-            </div>
-            <span className="text-xl font-bold text-primary-950">
-              Capvista
-            </span>
-          </Link>
-          <Link
-            href="/dashboard/investor/companies"
-            className="text-sm text-gray-600 hover:text-gray-900"
-          >
-            ← Back to Companies
-          </Link>
-        </div>
-      </div>
-    </header>
-  );
-}
 
 // ============================================================================
 // STEP 1: COMMITMENT

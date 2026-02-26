@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Star, CheckCircle2, ExternalLink, Linkedin } from "lucide-react";
+import InvestorHeader from "@/components/InvestorHeader";
 
 type Company = {
   id: string;
@@ -372,6 +373,8 @@ export default function CompanyDetailPage() {
 
   return (
     <div className="min-h-screen bg-[#F6F8FA]">
+      <InvestorHeader />
+
       {/* Hero Section */}
       <div style={{ background: "linear-gradient(to bottom right, #0A1F44, #1A3A6B)" }}>
         <div className="max-w-7xl mx-auto px-6 py-8">
@@ -461,7 +464,7 @@ export default function CompanyDetailPage() {
       </div>
 
       {/* Tab Bar */}
-      <div className="bg-[#F6F8FA] border-b border-[#E5E7EB] sticky top-0 z-10">
+      <div className="bg-[#F6F8FA] border-b border-[#E5E7EB] sticky top-[73px] z-10">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex gap-1 overflow-x-auto">
             {tabs.map((tab) => (

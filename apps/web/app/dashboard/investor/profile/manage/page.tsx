@@ -4,6 +4,7 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import InvestorHeader from "@/components/InvestorHeader";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -646,32 +647,9 @@ export default function ManageProfilePage() {
 
   if (!user) return null;
 
-  const userInitials = `${user.firstName?.charAt(0) || ""}${user.lastName?.charAt(0) || ""}`.toUpperCase() || "U";
-
   return (
     <div style={{ background: "#F6F8FA" }} className="min-h-screen">
-      {/* Header */}
-      <header className="bg-white border-b border-[#E5E7EB]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#0A1F44] to-[#10B981]" />
-              <span className="text-xl font-semibold text-[#0A1F44]">Capvista</span>
-            </Link>
-            <nav className="flex items-center gap-6">
-              <Link href="/dashboard/investor" className="text-sm font-medium text-[#6B7280] hover:text-[#0A1F44] transition-colors">
-                Dashboard
-              </Link>
-              <Link href="/dashboard/investor/companies" className="text-sm font-medium text-[#6B7280] hover:text-[#0A1F44] transition-colors">
-                Browse
-              </Link>
-              <div className="w-10 h-10 rounded-full bg-[#10B981] flex items-center justify-center text-white text-sm font-semibold">
-                {userInitials}
-              </div>
-            </nav>
-          </div>
-        </div>
-      </header>
+      <InvestorHeader />
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back link + title */}
