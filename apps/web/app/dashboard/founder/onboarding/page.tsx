@@ -451,7 +451,7 @@ function validateStep(step: number, formData: FormData): string[] {
 
 // Helper: input border class based on error
 function inputClass(hasError: boolean) {
-  return `w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none ${
+  return `w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#10B981] focus:border-transparent outline-none ${
     hasError ? "border-red-400 bg-red-50" : "border-gray-300"
   }`;
 }
@@ -715,7 +715,7 @@ export default function CompanyOnboarding() {
         style={{ backgroundColor: "#F6F8FA" }}
       >
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-16 h-16 border-4 border-[#10B981] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-slate">Loading...</p>
         </div>
       </div>
@@ -767,13 +767,13 @@ export default function CompanyOnboarding() {
               <div key={step} className="flex-1 relative">
                 <div className="flex items-center">
                   <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm transition-colors ${index <= currentStep ? "bg-primary-950 text-white" : "bg-gray-200 text-gray-500"}`}
+                    className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm transition-colors ${index <= currentStep ? "bg-[#10B981] text-white" : "bg-gray-200 text-gray-500"}`}
                   >
                     {index + 1}
                   </div>
                   {index < STEPS.length - 1 && (
                     <div
-                      className={`flex-1 h-1 mx-2 transition-colors ${index < currentStep ? "bg-primary-950" : "bg-gray-200"}`}
+                      className={`flex-1 h-1 mx-2 transition-colors ${index < currentStep ? "bg-[#10B981]" : "bg-gray-200"}`}
                     />
                   )}
                 </div>
@@ -1627,7 +1627,7 @@ function Step5Capital({ formData, updateField, errors }: StepProps) {
               type="checkbox"
               checked={formData.hasRaisedBefore}
               onChange={(e) => updateField("hasRaisedBefore", e.target.checked)}
-              className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-2 focus:ring-primary-600"
+              className="w-5 h-5 text-[#10B981] border-gray-300 rounded focus:ring-2 focus:ring-[#10B981]"
             />
             <span className="text-sm font-semibold text-gray-900">
               We have raised capital before
@@ -1820,7 +1820,7 @@ function Step6Risks({ formData, updateField, errors }: StepProps) {
                 onChange={(e) =>
                   updateField("regulationDependent", e.target.checked)
                 }
-                className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-2 focus:ring-primary-600 mt-0.5"
+                className="w-5 h-5 text-[#10B981] border-gray-300 rounded focus:ring-2 focus:ring-[#10B981] mt-0.5"
               />
               <div className="flex-1">
                 <span className="text-sm font-semibold text-gray-900 block">
@@ -1838,7 +1838,7 @@ function Step6Risks({ formData, updateField, errors }: StepProps) {
                   updateField("regulatoryDependencies", e.target.value)
                 }
                 rows={2}
-                className="w-full mt-2 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+                className="w-full mt-2 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#10B981] focus:border-transparent outline-none"
                 placeholder="Explain your regulatory dependencies"
               />
             )}
@@ -1849,7 +1849,7 @@ function Step6Risks({ formData, updateField, errors }: StepProps) {
                 type="checkbox"
                 checked={formData.fxExposure}
                 onChange={(e) => updateField("fxExposure", e.target.checked)}
-                className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-2 focus:ring-primary-600 mt-0.5"
+                className="w-5 h-5 text-[#10B981] border-gray-300 rounded focus:ring-2 focus:ring-[#10B981] mt-0.5"
               />
               <div className="flex-1">
                 <span className="text-sm font-semibold text-gray-900 block">
@@ -1869,7 +1869,7 @@ function Step6Risks({ formData, updateField, errors }: StepProps) {
                 onChange={(e) =>
                   updateField("singleSupplier", e.target.checked)
                 }
-                className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-2 focus:ring-primary-600 mt-0.5"
+                className="w-5 h-5 text-[#10B981] border-gray-300 rounded focus:ring-2 focus:ring-[#10B981] mt-0.5"
               />
               <div className="flex-1">
                 <span className="text-sm font-semibold text-gray-900 block">
@@ -2092,7 +2092,7 @@ function Step8Legal({ formData, updateField, errors }: StepProps) {
             onChange={(e) =>
               updateField("acknowledgePlacement", e.target.checked)
             }
-            className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-2 focus:ring-primary-600 mt-1"
+            className="w-5 h-5 text-[#10B981] border-gray-300 rounded focus:ring-2 focus:ring-[#10B981] mt-1"
           />
           <div className="flex-1">
             <p className="text-sm font-semibold text-gray-900">
@@ -2114,7 +2114,7 @@ function Step8Legal({ formData, updateField, errors }: StepProps) {
             onChange={(e) =>
               updateField("acknowledgeNoSolicitation", e.target.checked)
             }
-            className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-2 focus:ring-primary-600 mt-1"
+            className="w-5 h-5 text-[#10B981] border-gray-300 rounded focus:ring-2 focus:ring-[#10B981] mt-1"
           />
           <div className="flex-1">
             <p className="text-sm font-semibold text-gray-900">
@@ -2136,7 +2136,7 @@ function Step8Legal({ formData, updateField, errors }: StepProps) {
             onChange={(e) =>
               updateField("acknowledgeAccuracy", e.target.checked)
             }
-            className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-2 focus:ring-primary-600 mt-1"
+            className="w-5 h-5 text-[#10B981] border-gray-300 rounded focus:ring-2 focus:ring-[#10B981] mt-1"
           />
           <div className="flex-1">
             <p className="text-sm font-semibold text-gray-900">
@@ -2156,7 +2156,7 @@ function Step8Legal({ formData, updateField, errors }: StepProps) {
             type="checkbox"
             checked={formData.acknowledgeEquity}
             onChange={(e) => updateField("acknowledgeEquity", e.target.checked)}
-            className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-2 focus:ring-primary-600 mt-1"
+            className="w-5 h-5 text-[#10B981] border-gray-300 rounded focus:ring-2 focus:ring-[#10B981] mt-1"
           />
           <div className="flex-1">
             <p className="text-sm font-semibold text-gray-900">
@@ -2178,7 +2178,7 @@ function Step8Legal({ formData, updateField, errors }: StepProps) {
             onChange={(e) =>
               updateField("acknowledgeNoGuarantee", e.target.checked)
             }
-            className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-2 focus:ring-primary-600 mt-1"
+            className="w-5 h-5 text-[#10B981] border-gray-300 rounded focus:ring-2 focus:ring-[#10B981] mt-1"
           />
           <div className="flex-1">
             <p className="text-sm font-semibold text-gray-900">
@@ -2286,7 +2286,7 @@ function Step9Participation({ formData, updateField, errors }: StepProps) {
             onChange={(e) =>
               updateField("participationAcknowledged", e.target.checked)
             }
-            className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-2 focus:ring-primary-600 mt-0.5"
+            className="w-5 h-5 text-[#10B981] border-gray-300 rounded focus:ring-2 focus:ring-[#10B981] mt-0.5"
           />
           <p className="text-sm text-gray-800 leading-relaxed">
             <strong>I acknowledge and agree</strong> to the Capvista Platform
