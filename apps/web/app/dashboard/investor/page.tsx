@@ -20,13 +20,10 @@ export default function InvestorDashboard() {
 
   if (loading) {
     return (
-      <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ backgroundColor: "#F6F8FA" }}
-      >
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate">Loading...</p>
+          <div className="w-16 h-16 border-4 border-[#10B981] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-500">Loading...</p>
         </div>
       </div>
     );
@@ -34,227 +31,91 @@ export default function InvestorDashboard() {
 
   if (!user) return null;
 
-  const userInitial = user.firstName?.charAt(0).toUpperCase() || "U";
+  const userInitials = `${user.firstName?.charAt(0) || ""}${user.lastName?.charAt(0) || ""}`.toUpperCase() || "U";
   const userFullName = `${user.firstName || ""} ${user.lastName || ""}`.trim();
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "#F6F8FA" }}>
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
-        <div className="container">
-          <div className="flex items-center justify-between py-4">
-            {/* Logo */}
-            <Link href="/" className="flex items-center space-x-2">
-              <div
-                className="h-9 w-9 rounded-lg flex items-center justify-center"
-                style={{ backgroundColor: "#C8A24D" }}
-              >
-                <span
-                  className="font-bold text-base"
-                  style={{ color: "#0B1C2D" }}
-                >
-                  CV
-                </span>
-              </div>
-              <span className="text-xl font-bold text-primary-950">
-                Capvista
-              </span>
+      <header className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            <Link href="/" className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#0A1F44] to-[#10B981]" />
+              <span className="text-xl font-semibold text-[#0A1F44]">Capvista</span>
             </Link>
+            <nav className="flex items-center gap-6">
+              <button
+                onClick={() => setActiveTab("overview")}
+                className={`text-sm font-medium transition-colors ${
+                  activeTab === "overview"
+                    ? "text-[#0A1F44]"
+                    : "text-gray-600 hover:text-[#0A1F44]"
+                }`}
+              >
+                Dashboard
+              </button>
+              <Link
+                href="/dashboard/investor/companies"
+                className="text-sm font-medium text-gray-600 hover:text-[#0A1F44] transition-colors"
+              >
+                Browse
+              </Link>
+              <button
+                onClick={() => setActiveTab("portfolio")}
+                className={`text-sm font-medium transition-colors ${
+                  activeTab === "portfolio"
+                    ? "text-[#0A1F44]"
+                    : "text-gray-600 hover:text-[#0A1F44]"
+                }`}
+              >
+                Portfolio
+              </button>
 
-            {/* Navigation & Profile - grouped together on the right */}
-            <div className="flex items-center gap-8">
-              <nav className="hidden md:flex items-center space-x-8">
-                {/* Explore Dropdown - FIRST */}
-                <div className="relative group">
-                  <button className="flex items-center gap-1 font-medium text-gray-600 hover:text-primary-950 transition-colors">
-                    Explore
-                    <svg
-                      className="w-4 h-4 group-hover:rotate-180 transition-transform"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
-                  </button>
-
-                  {/* Dropdown Menu - RIGHT ALIGNED */}
-                  <div className="absolute top-full right-0 mt-2 w-72 bg-white rounded-lg shadow-lg border border-gray-200 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                    <button
-                      onClick={() =>
-                        router.push("/dashboard/investor/companies")
-                      }
-                      className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-start gap-3"
-                    >
-                      <svg
-                        className="w-5 h-5 text-gray-600 mt-0.5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                        />
-                      </svg>
-                      <div>
-                        <p className="font-semibold text-gray-900">
-                          Browse Companies
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          Explore our curated list of private companies
-                        </p>
-                      </div>
-                    </button>
-
-                    <button
-                      onClick={() => setActiveTab("opportunities")}
-                      className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-start gap-3"
-                    >
-                      <svg
-                        className="w-5 h-5 text-gray-600 mt-0.5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                        />
-                      </svg>
-                      <div>
-                        <p className="font-semibold text-gray-900">
-                          Market Opportunities
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          Find active opportunities to invest in
-                        </p>
-                      </div>
-                    </button>
-
-                    <button
-                      onClick={() => setActiveTab("watchlist")}
-                      className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-start gap-3"
-                    >
-                      <svg
-                        className="w-5 h-5 text-gray-600 mt-0.5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
-                        />
-                      </svg>
-                      <div>
-                        <p className="font-semibold text-gray-900">Watchlist</p>
-                        <p className="text-sm text-gray-600">
-                          Track the private companies that matter to you
-                        </p>
-                      </div>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Dashboard - SECOND */}
-                <button
-                  onClick={() => setActiveTab("overview")}
-                  className={`font-medium transition-colors ${
-                    activeTab === "overview"
-                      ? "text-primary-950"
-                      : "text-gray-600 hover:text-primary-950"
-                  }`}
-                >
-                  Dashboard
-                </button>
-              </nav>
-
-              {/* Profile Button */}
+              {/* Profile avatar with dropdown */}
               <div className="relative group">
-                <div className="w-10 h-10 rounded-full bg-primary-950 text-white font-semibold flex items-center justify-center hover:bg-primary-900 transition-colors cursor-pointer">
-                  {userInitial}
+                <div className="w-10 h-10 rounded-full bg-[#10B981] flex items-center justify-center text-white text-sm font-semibold cursor-pointer">
+                  {userInitials}
                 </div>
-
-                {/* Profile Dropdown - appears on hover */}
-                <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                   <div className="px-4 py-3 border-b border-gray-200">
-                    <p className="font-semibold text-gray-900">
-                      {userFullName}
-                    </p>
-                    <p className="text-sm text-gray-600">Investor</p>
+                    <p className="font-semibold text-gray-900">{userFullName}</p>
+                    <p className="text-sm text-gray-500">Investor</p>
                   </div>
-
                   <button
-                    onClick={() => {
-                      // Navigate to profile page
-                    }}
+                    onClick={() => router.push("/dashboard/investor/complete-profile")}
                     className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3"
                   >
-                    <svg
-                      className="w-5 h-5 text-gray-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                      />
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
-                    <span className="font-medium text-gray-900">
-                      Manage Profile
-                    </span>
+                    <span className="text-sm text-gray-700">Manage Profile</span>
                   </button>
-
                   <button
                     onClick={signOut}
                     className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3"
                   >
-                    <svg
-                      className="w-5 h-5 text-gray-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                      />
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                     </svg>
-                    <span className="font-medium text-gray-900">Log Out</span>
+                    <span className="text-sm text-gray-700">Log Out</span>
                   </button>
                 </div>
               </div>
-            </div>
+            </nav>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="container py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {activeTab === "overview" && (
           <OverviewTab user={user} router={router} />
         )}
         {activeTab === "opportunities" && <OpportunitiesTab />}
         {activeTab === "watchlist" && <WatchlistTab />}
         {activeTab === "portfolio" && <PortfolioTab router={router} />}
-      </main>
+      </div>
     </div>
   );
 }
@@ -426,475 +287,406 @@ function OverviewTab({ user, router }: { user: any; router: any }) {
     if (accessToken) fetchInvestments();
   }, [accessToken]);
 
+  const stats = [
+    {
+      label: "Total Invested",
+      value: investmentsLoading ? "..." : formatCurrency(summary?.totalCommitted || 0),
+      subtitle: `Across ${summary?.investmentCount || 0} deal${summary?.investmentCount !== 1 ? "s" : ""}`,
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+      color: "text-[#10B981]",
+      bg: "bg-emerald-50",
+    },
+    {
+      label: "Active Commitments",
+      value: investmentsLoading ? "..." : String(summary?.activeCount || 0),
+      subtitle: summary?.activeCount ? "Active positions" : "No active positions",
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+        </svg>
+      ),
+      color: "text-blue-600",
+      bg: "bg-blue-50",
+    },
+    {
+      label: "Portfolio Companies",
+      value: investmentsLoading ? "..." : String(summary?.investmentCount || 0),
+      subtitle: "Unique companies",
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+        </svg>
+      ),
+      color: "text-[#0A1F44]",
+      bg: "bg-slate-50",
+    },
+    {
+      label: "Avg. Return",
+      value: investmentsLoading
+        ? "..."
+        : summary?.totalCurrentValue && summary.totalFunded
+          ? `${((summary.totalCurrentValue / summary.totalFunded - 1) * 100).toFixed(1)}%`
+          : "N/A",
+      subtitle: summary?.totalReturned ? formatCurrency(summary.totalReturned) + " returned" : "No returns yet",
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+      ),
+      color: "text-purple-600",
+      bg: "bg-purple-50",
+    },
+  ];
+
   return (
-    <div className="space-y-6">
-      {/* Welcome Section */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-        <h1 className="text-3xl font-bold text-primary-950 mb-2">
-          Welcome back, {user.firstName}{" "}
+    <div className="space-y-8">
+      {/* Welcome Banner — green gradient */}
+      <div className="bg-gradient-to-r from-[#10B981] to-[#059669] rounded-2xl p-8 text-white">
+        <h1 className="text-3xl font-bold mb-2">
+          Welcome back, {user.firstName}!
         </h1>
-        <p className="text-slate-light">Here's your investment overview</p>
+        <p className="text-emerald-100 text-lg">
+          Discover your next investment opportunity
+        </p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid md:grid-cols-3 gap-6">
-        {/* Total Committed */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
-              Total Committed
-            </h3>
-            <div
-              className="w-10 h-10 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: "rgba(200, 162, 77, 0.1)" }}
-            >
-              <svg
-                className="w-5 h-5"
-                style={{ color: "#C8A24D" }}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-          </div>
-          <p className="text-3xl font-bold text-primary-950 mb-1">
-            {investmentsLoading ? "..." : formatCurrency(summary?.totalCommitted || 0)}
-          </p>
-          <p className="text-sm text-gray-500">
-            Across {summary?.investmentCount || 0} deal{summary?.investmentCount !== 1 ? "s" : ""}
-          </p>
-        </div>
-
-        {/* Active Investments */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
-              Active Investments
-            </h3>
-            <div
-              className="w-10 h-10 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: "rgba(28, 140, 94, 0.1)" }}
-            >
-              <svg
-                className="w-5 h-5 text-emerald"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-                />
-              </svg>
-            </div>
-          </div>
-          <p className="text-3xl font-bold text-primary-950 mb-1">
-            {investmentsLoading ? "..." : summary?.activeCount || 0}
-          </p>
-          <p className="text-sm text-gray-500">
-            {summary?.activeCount ? "Active positions" : "No active positions"}
-          </p>
-        </div>
-
-        {/* Total Returns */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
-              Total Returns
-            </h3>
-            <div
-              className="w-10 h-10 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: "rgba(28, 140, 94, 0.1)" }}
-            >
-              <svg
-                className="w-5 h-5 text-emerald"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                />
-              </svg>
-            </div>
-          </div>
-          <p className="text-3xl font-bold text-primary-950 mb-1">
-            {investmentsLoading ? "..." : formatCurrency(summary?.totalReturned || 0)}
-          </p>
-          <p className="text-sm text-emerald">
-            {summary?.totalCurrentValue && summary.totalFunded
-              ? `${((summary.totalCurrentValue / summary.totalFunded - 1) * 100).toFixed(1)}% return`
-              : "+0% IRR"}
-          </p>
-        </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-        <h2 className="text-xl font-bold text-primary-950 mb-6">
-          Quick Actions
-        </h2>
-        <div className="grid md:grid-cols-2 gap-4">
-          <button
-            onClick={() => router.push("/dashboard/investor/companies")}
-            className="flex items-center gap-4 p-6 rounded-xl border-2 border-gray-200 hover:border-primary-900 transition-all group"
+      {/* Stats Grid — 4 columns */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {stats.map((stat) => (
+          <div
+            key={stat.label}
+            className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-shadow"
           >
-            <div
-              className="w-12 h-12 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: "rgba(200, 162, 77, 0.1)" }}
-            >
-              <svg
-                className="w-6 h-6"
-                style={{ color: "#C8A24D" }}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-sm font-medium text-gray-500">{stat.label}</span>
+              <div className={`w-10 h-10 rounded-lg ${stat.bg} flex items-center justify-center ${stat.color}`}>
+                {stat.icon}
+              </div>
             </div>
-            <div className="text-left">
-              <h3 className="font-semibold text-primary-950 group-hover:text-primary-900 transition-colors">
-                Browse Companies
-              </h3>
-              <p className="text-sm text-gray-600">
-                Explore verified opportunities
-              </p>
+            <p className="text-2xl font-bold text-[#0A1F44] mb-1">{stat.value}</p>
+            <p className="text-sm text-gray-500">{stat.subtitle}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Search Bar + Browse All */}
+      <div className="flex items-center gap-4">
+        <div className="flex-1 relative">
+          <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input
+            type="text"
+            placeholder="Search companies, deals, sectors..."
+            className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-transparent"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                router.push("/dashboard/investor/companies");
+              }
+            }}
+          />
+        </div>
+        <button
+          onClick={() => router.push("/dashboard/investor/companies")}
+          className="px-6 py-3 bg-[#0A1F44] text-white rounded-xl text-sm font-medium hover:bg-[#0A1F44]/90 transition-colors whitespace-nowrap"
+        >
+          Browse All
+        </button>
+      </div>
+
+      {/* Profile Status + Quick Actions */}
+      <div className="grid md:grid-cols-2 gap-6">
+        {/* Profile Status Card */}
+        {profileStatus === "loading" ? (
+          <div className="bg-white rounded-xl border border-gray-200 p-6 animate-pulse">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-lg bg-gray-100" />
+              <div className="flex-1">
+                <div className="h-4 w-32 bg-gray-100 rounded mb-2" />
+                <div className="h-3 w-48 bg-gray-100 rounded" />
+              </div>
+            </div>
+          </div>
+        ) : profileStatus === "incomplete" ? (
+          <button
+            onClick={() => router.push("/dashboard/investor/complete-profile")}
+            className="bg-amber-50 rounded-xl border-2 border-amber-200 p-6 hover:border-amber-300 transition-all group text-left"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-lg bg-amber-100 flex items-center justify-center shrink-0">
+                <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-semibold text-amber-900">Complete Your Profile</h3>
+                <p className="text-sm text-amber-700 mt-0.5">Required before you can invest</p>
+              </div>
             </div>
           </button>
-
-          {profileStatus === "loading" ? (
-            <div className="flex items-center gap-4 p-6 rounded-xl border-2 border-gray-200">
-              <div className="w-12 h-12 rounded-lg bg-gray-100 animate-pulse" />
+        ) : profileStatus === "PENDING" ? (
+          <div className="bg-blue-50 rounded-xl border-2 border-blue-200 p-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
+                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
               <div>
-                <div className="h-4 w-32 bg-gray-100 rounded animate-pulse mb-2" />
-                <div className="h-3 w-48 bg-gray-100 rounded animate-pulse" />
+                <h3 className="font-semibold text-blue-900">Profile Under Review</h3>
+                <p className="text-sm text-blue-700 mt-0.5">Your investor profile is being reviewed</p>
               </div>
             </div>
-          ) : profileStatus === "incomplete" ? (
-            <button
-              onClick={() =>
-                router.push("/dashboard/investor/complete-profile")
-              }
-              className="flex items-center gap-4 p-6 rounded-xl border-2 border-amber-300 bg-amber-50 hover:border-amber-400 transition-all group"
-            >
-              <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-amber-100">
-                <svg
-                  className="w-6 h-6 text-amber-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
-                  />
+          </div>
+        ) : profileStatus === "VERIFIED" ? (
+          <div className="bg-green-50 rounded-xl border-2 border-green-200 p-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center shrink-0">
+                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <div className="text-left">
-                <h3 className="font-semibold text-amber-900">
-                  Complete Profile
-                </h3>
-                <p className="text-sm text-amber-700">
-                  Required before you can invest
-                </p>
-              </div>
-            </button>
-          ) : profileStatus === "PENDING" ? (
-            <div className="flex items-center gap-4 p-6 rounded-xl border-2 border-blue-200 bg-blue-50">
-              <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-blue-100">
-                <svg
-                  className="w-6 h-6 text-blue-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <div className="text-left">
-                <h3 className="font-semibold text-blue-900">Profile Pending</h3>
-                <p className="text-sm text-blue-700">
-                  Your investor profile is being reviewed
-                </p>
+              <div>
+                <h3 className="font-semibold text-green-900">Profile Verified</h3>
+                <p className="text-sm text-green-700 mt-0.5">You're verified and ready to invest</p>
               </div>
             </div>
-          ) : profileStatus === "VERIFIED" ? (
-            <div className="flex items-center gap-4 p-6 rounded-xl border-2 border-green-200 bg-green-50">
-              <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-green-100">
-                <svg
-                  className="w-6 h-6 text-green-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
+          </div>
+        ) : profileStatus === "REJECTED" ? (
+          <div className="bg-red-50 rounded-xl border-2 border-red-200 p-6">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-lg bg-red-100 flex items-center justify-center shrink-0">
+                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <div className="text-left">
-                <h3 className="font-semibold text-green-900">
-                  Profile Verified
-                </h3>
-                <p className="text-sm text-green-700">
-                  You're verified and ready to invest
-                </p>
-              </div>
-            </div>
-          ) : profileStatus === "REJECTED" ? (
-            <div className="flex items-start gap-4 p-6 rounded-xl border-2 border-red-200 bg-red-50">
-              <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-red-100 shrink-0">
-                <svg
-                  className="w-6 h-6 text-red-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <div className="text-left">
-                <h3 className="font-semibold text-red-900">
-                  Profile Rejected
-                </h3>
+              <div>
+                <h3 className="font-semibold text-red-900">Profile Rejected</h3>
                 {adminReason && (
-                  <p className="text-sm text-red-700 mt-1">
-                    {adminReason}
-                  </p>
+                  <p className="text-sm text-red-700 mt-1">{adminReason}</p>
                 )}
               </div>
             </div>
-          ) : profileStatus === "INFO_REQUESTED" ? (
-            <button
-              onClick={() =>
-                router.push("/dashboard/investor/complete-profile")
-              }
-              className="flex items-start gap-4 p-6 rounded-xl border-2 border-orange-300 bg-orange-50 hover:border-orange-400 transition-all group text-left"
-            >
-              <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-orange-100 shrink-0">
-                <svg
-                  className="w-6 h-6 text-orange-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
+          </div>
+        ) : profileStatus === "INFO_REQUESTED" ? (
+          <button
+            onClick={() => router.push("/dashboard/investor/complete-profile")}
+            className="bg-orange-50 rounded-xl border-2 border-orange-200 p-6 hover:border-orange-300 transition-all group text-left"
+          >
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-lg bg-orange-100 flex items-center justify-center shrink-0">
+                <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-orange-900">
-                  Additional Information Required
-                </h3>
+                <h3 className="font-semibold text-orange-900">Additional Information Required</h3>
                 {adminReason && (
-                  <p className="text-sm text-orange-700 mt-1">
-                    {adminReason}
-                  </p>
+                  <p className="text-sm text-orange-700 mt-1">{adminReason}</p>
                 )}
                 <p className="text-sm text-orange-600 mt-2 font-medium group-hover:underline">
                   Update your profile &rarr;
                 </p>
               </div>
-            </button>
-          ) : null}
-        </div>
+            </div>
+          </button>
+        ) : null}
+
+        {/* Browse Companies Quick Action */}
+        <button
+          onClick={() => router.push("/dashboard/investor/companies")}
+          className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md hover:border-gray-300 transition-all group text-left"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
+              <svg className="w-6 h-6 text-[#10B981]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="font-semibold text-[#0A1F44] group-hover:text-[#10B981] transition-colors">Browse Companies</h3>
+              <p className="text-sm text-gray-500 mt-0.5">Explore verified opportunities</p>
+            </div>
+            <svg className="w-5 h-5 text-gray-400 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </button>
       </div>
 
-      {/* My Investments Section */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+      {/* Featured Deals / My Investments */}
+      <div>
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-primary-950">My Investments</h2>
+          <h2 className="text-xl font-bold text-[#0A1F44]">
+            {investments.length > 0 ? "Active Investments" : "Featured Deals"}
+          </h2>
           {investments.length > 0 && (
             <button
               onClick={() => router.push("/dashboard/investor/companies")}
-              className="text-sm font-medium transition-colors"
-              style={{ color: "#C8A24D" }}
+              className="text-sm font-medium text-[#10B981] hover:text-[#059669] transition-colors"
             >
-              Browse more deals
+              Browse more deals &rarr;
             </button>
           )}
         </div>
 
         {investmentsLoading ? (
-          <div className="space-y-4">
-            {[1, 2].map((i) => (
-              <div key={i} className="p-5 rounded-xl border border-gray-200 animate-pulse">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-lg bg-gray-100" />
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-white rounded-xl border border-gray-200 p-6 animate-pulse">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-lg bg-gray-100" />
                   <div className="flex-1">
-                    <div className="h-4 w-48 bg-gray-100 rounded mb-2" />
-                    <div className="h-3 w-32 bg-gray-100 rounded" />
+                    <div className="h-4 w-32 bg-gray-100 rounded mb-2" />
+                    <div className="h-3 w-20 bg-gray-100 rounded" />
                   </div>
-                  <div className="h-6 w-20 bg-gray-100 rounded-full" />
+                </div>
+                <div className="space-y-3">
+                  <div className="h-3 w-full bg-gray-100 rounded" />
+                  <div className="h-3 w-2/3 bg-gray-100 rounded" />
                 </div>
               </div>
             ))}
           </div>
         ) : investments.length === 0 ? (
-          <div className="text-center py-12">
-            <div
-              className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center"
-              style={{ backgroundColor: "rgba(107, 124, 147, 0.1)" }}
-            >
-              <svg
-                className="w-8 h-8 text-slate-light"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                />
+          /* Empty State — styled like Featured Deals placeholders */
+          <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center">
+            <div className="w-16 h-16 rounded-full bg-gray-100 mx-auto mb-4 flex items-center justify-center">
+              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-primary-950 mb-2">
-              No active investments
-            </h3>
-            <p className="text-gray-600 mb-6">
-              Browse companies to discover opportunities.
+            <h3 className="text-lg font-semibold text-[#0A1F44] mb-2">No active investments yet</h3>
+            <p className="text-gray-500 mb-6 max-w-sm mx-auto">
+              Browse companies to discover your next investment opportunity.
             </p>
             <Link
               href="/dashboard/investor/companies"
-              className="inline-block px-6 py-3 rounded-lg font-semibold transition-all"
-              style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-[#10B981] text-white rounded-xl text-sm font-medium hover:bg-[#059669] transition-colors"
             >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
               Browse Companies
             </Link>
           </div>
         ) : (
-          <div className="space-y-4">
+          /* Investment Cards — Figma card layout */
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {investments.map((inv) => {
               const status = statusConfig[inv.status] || statusConfig.INTERESTED;
               const companyName = inv.deal.company.tradingName || inv.deal.company.legalName;
               const laneLabel = laneLabels[inv.deal.lane] || inv.deal.lane;
               const instrumentLabel = instrumentLabels[inv.deal.instrumentType] || inv.deal.instrumentType;
+              const progress = inv.deal.targetAmount > 0
+                ? Math.min((inv.deal.raisedAmount / inv.deal.targetAmount) * 100, 100)
+                : 0;
 
               return (
                 <button
                   key={inv.id}
                   onClick={() => router.push(`/dashboard/investor/investments/${inv.id}`)}
-                  className="w-full text-left p-5 rounded-xl border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all group"
+                  className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg hover:border-gray-300 transition-all group text-left"
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    {/* Left: Company info */}
-                    <div className="flex items-start gap-4 min-w-0">
-                      {/* Company logo / initial */}
-                      <div
-                        className="w-12 h-12 rounded-lg flex items-center justify-center shrink-0 text-sm font-bold"
-                        style={{ backgroundColor: "rgba(200, 162, 77, 0.1)", color: "#C8A24D" }}
-                      >
-                        {inv.deal.company.logoUrl ? (
-                          <img
-                            src={inv.deal.company.logoUrl}
-                            alt={companyName}
-                            className="w-12 h-12 rounded-lg object-cover"
-                          />
-                        ) : (
-                          companyName.charAt(0).toUpperCase()
-                        )}
-                      </div>
-
-                      <div className="min-w-0">
-                        <h3 className="font-semibold text-primary-950 group-hover:text-primary-900 truncate">
-                          {inv.deal.name}
-                        </h3>
-                        <p className="text-sm text-gray-600 truncate">{companyName}</p>
-
-                        {/* Instrument type + Lane badge */}
-                        <div className="flex items-center gap-2 mt-2">
-                          <span className="text-xs text-gray-500">{instrumentLabel}</span>
-                          <span
-                            className="inline-block px-2 py-0.5 rounded text-xs font-medium"
-                            style={{
-                              backgroundColor: inv.deal.lane === "YIELD" ? "#EFF6FF" : "#F5F3FF",
-                              color: inv.deal.lane === "YIELD" ? "#1D4ED8" : "#7C3AED",
-                            }}
-                          >
-                            {laneLabel}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Right: Amount + Status */}
-                    <div className="text-right shrink-0">
-                      <p className="font-semibold text-primary-950">
-                        {formatCurrency(Number(inv.commitmentAmount))}
-                      </p>
-
-                      {/* Status badge */}
-                      <span
-                        className="inline-block px-2.5 py-1 rounded-full text-xs font-medium mt-1"
-                        style={{ backgroundColor: status.bg, color: status.text }}
-                      >
-                        {status.label}
-                      </span>
-
-                      {/* Status-specific details */}
-                      {inv.status === "PENDING_FUNDING" && (
-                        <div className="mt-2 text-xs text-gray-500 space-y-0.5">
-                          {inv.fundingReference && (
-                            <p>Ref: <span className="font-mono">{inv.fundingReference}</span></p>
-                          )}
-                          {inv.fundingDeadline && (
-                            <p>Due: {formatDate(inv.fundingDeadline)}</p>
-                          )}
-                        </div>
-                      )}
-
-                      {(inv.status === "FUNDED" || inv.status === "ACTIVE") && (
-                        <div className="mt-2 text-xs space-y-0.5">
-                          <p className="text-gray-500">
-                            Value: <span className="font-medium text-primary-950">{formatCurrency(Number(inv.currentValue))}</span>
-                          </p>
-                          {Number(inv.totalReturned) > 0 && (
-                            <p className="text-emerald">
-                              +{formatCurrency(Number(inv.totalReturned))} returned
-                            </p>
-                          )}
-                        </div>
+                  {/* Company header */}
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#0A1F44] to-[#10B981] flex items-center justify-center text-white text-sm font-bold shrink-0">
+                      {inv.deal.company.logoUrl ? (
+                        <img
+                          src={inv.deal.company.logoUrl}
+                          alt={companyName}
+                          className="w-10 h-10 rounded-lg object-cover"
+                        />
+                      ) : (
+                        companyName.charAt(0).toUpperCase()
                       )}
                     </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-semibold text-[#0A1F44] truncate group-hover:text-[#10B981] transition-colors">
+                        {companyName}
+                      </h3>
+                      <p className="text-xs text-gray-500 truncate">{inv.deal.name}</p>
+                    </div>
+                    <span
+                      className="inline-block px-2.5 py-1 rounded-full text-xs font-medium shrink-0"
+                      style={{ backgroundColor: status.bg, color: status.text }}
+                    >
+                      {status.label}
+                    </span>
+                  </div>
+
+                  {/* Tags */}
+                  <div className="flex items-center gap-2 mb-4">
+                    {inv.deal.company.sector && (
+                      <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">{inv.deal.company.sector}</span>
+                    )}
+                    <span
+                      className="px-2 py-1 rounded text-xs font-medium"
+                      style={{
+                        backgroundColor: inv.deal.lane === "YIELD" ? "#EFF6FF" : "#F5F3FF",
+                        color: inv.deal.lane === "YIELD" ? "#1D4ED8" : "#7C3AED",
+                      }}
+                    >
+                      {laneLabel}
+                    </span>
+                    <span className="px-2 py-1 bg-gray-100 text-gray-500 rounded text-xs">{instrumentLabel}</span>
+                  </div>
+
+                  {/* Metrics */}
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <p className="text-xs text-gray-500">Committed</p>
+                      <p className="text-sm font-semibold text-[#0A1F44]">{formatCurrency(Number(inv.commitmentAmount))}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">Current Value</p>
+                      <p className="text-sm font-semibold text-[#0A1F44]">{formatCurrency(Number(inv.currentValue))}</p>
+                    </div>
+                  </div>
+
+                  {/* Status-specific details */}
+                  {inv.status === "PENDING_FUNDING" && (
+                    <div className="text-xs text-gray-500 space-y-0.5 mb-4">
+                      {inv.fundingReference && (
+                        <p>Ref: <span className="font-mono">{inv.fundingReference}</span></p>
+                      )}
+                      {inv.fundingDeadline && (
+                        <p>Due: {formatDate(inv.fundingDeadline)}</p>
+                      )}
+                    </div>
+                  )}
+
+                  {(inv.status === "FUNDED" || inv.status === "ACTIVE") && Number(inv.totalReturned) > 0 && (
+                    <p className="text-xs text-[#10B981] font-medium mb-4">
+                      +{formatCurrency(Number(inv.totalReturned))} returned
+                    </p>
+                  )}
+
+                  {/* Deal progress bar */}
+                  {inv.deal.targetAmount > 0 && (
+                    <div>
+                      <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
+                        <span>{formatCurrency(inv.deal.raisedAmount)} raised</span>
+                        <span>{formatCurrency(inv.deal.targetAmount)} target</span>
+                      </div>
+                      <div className="w-full bg-gray-100 rounded-full h-1.5">
+                        <div
+                          className="bg-[#10B981] h-1.5 rounded-full transition-all"
+                          style={{ width: `${progress}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* View Details link */}
+                  <div className="mt-4 pt-4 border-t border-gray-100">
+                    <span className="text-sm font-medium text-[#10B981] group-hover:text-[#059669] transition-colors">
+                      View Details &rarr;
+                    </span>
                   </div>
                 </button>
               );
@@ -902,6 +694,23 @@ function OverviewTab({ user, router }: { user: any; router: any }) {
           </div>
         )}
       </div>
+
+      {/* Active Investments Empty State (bottom section) */}
+      {!investmentsLoading && investments.length === 0 && (
+        <div className="bg-white rounded-2xl border border-gray-200 p-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-[#0A1F44]">Active Investments</h2>
+          </div>
+          <div className="text-center py-8">
+            <div className="w-12 h-12 rounded-full bg-gray-100 mx-auto mb-3 flex items-center justify-center">
+              <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </div>
+            <p className="text-gray-500 text-sm">Your active investments will appear here once you commit to a deal.</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -910,37 +719,24 @@ function OverviewTab({ user, router }: { user: any; router: any }) {
 function OpportunitiesTab() {
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-        <h2 className="text-2xl font-bold text-primary-950 mb-4">
+      <div className="bg-white rounded-2xl border border-gray-200 p-8">
+        <h2 className="text-2xl font-bold text-[#0A1F44] mb-2">
           Market Opportunities
         </h2>
-        <p className="text-slate-light mb-8">
+        <p className="text-gray-500 mb-8">
           Find active opportunities to invest in
         </p>
 
         <div className="text-center py-12">
-          <div
-            className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center"
-            style={{ backgroundColor: "rgba(107, 124, 147, 0.1)" }}
-          >
-            <svg
-              className="w-8 h-8 text-slate-light"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-              />
+          <div className="w-16 h-16 rounded-full bg-gray-100 mx-auto mb-4 flex items-center justify-center">
+            <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
           </div>
-          <h3 className="text-lg font-semibold text-primary-950 mb-2">
+          <h3 className="text-lg font-semibold text-[#0A1F44] mb-2">
             No Live Opportunities
           </h3>
-          <p className="text-gray-600">
+          <p className="text-gray-500">
             Active investment opportunities will appear here
           </p>
         </div>
@@ -953,37 +749,24 @@ function OpportunitiesTab() {
 function WatchlistTab() {
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-        <h2 className="text-2xl font-bold text-primary-950 mb-4">
+      <div className="bg-white rounded-2xl border border-gray-200 p-8">
+        <h2 className="text-2xl font-bold text-[#0A1F44] mb-2">
           Your Watchlist
         </h2>
-        <p className="text-slate-light mb-8">
+        <p className="text-gray-500 mb-8">
           Track the private companies that matter to you
         </p>
 
         <div className="text-center py-12">
-          <div
-            className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center"
-            style={{ backgroundColor: "rgba(107, 124, 147, 0.1)" }}
-          >
-            <svg
-              className="w-8 h-8 text-slate-light"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
-              />
+          <div className="w-16 h-16 rounded-full bg-gray-100 mx-auto mb-4 flex items-center justify-center">
+            <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
             </svg>
           </div>
-          <h3 className="text-lg font-semibold text-primary-950 mb-2">
+          <h3 className="text-lg font-semibold text-[#0A1F44] mb-2">
             No Companies Saved
           </h3>
-          <p className="text-gray-600">
+          <p className="text-gray-500">
             Companies you're interested in will appear here
           </p>
         </div>
@@ -996,47 +779,29 @@ function WatchlistTab() {
 function PortfolioTab({ router }: { router: any }) {
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-        <h2 className="text-2xl font-bold text-primary-950 mb-4">
+      <div className="bg-white rounded-2xl border border-gray-200 p-8">
+        <h2 className="text-2xl font-bold text-[#0A1F44] mb-2">
           Your Portfolio
         </h2>
-        <p className="text-slate-light mb-8">
+        <p className="text-gray-500 mb-8">
           Track your investments and returns
         </p>
 
-        {/* Empty State */}
         <div className="text-center py-12">
-          <div
-            className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center"
-            style={{ backgroundColor: "rgba(107, 124, 147, 0.1)" }}
-          >
-            <svg
-              className="w-8 h-8 text-slate-light"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-              />
+          <div className="w-16 h-16 rounded-full bg-gray-100 mx-auto mb-4 flex items-center justify-center">
+            <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
           </div>
-          <h3 className="text-lg font-semibold text-primary-950 mb-2">
+          <h3 className="text-lg font-semibold text-[#0A1F44] mb-2">
             No Investments Yet
           </h3>
-          <p className="text-gray-600 mb-6">
+          <p className="text-gray-500 mb-6">
             Start investing to build your portfolio
           </p>
           <button
             onClick={() => router.push("/dashboard/investor/companies")}
-            className="inline-block px-6 py-3 rounded-lg font-semibold transition-all"
-            style={{
-              backgroundColor: "#C8A24D",
-              color: "#0B1C2D",
-            }}
+            className="inline-flex items-center gap-2 px-6 py-3 bg-[#10B981] text-white rounded-xl text-sm font-medium hover:bg-[#059669] transition-colors"
           >
             Browse Companies
           </button>
