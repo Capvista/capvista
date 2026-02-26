@@ -736,7 +736,7 @@ export default function CompanyOnboarding() {
               className="flex items-center space-x-2"
             >
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#0A1F44] to-[#10B981]" />
-              <span className="text-xl text-[#0A1F44]">
+              <span className="text-xl font-semibold text-[#0A1F44]">
                 Capvista
               </span>
             </Link>

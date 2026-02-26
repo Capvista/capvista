@@ -47,7 +47,7 @@ function LoginForm() {
           <div>
             <Link href="/" className="flex items-center gap-2 mb-8">
               <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#0A1F44] to-[#10B981]" />
-              <span className="text-2xl text-[#0A1F44]">Capvista</span>
+              <span className="text-2xl font-semibold text-[#0A1F44]">Capvista</span>
             </Link>
             <h1 className="text-3xl text-[#0A1F44] mb-2">Welcome back</h1>
             <p className="text-gray-600">Sign in to your account to continue</p>

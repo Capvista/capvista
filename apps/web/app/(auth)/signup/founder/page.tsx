@@ -64,7 +64,7 @@ export default function FounderSignupPage() {
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 mb-8">
           <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#0A1F44] to-[#10B981]" />
-          <span className="text-2xl text-[#0A1F44]">Capvista</span>
+          <span className="text-2xl font-semibold text-[#0A1F44]">Capvista</span>
         </Link>
 
         {/* Header */}

@@ -34,15 +34,8 @@ export default function LandingNav() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
         {/* Left: Logo */}
         <Link href="/" className="flex items-center space-x-2">
-          <div
-            className="h-8 w-8 rounded-lg flex items-center justify-center"
-            style={{
-              background: "linear-gradient(135deg, #10B981 0%, #0A1F44 100%)",
-            }}
-          >
-            <span className="font-bold text-xs text-white">CV</span>
-          </div>
-          <span className="text-xl font-bold" style={{ color: "#0A1F44" }}>
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#0A1F44] to-[#10B981]" />
+          <span className="text-xl font-semibold text-[#0A1F44]">
             Capvista
           </span>
         </Link>

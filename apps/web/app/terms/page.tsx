@@ -7,18 +7,8 @@ export default function TermsPage() {
       <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/95 backdrop-blur-md">
         <div className="container flex items-center justify-between py-4">
           <Link href="/" className="flex items-center space-x-2">
-            <div
-              className="h-9 w-9 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: "#C8A24D" }}
-            >
-              <span
-                className="font-bold text-base"
-                style={{ color: "#0B1C2D" }}
-              >
-                CV
-              </span>
-            </div>
-            <span className="text-xl font-bold" style={{ color: "#0B1C2D" }}>
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#0A1F44] to-[#10B981]" />
+            <span className="text-xl font-semibold text-[#0A1F44]">
               Capvista
             </span>
           </Link>
@@ -86,18 +76,8 @@ export default function TermsPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-14">
             <div className="col-span-2 md:col-span-1">
               <div className="flex items-center space-x-2 mb-5">
-                <div
-                  className="h-9 w-9 rounded-lg flex items-center justify-center"
-                  style={{ backgroundColor: "#C8A24D" }}
-                >
-                  <span
-                    className="font-bold text-sm"
-                    style={{ color: "#0B1C2D" }}
-                  >
-                    CV
-                  </span>
-                </div>
-                <span className="text-lg font-bold text-white tracking-tight">
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#0A1F44] to-[#10B981]" />
+                <span className="text-lg font-semibold text-white tracking-tight">
                   Capvista
                 </span>
               </div>
