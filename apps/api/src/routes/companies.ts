@@ -335,6 +335,9 @@ router.get("/:id", async (req: Request, res: Response) => {
             },
           },
         },
+        teamMembers: {
+          orderBy: { sortOrder: "asc" },
+        },
         deals: {
           select: {
             id: true,

@@ -15,6 +15,7 @@ import adminRoutes from "./routes/admin";
 import dealsRoutes from "./routes/deals";
 import investmentsRoutes from "./routes/investments";
 import watchlistRoutes from "./routes/watchlist";
+import companyManageRoutes from "./routes/company-manage";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -76,6 +77,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/deals", dealsRoutes);
 app.use("/api/investments", investmentsRoutes);
 app.use("/api/watchlist", watchlistRoutes);
+app.use("/api/companies", companyManageRoutes);
 
 // Error handling middleware
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {

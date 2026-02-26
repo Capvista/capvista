@@ -315,6 +315,7 @@ model Company {
   issuanceDocsReviewedBy              String?   // Admin user ID
 
   founders            CompanyFounder[]
+  teamMembers         TeamMember[]
   verificationRecords VerificationRecord[]
   deals               Deal[]
   monitoringStatuses  MonitoringStatus[]
@@ -347,6 +348,28 @@ model CompanyFounder {
   @@unique([companyId, founderId])
   @@index([companyId])
   @@index([founderId])
+}
+
+// ============================================================================
+// TEAM MEMBERS
+// ============================================================================
+
+model TeamMember {
+  id          String   @id @default(cuid())
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  fullName    String
+  role        String
+  bio         String?  @db.Text
+  linkedinUrl String?
+  photoUrl    String?
+  email       String?
+  equityPercent Float?
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([companyId])
 }
 
 // ============================================================================

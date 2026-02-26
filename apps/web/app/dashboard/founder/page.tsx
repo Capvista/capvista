@@ -21,6 +21,7 @@ import {
   AlertTriangle,
   ShieldCheck,
   Upload,
+  Settings,
 } from "lucide-react";
 
 const supabase = createClient(
@@ -260,7 +261,7 @@ export default function FounderDashboard() {
                 Dashboard
               </Link>
               <Link
-                href="/dashboard/founder/onboarding"
+                href={companies.length > 0 ? "/dashboard/founder/company/manage" : "/dashboard/founder/onboarding"}
                 className="text-gray-600 hover:text-[#0A1F44] transition-colors"
               >
                 Company
@@ -714,6 +715,15 @@ function CompanyCard({
 
           {/* Action Buttons */}
           <div className="flex flex-col items-end gap-2 flex-shrink-0">
+            {company.approvalStatus !== "REJECTED" && (
+              <Link
+                href="/dashboard/founder/company/manage"
+                className="px-4 py-2 border border-gray-300 text-[#0A1F44] hover:bg-gray-50 rounded-lg transition-colors flex items-center gap-2 text-sm font-semibold"
+              >
+                <Settings className="w-4 h-4" />
+                <span>Manage Company</span>
+              </Link>
+            )}
             {company.approvalStatus === "APPROVED" && (
               <>
                 <Link
