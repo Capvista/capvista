@@ -28,7 +28,7 @@ export default function AboutPage() {
             <Link
               href="/signup"
               className="inline-block px-6 py-2.5 rounded-lg font-semibold text-sm transition-all hover:opacity-90"
-              style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
+              style={{ backgroundColor: "#0A1F44", color: "#FFFFFF" }}
             >
               Sign Up
             </Link>
@@ -43,7 +43,7 @@ export default function AboutPage() {
             <Link
               href="/signup"
               className="inline-block px-5 py-2 rounded-lg font-semibold text-sm transition-all hover:opacity-90"
-              style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
+              style={{ backgroundColor: "#0A1F44", color: "#FFFFFF" }}
             >
               Sign Up
             </Link>

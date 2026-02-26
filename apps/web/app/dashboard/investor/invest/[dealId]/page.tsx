@@ -420,7 +420,7 @@ export default function InvestCommitmentFlow() {
           <button
             onClick={() => router.back()}
             className="px-6 py-3 rounded-lg font-semibold text-sm"
-            style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
+            style={{ backgroundColor: "#0A1F44", color: "#FFFFFF" }}
           >
             Go Back
           </button>
@@ -603,7 +603,7 @@ function PageHeader() {
           >
             <div
               className="h-9 w-9 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: "#C8A24D" }}
+              style={{ backgroundColor: "#0A1F44" }}
             >
               <span
                 className="font-bold text-base"
@@ -1727,7 +1727,7 @@ function Step4Confirmation({
         <button
           onClick={() => router.push("/dashboard/investor")}
           className="px-6 py-3 rounded-lg text-sm font-semibold transition-all hover:opacity-90"
-          style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
+          style={{ backgroundColor: "#0A1F44", color: "#FFFFFF" }}
         >
           View My Investments
         </button>

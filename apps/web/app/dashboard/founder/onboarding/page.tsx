@@ -863,7 +863,7 @@ export default function CompanyOnboarding() {
             <button
               onClick={prevStep}
               disabled={currentStep === 0}
-              className="px-6 py-3 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed border-2 border-gray-300 text-gray-700 hover:border-gray-400"
+              className="px-8 py-3 border border-gray-300 text-[#0A1F44] hover:bg-gray-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Previous
             </button>
@@ -871,16 +871,14 @@ export default function CompanyOnboarding() {
             {currentStep < STEPS.length - 1 ? (
               <button
                 onClick={nextStep}
-                className="px-6 py-3 rounded-lg font-semibold transition-all"
-                style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
+                className="px-8 py-3 bg-[#0A1F44] hover:bg-[#1A3A6B] text-white rounded-lg transition-colors"
               >
                 Next Step
               </button>
             ) : (
               <button
                 onClick={handleSubmit}
-                className="px-6 py-3 rounded-lg font-semibold transition-all"
-                style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
+                className="px-8 py-3 bg-[#0A1F44] hover:bg-[#1A3A6B] text-white rounded-lg transition-colors"
               >
                 Submit Company
               </button>

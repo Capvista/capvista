@@ -933,7 +933,7 @@ export default function CompleteInvestorProfile() {
             >
               <div
                 className="h-9 w-9 rounded-lg flex items-center justify-center"
-                style={{ backgroundColor: "#C8A24D" }}
+                style={{ backgroundColor: "#0A1F44" }}
               >
                 <span
                   className="font-bold text-base"
@@ -1050,7 +1050,7 @@ export default function CompleteInvestorProfile() {
               <button
                 onClick={nextStep}
                 className="px-6 py-3 rounded-lg font-semibold transition-all"
-                style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
+                style={{ backgroundColor: "#0A1F44", color: "#FFFFFF" }}
               >
                 Next Step
               </button>
@@ -1059,7 +1059,7 @@ export default function CompleteInvestorProfile() {
                 onClick={handleSubmit}
                 disabled={submitting}
                 className="px-6 py-3 rounded-lg font-semibold transition-all disabled:opacity-50"
-                style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
+                style={{ backgroundColor: "#0A1F44", color: "#FFFFFF" }}
               >
                 {submitting ? "Submitting..." : "Complete Profile"}
               </button>

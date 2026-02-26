@@ -28,9 +28,9 @@ const config: Config = {
           light: "#6B7C93",
         },
         gold: {
-          DEFAULT: "#C8A24D",
-          light: "#D4B66A",
-          dark: "#B38F3A",
+          DEFAULT: "#0A1F44",
+          light: "#1A3A6B",
+          dark: "#071530",
         },
         emerald: {
           DEFAULT: "#1C8C5E",
@@ -38,7 +38,7 @@ const config: Config = {
           dark: "#156B47",
         },
         verified: "#1C8C5E",
-        watch: "#C8A24D",
+        watch: "#0A1F44",
         intervention: "#DC2626",
       },
       fontFamily: {

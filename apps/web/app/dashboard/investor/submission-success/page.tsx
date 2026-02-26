@@ -73,7 +73,7 @@ export default function InvestorSubmissionSuccess() {
             <div className="flex items-start gap-3">
               <div
                 className="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold text-white mt-0.5"
-                style={{ backgroundColor: "#C8A24D" }}
+                style={{ backgroundColor: "#0A1F44" }}
               >
                 1
               </div>
@@ -86,7 +86,7 @@ export default function InvestorSubmissionSuccess() {
             <div className="flex items-start gap-3">
               <div
                 className="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold text-white mt-0.5"
-                style={{ backgroundColor: "#C8A24D" }}
+                style={{ backgroundColor: "#0A1F44" }}
               >
                 2
               </div>
@@ -106,7 +106,7 @@ export default function InvestorSubmissionSuccess() {
           <Link
             href="/dashboard/investor"
             className="inline-flex items-center gap-2 px-8 py-3 rounded-lg font-semibold transition-all text-lg"
-            style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
+            style={{ backgroundColor: "#0A1F44", color: "#FFFFFF" }}
           >
             Go to Profile
             <svg

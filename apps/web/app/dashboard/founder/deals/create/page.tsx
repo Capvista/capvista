@@ -1142,7 +1142,7 @@ function CreateDealContent() {
               <Link
                 href="/dashboard/founder"
                 className="inline-block px-6 py-3 rounded-lg font-semibold transition-all"
-                style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
+                style={{ backgroundColor: "#0A1F44", color: "#FFFFFF" }}
               >
                 Back to Dashboard
               </Link>
@@ -1220,7 +1220,7 @@ function CreateDealContent() {
                   <button
                     onClick={nextStep}
                     className="px-6 py-3 rounded-lg font-semibold transition-all"
-                    style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
+                    style={{ backgroundColor: "#0A1F44", color: "#FFFFFF" }}
                   >
                     Next Step
                   </button>
@@ -1229,7 +1229,7 @@ function CreateDealContent() {
                     onClick={handleSubmit}
                     disabled={submitting || savingDraft}
                     className="px-6 py-3 rounded-lg font-semibold transition-all disabled:opacity-50"
-                    style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
+                    style={{ backgroundColor: "#0A1F44", color: "#FFFFFF" }}
                   >
                     {submitting ? "Submitting..." : "Submit for Review"}
                   </button>
@@ -3140,7 +3140,7 @@ function Step6DocumentsReview({
           <div className="flex items-start gap-3">
             <svg
               className="w-5 h-5 mt-0.5 flex-shrink-0"
-              style={{ color: "#C8A24D" }}
+              style={{ color: "#0A1F44" }}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"

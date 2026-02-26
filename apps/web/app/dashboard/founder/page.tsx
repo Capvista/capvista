@@ -817,7 +817,7 @@ function CompanyCard({
                 <button
                   onClick={() => setShowSignModal(true)}
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all hover:opacity-90"
-                  style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
+                  style={{ backgroundColor: "#0A1F44", color: "#FFFFFF" }}
                 >
                   Sign Agreement
                 </button>
@@ -983,7 +983,7 @@ function CompanyCard({
                     !docFiles.capTable
                   }
                   className="w-full mt-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
+                  style={{ backgroundColor: "#0A1F44", color: "#FFFFFF" }}
                 >
                   {uploadingDocs ? "Uploading..." : "Submit Documents"}
                 </button>
@@ -1249,7 +1249,7 @@ function CompanyCard({
                   signingLoading || !signingName.trim() || !signingConfirmed
                 }
                 className="px-5 py-2.5 rounded-lg text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
+                style={{ backgroundColor: "#0A1F44", color: "#FFFFFF" }}
               >
                 {signingLoading ? "Executing..." : "Execute Agreement"}
               </button>

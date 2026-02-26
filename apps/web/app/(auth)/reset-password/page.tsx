@@ -68,7 +68,7 @@ function ResetPasswordForm() {
             <Link href="/" className="inline-flex items-center space-x-2">
               <div
                 className="h-12 w-12 rounded-lg flex items-center justify-center"
-                style={{ backgroundColor: "#C8A24D" }}
+                style={{ backgroundColor: "#0A1F44" }}
               >
                 <span
                   className="font-bold text-xl"
@@ -93,7 +93,7 @@ function ResetPasswordForm() {
             <Link
               href="/forgot-password"
               className="inline-block py-3 px-6 rounded-lg font-semibold transition-all"
-              style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
+              style={{ backgroundColor: "#0A1F44", color: "#FFFFFF" }}
             >
               Request New Reset
             </Link>
@@ -114,7 +114,7 @@ function ResetPasswordForm() {
           <Link href="/" className="inline-flex items-center space-x-2">
             <div
               className="h-12 w-12 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: "#C8A24D" }}
+              style={{ backgroundColor: "#0A1F44" }}
             >
               <span className="font-bold text-xl" style={{ color: "#0B1C2D" }}>
                 CV
@@ -145,7 +145,7 @@ function ResetPasswordForm() {
               <Link
                 href="/login"
                 className="block w-full py-3 px-4 rounded-lg font-semibold text-lg text-center transition-all"
-                style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
+                style={{ backgroundColor: "#0A1F44", color: "#FFFFFF" }}
               >
                 Sign In Now
               </Link>
@@ -200,7 +200,7 @@ function ResetPasswordForm() {
                 type="submit"
                 disabled={loading}
                 className="w-full py-3 px-4 rounded-lg font-semibold text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
+                style={{ backgroundColor: "#0A1F44", color: "#FFFFFF" }}
               >
                 {loading ? "Resetting..." : "Reset Password"}
               </button>

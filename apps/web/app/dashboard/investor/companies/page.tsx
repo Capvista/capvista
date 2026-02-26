@@ -447,7 +447,7 @@ export default function BrowseCompanies() {
             <Link href="/" className="flex items-center space-x-2">
               <div
                 className="h-9 w-9 rounded-lg flex items-center justify-center"
-                style={{ backgroundColor: "#C8A24D" }}
+                style={{ backgroundColor: "#0A1F44" }}
               >
                 <span
                   className="font-bold text-base"
@@ -546,7 +546,7 @@ export default function BrowseCompanies() {
                   <Link
                     href="/signup"
                     className="inline-block px-6 py-2.5 rounded-lg font-semibold text-sm transition-all hover:opacity-90"
-                    style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
+                    style={{ backgroundColor: "#0A1F44", color: "#FFFFFF" }}
                   >
                     Sign Up
                   </Link>
@@ -556,7 +556,7 @@ export default function BrowseCompanies() {
                   <Link
                     href="/signup"
                     className="inline-block px-5 py-2 rounded-lg font-semibold text-sm transition-all hover:opacity-90"
-                    style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
+                    style={{ backgroundColor: "#0A1F44", color: "#FFFFFF" }}
                   >
                     Sign Up
                   </Link>
@@ -572,9 +572,9 @@ export default function BrowseCompanies() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: "rgba(200, 162, 77, 0.15)" }}>
-              <TrendingUp className="w-5 h-5" style={{ color: "#C8A24D" }} />
+              <TrendingUp className="w-5 h-5" style={{ color: "#0A1F44" }} />
             </div>
-            <span className="text-sm font-medium tracking-wide uppercase" style={{ color: "#C8A24D" }}>
+            <span className="text-sm font-medium tracking-wide uppercase" style={{ color: "#0A1F44" }}>
               Investment Opportunities
             </span>
           </div>
@@ -710,7 +710,7 @@ export default function BrowseCompanies() {
             <button
               onClick={fetchCompanies}
               className="px-6 py-2.5 rounded-lg font-semibold text-sm transition-all hover:opacity-90"
-              style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
+              style={{ backgroundColor: "#0A1F44", color: "#FFFFFF" }}
             >
               Try Again
             </button>

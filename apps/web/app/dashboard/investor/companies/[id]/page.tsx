@@ -306,7 +306,7 @@ export default function CompanyDetailPage() {
               >
                 <div
                   className="h-9 w-9 rounded-lg flex items-center justify-center"
-                  style={{ backgroundColor: "#C8A24D" }}
+                  style={{ backgroundColor: "#0A1F44" }}
                 >
                   <span
                     className="font-bold text-base"
@@ -347,7 +347,7 @@ export default function CompanyDetailPage() {
           <Link
             href="/dashboard/investor/companies"
             className="px-6 py-3 rounded-lg font-semibold transition-all"
-            style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
+            style={{ backgroundColor: "#0A1F44", color: "#FFFFFF" }}
           >
             Browse Companies
           </Link>
@@ -388,7 +388,7 @@ export default function CompanyDetailPage() {
             >
               <div
                 className="h-9 w-9 rounded-lg flex items-center justify-center"
-                style={{ backgroundColor: "#C8A24D" }}
+                style={{ backgroundColor: "#0A1F44" }}
               >
                 <span
                   className="font-bold text-base"
@@ -507,7 +507,7 @@ export default function CompanyDetailPage() {
               {liveDeals.length > 0 && (
                 <button
                   className="px-5 py-2.5 rounded-lg text-sm font-semibold transition-all"
-                  style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
+                  style={{ backgroundColor: "#0A1F44", color: "#FFFFFF" }}
                   onClick={() => setActiveTab("deals")}
                 >
                   View Deals
@@ -749,7 +749,7 @@ function OverviewTab({ company, liveDeals, onViewDeals }: { company: Company; li
               <button
                 onClick={onViewDeals}
                 className="px-4 py-2 text-xs font-semibold rounded-lg transition-all hover:opacity-90"
-                style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
+                style={{ backgroundColor: "#0A1F44", color: "#FFFFFF" }}
               >
                 View Deal →
               </button>
@@ -1365,7 +1365,7 @@ function DealsTab({
                     <button
                       onClick={() => handleExpressInterest(deal.id)}
                       className="w-full py-3 rounded-lg text-sm font-semibold transition-all hover:opacity-90"
-                      style={{ backgroundColor: "#C8A24D", color: "#0B1C2D" }}
+                      style={{ backgroundColor: "#0A1F44", color: "#FFFFFF" }}
                     >
                       Express Interest
                     </button>
