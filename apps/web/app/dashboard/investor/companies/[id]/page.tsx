@@ -271,8 +271,47 @@ export default function CompanyDetailPage() {
   }, [user, loading, router]);
 
   useEffect(() => {
-    if (user && companyId) fetchCompany();
+    if (user && companyId) {
+      fetchCompany();
+      fetchWatchlistStatus();
+    }
   }, [user, companyId]);
+
+  const fetchWatchlistStatus = async () => {
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL;
+      const token = localStorage.getItem("capvista_token");
+      if (!token) return;
+      const response = await fetch(`${API_URL}/api/watchlist`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const result = await response.json();
+      if (result.success) {
+        setIsWatchlisted(result.data.includes(companyId));
+      }
+    } catch {
+      // silently fail
+    }
+  };
+
+  const toggleWatchlist = async () => {
+    const prev = isWatchlisted;
+    setIsWatchlisted(!prev);
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL;
+      const token = localStorage.getItem("capvista_token");
+      if (!token) return;
+      const response = await fetch(`${API_URL}/api/watchlist/${companyId}`, {
+        method: prev ? "DELETE" : "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) {
+        setIsWatchlisted(prev);
+      }
+    } catch {
+      setIsWatchlisted(prev);
+    }
+  };
 
   const fetchCompany = async () => {
     try {
@@ -468,8 +507,8 @@ export default function CompanyDetailPage() {
                 </button>
               )}
               <button
-                onClick={() => setIsWatchlisted(!isWatchlisted)}
-                className="w-10 h-10 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center transition-all hover:bg-white/20"
+                onClick={toggleWatchlist}
+                className="w-10 h-10 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center transition-all hover:bg-white/20 transition-transform active:scale-90"
               >
                 <Star
                   className={`w-5 h-5 ${isWatchlisted ? "fill-[#C8A24D] text-[#C8A24D]" : "text-white"}`}

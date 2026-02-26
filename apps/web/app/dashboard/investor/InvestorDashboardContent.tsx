@@ -10,9 +10,11 @@ export default function InvestorDashboardContent() {
   const { user, loading, signOut } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState<"overview" | "opportunities" | "watchlist" | "portfolio">(
-    (searchParams.get("tab") as any) === "portfolio" ? "portfolio" : "overview",
-  );
+  const [activeTab, setActiveTab] = useState<"overview" | "opportunities" | "watchlist" | "portfolio">(() => {
+    const tab = searchParams.get("tab");
+    if (tab === "portfolio" || tab === "watchlist") return tab;
+    return "overview";
+  });
 
   useEffect(() => {
     if (!loading && !user) {
@@ -678,6 +680,65 @@ function OpportunitiesTab() {
 
 // Watchlist Tab
 function WatchlistTab() {
+  const { accessToken } = useAuth();
+  const router = useRouter();
+  const [companies, setCompanies] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchWatchlist = async () => {
+      try {
+        // 1. Get watchlisted company IDs
+        const watchlistRes = await fetch(`${API_URL}/api/watchlist`, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        const watchlistResult = await watchlistRes.json();
+        if (!watchlistResult.success || !watchlistResult.data?.length) {
+          setCompanies([]);
+          return;
+        }
+        const watchlistedIds: string[] = watchlistResult.data;
+
+        // 2. Get all companies and filter to watchlisted ones
+        const companiesRes = await fetch(`${API_URL}/api/companies`);
+        const companiesResult = await companiesRes.json();
+        if (companiesResult.success) {
+          const idSet = new Set(watchlistedIds);
+          setCompanies(companiesResult.data.filter((c: any) => idSet.has(c.id)));
+        }
+      } catch {
+        // silently fail
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    if (accessToken) fetchWatchlist();
+  }, [accessToken]);
+
+  const removeFromWatchlist = async (companyId: string) => {
+    setCompanies((prev) => prev.filter((c) => c.id !== companyId));
+    try {
+      await fetch(`${API_URL}/api/watchlist/${companyId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+    } catch {
+      // silently fail — already removed from UI
+    }
+  };
+
+  const sectorLabels: Record<string, string> = {
+    FINTECH: "Financial Services", ENERGY: "Energy & Climate", LOGISTICS: "Logistics & Mobility",
+    AGRI_FOOD: "Agriculture & Food", TECHNOLOGY: "Technology & Software", SAAS_TECH: "SaaS / Tech",
+    HEALTH: "Healthcare & Life Sciences", CONSUMER_FMCG: "Consumer & Retail", REAL_ESTATE: "Real Estate",
+    INFRASTRUCTURE: "Infrastructure & Real Assets", MANUFACTURING: "Manufacturing & Industrial",
+  };
+  const stageLabels: Record<string, string> = {
+    PRE_SEED: "Pre-Seed", SEED: "Seed", SERIES_A: "Series A", SERIES_B: "Series B",
+    SERIES_C: "Series C", SERIES_D_PLUS: "Series D+", GROWTH_LATE: "Growth / Late Stage",
+    PRE_IPO: "Pre-IPO", BOOTSTRAPPED: "Bootstrapped",
+  };
+
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-2xl border border-gray-200 p-8">
@@ -688,19 +749,110 @@ function WatchlistTab() {
           Track the private companies that matter to you
         </p>
 
-        <div className="text-center py-12">
-          <div className="w-16 h-16 rounded-full bg-gray-100 mx-auto mb-4 flex items-center justify-center">
-            <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-            </svg>
+        {isLoading ? (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-white rounded-xl border border-gray-200 p-6 animate-pulse">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-lg bg-gray-100" />
+                  <div className="flex-1">
+                    <div className="h-4 w-32 bg-gray-100 rounded mb-2" />
+                    <div className="h-3 w-20 bg-gray-100 rounded" />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
-          <h3 className="text-lg font-semibold text-[#0A1F44] mb-2">
-            No Companies Saved
-          </h3>
-          <p className="text-gray-500">
-            Companies you're interested in will appear here
-          </p>
-        </div>
+        ) : companies.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 rounded-full bg-gray-100 mx-auto mb-4 flex items-center justify-center">
+              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-[#0A1F44] mb-2">
+              No Companies Saved
+            </h3>
+            <p className="text-gray-500 mb-6">
+              Browse companies to start building your watchlist.
+            </p>
+            <Link
+              href="/dashboard/investor/companies"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-[#10B981] text-white rounded-xl text-sm font-medium hover:bg-[#059669] transition-colors"
+            >
+              Browse Companies
+            </Link>
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {companies.map((company) => {
+              const name = company.tradingName || company.legalName;
+              return (
+                <div
+                  key={company.id}
+                  className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md hover:border-gray-300 transition-all group relative"
+                >
+                  {/* Remove button */}
+                  <button
+                    onClick={() => removeFromWatchlist(company.id)}
+                    className="absolute top-4 right-4 p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                    title="Remove from watchlist"
+                  >
+                    <svg className="w-5 h-5 fill-yellow-400 text-yellow-400" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                    </svg>
+                  </button>
+
+                  {/* Clickable area */}
+                  <button
+                    onClick={() => router.push(`/dashboard/investor/companies/${company.id}`)}
+                    className="text-left w-full"
+                  >
+                    <div className="flex items-center gap-3 mb-4 pr-8">
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#0A1F44] to-[#10B981] flex items-center justify-center text-white text-sm font-bold shrink-0 overflow-hidden">
+                        {company.logoUrl ? (
+                          <img src={company.logoUrl} alt={name} className="w-10 h-10 rounded-lg object-cover" />
+                        ) : (
+                          name.charAt(0).toUpperCase()
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-[#0A1F44] truncate group-hover:text-[#10B981] transition-colors">
+                          {name}
+                        </h3>
+                        <p className="text-xs text-gray-500 truncate">{company.oneLineDescription}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">
+                        {sectorLabels[company.sector] || company.sector}
+                      </span>
+                      <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">
+                        {stageLabels[company.stage] || company.stage}
+                      </span>
+                      {company.preferredLane && (
+                        <span
+                          className={`px-2 py-1 rounded text-xs font-medium ${
+                            company.preferredLane === "YIELD"
+                              ? "bg-emerald-50 text-emerald-700"
+                              : "bg-purple-50 text-purple-700"
+                          }`}
+                        >
+                          {laneLabels[company.preferredLane] || company.preferredLane}
+                        </span>
+                      )}
+                    </div>
+
+                    <span className="text-sm font-medium text-[#10B981] group-hover:text-[#059669] transition-colors">
+                      View Details &rarr;
+                    </span>
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

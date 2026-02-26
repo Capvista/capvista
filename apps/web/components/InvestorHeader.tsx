@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/lib/contexts/AuthContext";
-import { ChevronDown, Search, BarChart3 } from "lucide-react";
+import { ChevronDown, Search, BarChart3, Star } from "lucide-react";
 
 export default function InvestorHeader() {
   const { user, signOut } = useAuth();
@@ -82,6 +82,23 @@ export default function InvestorHeader() {
                         </p>
                         <p className="text-xs text-gray-500">
                           Explore our curated list of private companies
+                        </p>
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => {
+                        router.push("/dashboard/investor?tab=watchlist");
+                        setExploreOpen(false);
+                      }}
+                      className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-start gap-3"
+                    >
+                      <Star className="w-5 h-5 text-gray-500 mt-0.5" />
+                      <div>
+                        <p className="font-semibold text-gray-900 text-sm">
+                          Watchlist
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Companies you've saved to track
                         </p>
                       </div>
                     </button>
