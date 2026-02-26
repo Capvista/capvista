@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, SlidersHorizontal, Star, TrendingUp, ArrowRight, MapPin, Building2, ChevronDown } from "lucide-react";
+import { Search, SlidersHorizontal, Star, TrendingUp, ArrowRight, MapPin, Building2, ChevronDown, LayoutGrid, List } from "lucide-react";
 import CustomSelect from "@/components/CustomSelect";
 import { useAuth } from "@/lib/contexts/AuthContext";
 
@@ -251,6 +251,19 @@ export default function BrowseCompanies() {
   const [subsectorFilter, setSubsectorFilter] = useState<string>("all");
   const [stageFilter, setStageFilter] = useState<string>("all");
   const [laneFilter, setLaneFilter] = useState<string>("all");
+
+  // View mode: grid or list (persisted in localStorage)
+  const [viewMode, setViewMode] = useState<"grid" | "list">(() => {
+    if (typeof window !== "undefined") {
+      return (localStorage.getItem("capvista_browse_view") as "grid" | "list") || "grid";
+    }
+    return "grid";
+  });
+
+  const handleViewModeChange = (mode: "grid" | "list") => {
+    setViewMode(mode);
+    localStorage.setItem("capvista_browse_view", mode);
+  };
 
   // Build dynamic subsector options based on sector filter
   const subsectorFilterOptions = (() => {
@@ -654,6 +667,32 @@ export default function BrowseCompanies() {
                 )}
               </div>
             )}
+
+            {/* View Toggle — hidden on mobile */}
+            <div className="hidden md:flex items-center border border-gray-200 rounded-lg overflow-hidden">
+              <button
+                onClick={() => handleViewModeChange("grid")}
+                className={`p-2 transition-colors ${
+                  viewMode === "grid"
+                    ? "bg-[#0A1F44] text-white"
+                    : "bg-white text-gray-400 hover:text-gray-600"
+                }`}
+                title="Grid view"
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => handleViewModeChange("list")}
+                className={`p-2 transition-colors ${
+                  viewMode === "list"
+                    ? "bg-[#0A1F44] text-white"
+                    : "bg-white text-gray-400 hover:text-gray-600"
+                }`}
+                title="List view"
+              >
+                <List className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
           {/* Expanded Filters */}
@@ -744,18 +783,135 @@ export default function BrowseCompanies() {
             )}
           </div>
         ) : (
-          /* ============ 3-COLUMN CARD GRID ============ */
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredCompanies.map((company) => (
-              <CompanyCard
-                key={company.id}
-                company={company}
-                isWatchlisted={watchlist.has(company.id)}
-                toggleWatchlist={toggleWatchlist}
-                isLoggedIn={isLoggedIn}
-              />
-            ))}
-          </div>
+          viewMode === "list" ? (
+            /* ============ TABLE / LIST VIEW ============ */
+            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="bg-gray-50 border-b border-gray-200">
+                      <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
+                      <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sector & Subsector</th>
+                      <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stage</th>
+                      <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lane</th>
+                      <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Raising</th>
+                      <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valuation</th>
+                      <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Active Deals</th>
+                      <th className="px-5 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredCompanies.map((company) => {
+                      const activeDeal = company.deals?.[0];
+                      const raising = activeDeal?.targetAmount;
+                      const valuation = activeDeal?.valuation;
+                      return (
+                        <tr
+                          key={company.id}
+                          className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors"
+                          onClick={() => router.push(`/dashboard/investor/companies/${company.id}`)}
+                        >
+                          {/* Company */}
+                          <td className="px-5 py-4">
+                            <div className="flex items-center gap-3">
+                              <div
+                                className="w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center overflow-hidden"
+                                style={{
+                                  background: company.logoUrl ? undefined : getGradient(company.id),
+                                }}
+                              >
+                                {company.logoUrl ? (
+                                  <img src={company.logoUrl} alt={company.legalName} className="w-full h-full object-cover" />
+                                ) : (
+                                  <span className="text-xs font-bold text-white">
+                                    {(company.tradingName || company.legalName).charAt(0).toUpperCase()}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-sm font-semibold text-gray-900 truncate max-w-[200px]">
+                                  {company.tradingName || company.legalName}
+                                </p>
+                                <p className="text-xs text-gray-500 truncate max-w-[200px]">
+                                  {company.oneLineDescription}
+                                </p>
+                              </div>
+                            </div>
+                          </td>
+                          {/* Sector & Subsector */}
+                          <td className="px-5 py-4">
+                            <p className="text-sm text-gray-900">{sectorLabels[company.sector] || company.sector}</p>
+                            {company.subsector && (
+                              <p className="text-xs text-gray-500">{subsectorLabels[company.subsector] || company.subsector}</p>
+                            )}
+                          </td>
+                          {/* Stage */}
+                          <td className="px-5 py-4">
+                            <span className="text-sm text-gray-900">{stageLabels[company.stage] || company.stage}</span>
+                          </td>
+                          {/* Lane */}
+                          <td className="px-5 py-4">
+                            {company.preferredLane && (
+                              <span
+                                className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${
+                                  company.preferredLane === "YIELD"
+                                    ? "bg-emerald-50 text-emerald-700"
+                                    : "bg-purple-50 text-purple-700"
+                                }`}
+                              >
+                                {laneLabels[company.preferredLane] || company.preferredLane} Lane
+                              </span>
+                            )}
+                          </td>
+                          {/* Raising */}
+                          <td className="px-5 py-4">
+                            <span className="text-sm font-medium text-gray-900">
+                              {raising ? formatCurrency(raising) : company.targetRaiseRange || "—"}
+                            </span>
+                          </td>
+                          {/* Valuation */}
+                          <td className="px-5 py-4">
+                            <span className="text-sm font-medium text-gray-900">
+                              {valuation ? formatCurrency(valuation) : "—"}
+                            </span>
+                          </td>
+                          {/* Active Deals */}
+                          <td className="px-5 py-4">
+                            <span className="text-sm text-gray-900">{company.deals?.length || 0}</span>
+                          </td>
+                          {/* Action */}
+                          <td className="px-5 py-4 text-right">
+                            <Link
+                              href={`/dashboard/investor/companies/${company.id}`}
+                              className="text-sm font-medium hover:underline inline-flex items-center gap-1"
+                              style={{ color: "#0A1F44" }}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              View Details
+                              <ArrowRight className="w-3.5 h-3.5" />
+                            </Link>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : (
+            /* ============ 3-COLUMN CARD GRID ============ */
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredCompanies.map((company) => (
+                <CompanyCard
+                  key={company.id}
+                  company={company}
+                  isWatchlisted={watchlist.has(company.id)}
+                  toggleWatchlist={toggleWatchlist}
+                  isLoggedIn={isLoggedIn}
+                />
+              ))}
+            </div>
+          )
         )}
       </main>
     </div>
