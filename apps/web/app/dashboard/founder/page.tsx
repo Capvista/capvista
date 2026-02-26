@@ -22,6 +22,7 @@ import {
   ShieldCheck,
   Upload,
   Settings,
+  ArrowRight,
 } from "lucide-react";
 
 const supabase = createClient(
@@ -60,6 +61,7 @@ type Company = {
   approvalStatus: string;
   createdAt: string;
   countryOfIncorporation?: string;
+  logoUrl?: string;
   participationStatus?: string;
   participationAcknowledged?: boolean;
   participationExecutedAt?: string;
@@ -82,6 +84,42 @@ function getProfileCompletion(company: Company | null): number {
   if (company.approvalStatus === "REJECTED") return 30;
   return 20;
 }
+
+const statusConfig: Record<
+  string,
+  { label: string; color: string; bg: string }
+> = {
+  PENDING_REVIEW: {
+    label: "Pending Review",
+    color: "text-amber-700",
+    bg: "bg-amber-50 border-amber-200",
+  },
+  IN_REVIEW: {
+    label: "In Review",
+    color: "text-blue-700",
+    bg: "bg-blue-50 border-blue-200",
+  },
+  APPROVED: {
+    label: "Approved",
+    color: "text-green-700",
+    bg: "bg-green-50 border-green-200",
+  },
+  REJECTED: {
+    label: "Rejected",
+    color: "text-red-700",
+    bg: "bg-red-50 border-red-200",
+  },
+  INFO_REQUESTED: {
+    label: "More Info Requested",
+    color: "text-orange-700",
+    bg: "bg-orange-50 border-orange-200",
+  },
+  ACTIVE: {
+    label: "Active",
+    color: "text-green-700",
+    bg: "bg-green-50 border-green-200",
+  },
+};
 
 export default function FounderDashboard() {
   const { user, accessToken, loading, signOut } = useAuth();
@@ -330,6 +368,51 @@ export default function FounderDashboard() {
             );
           })}
         </div>
+
+        {/* Manage Company Card */}
+        {!loadingCompanies && primaryCompany && (
+          <Link
+            href="/dashboard/founder/company/manage"
+            className="block bg-white rounded-xl border border-gray-200 p-5 mb-8 hover:border-[#0A1F44]/30 hover:shadow-sm transition-all group"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                {primaryCompany.logoUrl ? (
+                  <img
+                    src={primaryCompany.logoUrl}
+                    alt={primaryCompany.legalName}
+                    className="w-12 h-12 rounded-lg object-cover border border-gray-200"
+                  />
+                ) : (
+                  <div className="w-12 h-12 rounded-lg bg-[#0A1F44] flex items-center justify-center">
+                    <Building2 className="w-6 h-6 text-white" />
+                  </div>
+                )}
+                <div>
+                  <p className="text-base font-bold text-[#0A1F44]">
+                    {primaryCompany.tradingName || primaryCompany.legalName}
+                  </p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span
+                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                        (statusConfig[primaryCompany.approvalStatus] || statusConfig.PENDING_REVIEW).bg
+                      } ${
+                        (statusConfig[primaryCompany.approvalStatus] || statusConfig.PENDING_REVIEW).color
+                      }`}
+                    >
+                      {(statusConfig[primaryCompany.approvalStatus] || statusConfig.PENDING_REVIEW).label}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-sm font-medium text-[#0A1F44] group-hover:gap-3 transition-all">
+                <Settings className="w-4 h-4" />
+                <span>Manage Company</span>
+                <ArrowRight className="w-4 h-4" />
+              </div>
+            </div>
+          </Link>
+        )}
 
         {/* Loading */}
         {loadingCompanies ? (
@@ -598,42 +681,6 @@ function CompanyCard({
     } finally {
       setUploadingDocs(false);
     }
-  };
-
-  const statusConfig: Record<
-    string,
-    { label: string; color: string; bg: string }
-  > = {
-    PENDING_REVIEW: {
-      label: "Pending Review",
-      color: "text-amber-700",
-      bg: "bg-amber-50 border-amber-200",
-    },
-    IN_REVIEW: {
-      label: "In Review",
-      color: "text-blue-700",
-      bg: "bg-blue-50 border-blue-200",
-    },
-    APPROVED: {
-      label: "Approved",
-      color: "text-green-700",
-      bg: "bg-green-50 border-green-200",
-    },
-    REJECTED: {
-      label: "Rejected",
-      color: "text-red-700",
-      bg: "bg-red-50 border-red-200",
-    },
-    INFO_REQUESTED: {
-      label: "More Info Requested",
-      color: "text-orange-700",
-      bg: "bg-orange-50 border-orange-200",
-    },
-    ACTIVE: {
-      label: "Active",
-      color: "text-green-700",
-      bg: "bg-green-50 border-green-200",
-    },
   };
 
   const status =
