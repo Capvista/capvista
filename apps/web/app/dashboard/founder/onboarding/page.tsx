@@ -15,6 +15,7 @@ const supabase = createClient(
 type FormData = {
   logoFile: File | null;
   logoPreview: string;
+  existingLogoUrl: string;
   legalName: string;
   tradingName: string;
   incorporationNumber: string;
@@ -356,7 +357,7 @@ function validateStep(step: number, formData: FormData): string[] {
 
   switch (step) {
     case 0: // Company Identity
-      if (!formData.logoFile) errors.push("logoFile");
+      if (!formData.logoFile && !formData.existingLogoUrl) errors.push("logoFile");
       if (!formData.legalName.trim()) errors.push("legalName");
       if (!formData.incorporationNumber.trim())
         errors.push("incorporationNumber");
@@ -485,7 +486,17 @@ export default function CompanyOnboarding() {
           setCurrentStep(step);
         }
         if (savedData && typeof savedData === "object") {
-          setFormData((prev) => ({ ...prev, ...savedData, logoFile: null }));
+          // Restore saved data, but logoFile is not serializable
+          const existingUrl = savedData.existingLogoUrl || "";
+          // blob: URLs are invalid after page reload, use existingLogoUrl instead
+          const logoPreview = existingUrl || (savedData.logoPreview && !savedData.logoPreview.startsWith("blob:") ? savedData.logoPreview : "");
+          setFormData((prev) => ({
+            ...prev,
+            ...savedData,
+            logoFile: null,
+            logoPreview,
+            existingLogoUrl: existingUrl,
+          }));
         }
       }
     } catch (e) {
@@ -496,6 +507,7 @@ export default function CompanyOnboarding() {
   const [formData, setFormData] = useState<FormData>({
     logoFile: null,
     logoPreview: "",
+    existingLogoUrl: "",
     legalName: "",
     tradingName: "",
     incorporationNumber: "",
@@ -600,8 +612,8 @@ export default function CompanyOnboarding() {
 
       console.log("✅ Submitting for user:", user?.email);
 
-      // Upload logo to Supabase Storage
-      let logoUrl = "";
+      // Upload logo to Supabase Storage (only if a new file was selected)
+      let logoUrl = formData.existingLogoUrl || "";
       if (formData.logoFile) {
         const fileExt = formData.logoFile.name.split(".").pop();
         const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
@@ -741,8 +753,29 @@ export default function CompanyOnboarding() {
               </span>
             </Link>
             <button
-              onClick={() => {
+              onClick={async () => {
+                let existingLogoUrl = formData.existingLogoUrl;
+                // Upload logo to Supabase on save so it persists across sessions
+                if (formData.logoFile && !existingLogoUrl) {
+                  try {
+                    const fileExt = formData.logoFile.name.split(".").pop();
+                    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+                    const { error: uploadError } = await supabase.storage
+                      .from("company_logo")
+                      .upload(fileName, formData.logoFile);
+                    if (!uploadError) {
+                      const { data: urlData } = supabase.storage
+                        .from("company_logo")
+                        .getPublicUrl(fileName);
+                      existingLogoUrl = urlData.publicUrl;
+                    }
+                  } catch (e) {
+                    console.error("Logo upload on save failed:", e);
+                  }
+                }
                 const { logoFile, ...serializableData } = formData;
+                serializableData.existingLogoUrl = existingLogoUrl;
+                serializableData.logoPreview = existingLogoUrl || serializableData.logoPreview;
                 localStorage.setItem(
                   "capvista_onboarding_progress",
                   JSON.stringify({
@@ -957,6 +990,7 @@ function Step1Identity({ formData, updateField, errors }: StepProps) {
                       }
                       updateField("logoFile", file);
                       updateField("logoPreview", URL.createObjectURL(file));
+                      updateField("existingLogoUrl", "");
                     }
                   }}
                 />
