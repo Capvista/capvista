@@ -5,6 +5,12 @@ import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import { sendEmail } from "../lib/email";
 import { welcomeEmail, passwordResetEmail } from "../lib/emailTemplates";
+import {
+  loginLimiter,
+  registerLimiter,
+  forgotPasswordLimiter,
+  resetPasswordLimiter,
+} from "../middleware/rateLimiter";
 
 const router = Router();
 
@@ -21,7 +27,7 @@ function generateTokens(userId: string, role: string) {
 }
 
 // POST /api/auth/register
-router.post("/register", async (req: Request, res: Response) => {
+router.post("/register", registerLimiter, async (req: Request, res: Response) => {
   try {
     const { email, password, firstName, lastName, role } = req.body;
 
@@ -144,7 +150,7 @@ router.post("/register", async (req: Request, res: Response) => {
 });
 
 // POST /api/auth/login
-router.post("/login", async (req: Request, res: Response) => {
+router.post("/login", loginLimiter, async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
@@ -228,7 +234,7 @@ router.post("/login", async (req: Request, res: Response) => {
 });
 
 // POST /api/auth/register-admin
-router.post("/register-admin", async (req: Request, res: Response) => {
+router.post("/register-admin", registerLimiter, async (req: Request, res: Response) => {
   try {
     const { email, password, firstName, lastName, inviteCode } = req.body;
 
@@ -318,7 +324,7 @@ router.post("/register-admin", async (req: Request, res: Response) => {
 });
 
 // POST /api/auth/forgot-password
-router.post("/forgot-password", async (req: Request, res: Response) => {
+router.post("/forgot-password", forgotPasswordLimiter, async (req: Request, res: Response) => {
   try {
     const { email } = req.body;
 
@@ -361,7 +367,7 @@ router.post("/forgot-password", async (req: Request, res: Response) => {
 });
 
 // POST /api/auth/reset-password
-router.post("/reset-password", async (req: Request, res: Response) => {
+router.post("/reset-password", resetPasswordLimiter, async (req: Request, res: Response) => {
   try {
     const { token, newPassword } = req.body;
 

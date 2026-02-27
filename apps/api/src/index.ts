@@ -5,6 +5,7 @@ dotenv.config();
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import helmet from "helmet";
+import { globalLimiter } from "./middleware/rateLimiter";
 
 // Import routes
 import companiesRoutes from "./routes/companies";
@@ -22,19 +23,31 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 
 // CORS configuration
-const allowedOrigins = [
-  "http://localhost:3000",
-  "http://localhost:3100",
-  process.env.WEB_URL,
-  process.env.ADMIN_URL,
-].filter(Boolean) as string[];
+const defaultOrigins =
+  process.env.NODE_ENV === "production"
+    ? ["https://fastgas.ng", "https://api.fastgas.ng"]
+    : ["http://localhost:3000", "http://localhost:8081", "http://localhost:19006"];
+
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
+  : defaultOrigins;
 
 // Middleware
 app.use(helmet()); // Security headers
+app.use(globalLimiter); // Global rate limiting (100 req / 15 min per IP)
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (mobile apps, Postman, server-to-server)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 app.use(express.json()); // Parse JSON bodies
