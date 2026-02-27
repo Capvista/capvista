@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { requireAuth, requireRole } from "../middleware/auth";
 import bcrypt from "bcrypt";
+import { pickFields } from "../utils/pickFields";
 
 const router = Router();
 
@@ -78,6 +79,12 @@ router.get(
 );
 
 // PUT /api/investors/profile/personal — Update personal info
+const ALLOWED_PERSONAL_FIELDS = [
+  "firstName", "lastName", "phone", "dateOfBirth",
+  "residentialAddress", "city", "stateProvince", "postalCode",
+  "countryOfResidence", "citizenship", "taxResidency",
+];
+
 router.put(
   "/profile/personal",
   requireAuth,
@@ -85,7 +92,7 @@ router.put(
   async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;
-      const body = req.body;
+      const body = pickFields(req.body, ALLOWED_PERSONAL_FIELDS, "PUT /investors/profile/personal");
 
       if (!body.firstName || !body.lastName) {
         return res.status(400).json({
@@ -116,7 +123,7 @@ router.put(
             fullName: `${body.firstName} ${body.lastName}`.trim(),
             phone: body.phone || null,
             dateOfBirth: body.dateOfBirth
-              ? new Date(body.dateOfBirth)
+              ? new Date(body.dateOfBirth as string)
               : undefined,
             residentialAddress: body.residentialAddress ?? undefined,
             city: body.city ?? undefined,
@@ -144,6 +151,10 @@ router.put(
 );
 
 // PUT /api/investors/profile/investor — Update investor profile
+const ALLOWED_INVESTOR_FIELDS = [
+  "investorType", "firmName", "title", "aum", "yearsExperience",
+];
+
 router.put(
   "/profile/investor",
   requireAuth,
@@ -151,7 +162,7 @@ router.put(
   async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;
-      const body = req.body;
+      const body = pickFields(req.body, ALLOWED_INVESTOR_FIELDS, "PUT /investors/profile/investor");
 
       if (!body.investorType) {
         return res.status(400).json({
@@ -200,6 +211,11 @@ router.put(
 );
 
 // PUT /api/investors/profile/preferences — Update investment preferences
+const ALLOWED_PREFERENCES_FIELDS = [
+  "preferredSectors", "preferredLanes", "minimumCheckSize",
+  "maximumCheckSize", "holdingPeriod",
+];
+
 router.put(
   "/profile/preferences",
   requireAuth,
@@ -207,7 +223,7 @@ router.put(
   async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;
-      const body = req.body;
+      const body = pickFields(req.body, ALLOWED_PREFERENCES_FIELDS, "PUT /investors/profile/preferences");
 
       const profile = await prisma.investorProfile.findUnique({
         where: { userId },
@@ -255,6 +271,8 @@ router.put(
 );
 
 // PUT /api/investors/profile/notifications — Update notification preferences
+const ALLOWED_NOTIFICATION_FIELDS = ["notificationPreferences"];
+
 router.put(
   "/profile/notifications",
   requireAuth,
@@ -262,7 +280,8 @@ router.put(
   async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;
-      const { notificationPreferences } = req.body;
+      const sanitized = pickFields(req.body, ALLOWED_NOTIFICATION_FIELDS, "PUT /investors/profile/notifications");
+      const { notificationPreferences } = sanitized;
 
       const profile = await prisma.investorProfile.findUnique({
         where: { userId },
@@ -300,6 +319,8 @@ router.put(
 );
 
 // PUT /api/investors/password — Change password
+const ALLOWED_PASSWORD_FIELDS = ["currentPassword", "newPassword", "confirmPassword"];
+
 router.put(
   "/password",
   requireAuth,
@@ -307,7 +328,8 @@ router.put(
   async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;
-      const { currentPassword, newPassword, confirmPassword } = req.body;
+      const sanitized = pickFields(req.body, ALLOWED_PASSWORD_FIELDS, "PUT /investors/password");
+      const { currentPassword, newPassword, confirmPassword } = sanitized;
 
       if (!currentPassword || !newPassword || !confirmPassword) {
         return res.status(400).json({
@@ -388,6 +410,8 @@ router.put(
 );
 
 // DELETE /api/investors/account — Deactivate account (soft delete)
+const ALLOWED_DEACTIVATE_FIELDS = ["confirmEmail"];
+
 router.delete(
   "/account",
   requireAuth,
@@ -395,7 +419,8 @@ router.delete(
   async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;
-      const { confirmEmail } = req.body;
+      const sanitized = pickFields(req.body, ALLOWED_DEACTIVATE_FIELDS, "DELETE /investors/account");
+      const { confirmEmail } = sanitized;
 
       if (!confirmEmail) {
         return res.status(400).json({

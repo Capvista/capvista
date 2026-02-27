@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { z } from "zod";
 import { requireAuth } from "../middleware/auth";
+import { pickFields } from "../utils/pickFields";
 
 const router = Router();
 
@@ -87,13 +88,16 @@ router.get("/me", requireAuth, async (req: Request, res: Response) => {
 });
 
 // PATCH /api/users/me - Update current user profile
+const ALLOWED_USER_FIELDS = ["firstName", "lastName", "phone"];
+
 router.patch("/me", requireAuth, async (req: Request, res: Response) => {
   try {
     const body = updateUserSchema.parse(req.body);
+    const updateData = pickFields(body, ALLOWED_USER_FIELDS, "PATCH /users/me");
 
     const user = await prisma.user.update({
       where: { id: req.user!.id },
-      data: body,
+      data: updateData,
     });
 
     return res.json({

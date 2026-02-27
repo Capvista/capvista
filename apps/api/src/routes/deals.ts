@@ -4,6 +4,7 @@ import { z } from "zod";
 import { requireAuth, requireRole } from "../middleware/auth";
 import { sendEmail } from "../lib/email";
 import { dealSubmittedEmail } from "../lib/emailTemplates";
+import { pickFields } from "../utils/pickFields";
 
 const router = Router();
 
@@ -586,10 +587,23 @@ router.patch(
         });
       }
 
-      // Build update data, converting closeDate string to Date if present
-      const updateData: any = { ...body };
-      if (body.closeDate) {
-        updateData.closeDate = new Date(body.closeDate);
+      // Whitelist allowed fields and convert closeDate string to Date if present
+      const ALLOWED_DEAL_UPDATE_FIELDS = [
+        "name", "lane", "instrumentType", "targetAmount", "minimumInvestment",
+        "terms", "duration", "status", "jurisdiction", "entityType",
+        "offeringStructure", "closingType", "leadInvestor", "softCap",
+        "closeDate", "rollingClose", "allowWaitlist", "useOfFunds",
+        "currentRevenue", "previousCapitalRaised", "expectedReturnStructure",
+        "paymentFrequency", "capitalProtection", "maturityTerms",
+        "companyDisclosure", "dealRisks", "pitchDeckUrl", "financialDocsUrl",
+        "termsSheetUrl", "incorporationDocsUrl", "instrumentTemplateUrl",
+        "riskDisclosureDocUrl", "subscriptionAgreementUrl", "capTableDocUrl",
+        "financialStatementsUrl", "founderBackgroundDocsUrl",
+        "customerContractsUrl", "bankStatementsUrl",
+      ];
+      const updateData: any = pickFields(body, ALLOWED_DEAL_UPDATE_FIELDS, "PATCH /deals/:id");
+      if (updateData.closeDate) {
+        updateData.closeDate = new Date(updateData.closeDate);
       }
 
       // Update deal

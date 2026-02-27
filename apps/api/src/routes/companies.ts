@@ -4,6 +4,7 @@ import { z } from "zod";
 import { requireAuth, requireRole } from "../middleware/auth";
 import { sendEmail } from "../lib/email";
 import { companySubmissionEmail } from "../lib/emailTemplates";
+import { pickFields } from "../utils/pickFields";
 
 const router = Router();
 
@@ -614,6 +615,21 @@ router.post(
 );
 
 // PATCH /api/companies/:id - Update company (founders only)
+const ALLOWED_COMPANY_UPDATE_FIELDS = [
+  "logoUrl", "legalName", "tradingName", "countryOfIncorporation",
+  "incorporationNumber", "incorporationDate", "companyAddress",
+  "operatingCountries", "website", "officialEmailDomain", "teamSize",
+  "oneLineDescription", "detailedDescription", "sector", "subsector",
+  "businessModel", "revenueModel", "stage", "revenueStatus", "revenueRange",
+  "primaryRevenueSource", "keyMetrics", "majorCustomers", "geographicFootprint",
+  "regulatoryDependencies", "hasRaisedBefore", "previousRaises",
+  "founderOwnedPercent", "externalInvestorsPercent", "notableInvestors",
+  "topRisks", "materialThreats", "singleSupplier", "fxExposure",
+  "regulationDependent", "infrastructureDependent", "preferredLane",
+  "preferredInstrument", "targetRaiseRange", "primaryUseOfFunds",
+  "participationAcknowledged",
+];
+
 router.patch(
   "/:id",
   requireAuth,
@@ -622,6 +638,7 @@ router.patch(
     try {
       const { id } = req.params;
       const body = updateCompanySchema.parse(req.body);
+      const updateData = pickFields(body, ALLOWED_COMPANY_UPDATE_FIELDS, "PATCH /companies/:id");
 
       // Get founder profile
       const founderProfile = await prisma.founderProfile.findUnique({
@@ -666,7 +683,7 @@ router.patch(
       const updatedCompany = await prisma.company.update({
         where: { id },
         data: {
-          ...body,
+          ...updateData,
           incorporationDate: body.incorporationDate
             ? new Date(body.incorporationDate)
             : undefined,
