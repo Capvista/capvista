@@ -101,8 +101,8 @@ const createCompanySchema = z.object({
 
 const updateCompanySchema = createCompanySchema.partial();
 
-// GET /api/companies - List companies
-router.get("/", async (req: Request, res: Response) => {
+// GET /api/companies - List companies (any authenticated user)
+router.get("/", requireAuth, async (req: Request, res: Response) => {
   try {
     const { sector, stage, lane, page = "1", limit = "20" } = req.query;
 
@@ -242,6 +242,7 @@ router.get(
 router.get(
   "/:id/status",
   requireAuth,
+  requireRole("FOUNDER", "ADMIN"),
   async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
@@ -256,6 +257,19 @@ router.get(
           success: false,
           error: { code: "COMPANY_NOT_FOUND", message: "Company not found" },
         });
+      }
+
+      // Verify ownership for founders (admins can access any)
+      if (req.user!.role === "FOUNDER") {
+        const founderProfile = await prisma.founderProfile.findUnique({
+          where: { userId: req.user!.id },
+        });
+        if (!founderProfile || company.ownerId !== founderProfile.id) {
+          return res.status(403).json({
+            success: false,
+            error: { code: "FORBIDDEN", message: "Not authorized to view this company's status" },
+          });
+        }
       }
 
       // Fetch the most recent admin action for this company
@@ -301,7 +315,7 @@ router.get(
 );
 
 // GET /api/companies/:id/similar - Get similar companies (same sector)
-router.get("/:id/similar", async (req: Request, res: Response) => {
+router.get("/:id/similar", requireAuth, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -362,8 +376,8 @@ router.get("/:id/similar", async (req: Request, res: Response) => {
   }
 });
 
-// GET /api/companies/:id - Get company details
-router.get("/:id", async (req: Request, res: Response) => {
+// GET /api/companies/:id - Get company details (any authenticated user)
+router.get("/:id", requireAuth, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
