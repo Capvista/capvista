@@ -25,8 +25,15 @@ const PORT = process.env.PORT || 4000;
 // CORS configuration
 const defaultOrigins =
   process.env.NODE_ENV === "production"
-    ? ["https://fastgas.ng", "https://api.fastgas.ng"]
-    : ["http://localhost:3000", "http://localhost:8081", "http://localhost:19006"];
+    ? [
+        "https://capvista-web.onrender.com",
+        "https://capvista-admin.onrender.com",
+      ]
+    : [
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://localhost:3002",
+      ];
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
