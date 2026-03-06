@@ -89,12 +89,12 @@ type FormData = {
 // ============================================================================
 
 const STEPS = [
-  "Identity & Jurisdiction",
-  "Investor Profile",
+  "Identity",
+  "Profile",
   "Accreditation",
   "Suitability",
   "Preferences",
-  "Risk Acknowledgement",
+  "Risk",
   "Review & Submit",
 ];
 
@@ -957,65 +957,56 @@ export default function CompleteInvestorProfile() {
         </div>
       </header>
 
-      {/* Progress Bar — 3 phases mapped to 7 internal steps */}
-      {(() => {
-        const phases = [
-          { label: "Identity", steps: [0, 1] },
-          { label: "Profile", steps: [2, 3, 4] },
-          { label: "Risk", steps: [5, 6] },
-        ];
-        const getPhaseStatus = (phase: { steps: number[] }) => {
-          const allDone = phase.steps.every((s) => currentStep > s);
-          const active = phase.steps.includes(currentStep);
-          return allDone ? "complete" : active ? "active" : "upcoming";
-        };
-        return (
-          <div className="bg-white border-b border-gray-200">
-            <div className="max-w-3xl mx-auto px-4 py-6">
-              <div className="flex items-center justify-between">
-                {phases.map((phase, i) => {
-                  const status = getPhaseStatus(phase);
-                  return (
-                    <div key={phase.label} className="flex-1 relative">
-                      <div className="flex items-center">
-                        <div
-                          className={`w-9 h-9 rounded-full flex items-center justify-center font-semibold text-sm transition-colors ${
-                            status === "complete"
-                              ? "bg-[#0A1F44] text-white"
-                              : status === "active"
-                                ? "bg-[#0A1F44] text-white"
-                                : "bg-gray-200 text-gray-500"
-                          }`}
-                        >
-                          {status === "complete" ? "✓" : i + 1}
-                        </div>
-                        {i < phases.length - 1 && (
-                          <div
-                            className={`flex-1 h-1 mx-3 rounded transition-colors ${
-                              status === "complete"
-                                ? "bg-[#0A1F44]"
-                                : "bg-gray-200"
-                            }`}
-                          />
-                        )}
-                      </div>
-                      <p
-                        className={`text-xs mt-2 font-medium ${
-                          status === "upcoming"
-                            ? "text-gray-400"
-                            : "text-[#0A1F44]"
-                        }`}
-                      >
-                        {phase.label}
-                      </p>
+      {/* Progress Bar — 7 steps */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-3xl mx-auto px-4 py-6">
+          <div className="flex items-center justify-between">
+            {STEPS.map((label, i) => {
+              const status =
+                i < currentStep
+                  ? "complete"
+                  : i === currentStep
+                    ? "active"
+                    : "upcoming";
+              return (
+                <div key={label} className="flex-1 relative">
+                  <div className="flex items-center">
+                    <div
+                      className={`w-9 h-9 rounded-full flex items-center justify-center font-semibold text-sm transition-colors ${
+                        status === "complete"
+                          ? "bg-[#0A1F44] text-white"
+                          : status === "active"
+                            ? "bg-[#0A1F44] text-white"
+                            : "bg-gray-200 text-gray-500"
+                      }`}
+                    >
+                      {status === "complete" ? "✓" : i + 1}
                     </div>
-                  );
-                })}
-              </div>
-            </div>
+                    {i < STEPS.length - 1 && (
+                      <div
+                        className={`flex-1 h-1 mx-3 rounded transition-colors ${
+                          status === "complete"
+                            ? "bg-[#0A1F44]"
+                            : "bg-gray-200"
+                        }`}
+                      />
+                    )}
+                  </div>
+                  <p
+                    className={`text-xs mt-2 font-medium ${
+                      status === "upcoming"
+                        ? "text-gray-400"
+                        : "text-[#0A1F44]"
+                    }`}
+                  >
+                    {label}
+                  </p>
+                </div>
+              );
+            })}
           </div>
-        );
-      })()}
+        </div>
+      </div>
 
       {/* Main Content */}
       <main className="max-w-3xl mx-auto px-4 py-8">
