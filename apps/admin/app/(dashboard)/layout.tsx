@@ -13,6 +13,7 @@ const navItems = [
   { label: "Investments", href: "/investments", icon: "investments" },
   { label: "Users", href: "/users", icon: "people" },
   { label: "Activity Log", href: "/activity", icon: "clock" },
+  { label: "Monitoring", href: "/monitoring", icon: "pulse" },
 ];
 
 function NavIcon({ icon, size = 20 }: { icon: string; size?: number }) {
@@ -73,6 +74,12 @@ function NavIcon({ icon, size = 20 }: { icon: string; size?: number }) {
         <svg {...s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="12" r="10" />
           <polyline points="12 6 12 12 16 14" />
+        </svg>
+      );
+    case "pulse":
+      return (
+        <svg {...s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
         </svg>
       );
     default:
