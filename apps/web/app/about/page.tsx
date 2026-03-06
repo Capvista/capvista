@@ -38,7 +38,7 @@ export default function AboutPage() {
             Capvista exists to fix this.
           </p>
           <p className="text-base text-[#6B7280] leading-relaxed">
-            We are building the trust and execution layer for cross-border
+            We are building the trust and execution layer for cross border
             private investment into African companies. Our platform verifies
             companies, standardizes deal structures, and gives qualified
             investors worldwide a clear, compliant path to participate in
@@ -61,7 +61,7 @@ export default function AboutPage() {
               <p className="text-base text-[#6B7280] leading-relaxed">
                 Access verified, structured investment opportunities across
                 African private markets. Browse companies, review standardized
-                deal terms, and invest through compliant instruments — whether
+                deal terms, and invest through compliant instruments whether
                 you&apos;re in Lagos, London, or Los Angeles.
               </p>
             </div>
@@ -105,10 +105,10 @@ export default function AboutPage() {
             We are infrastructure.
           </p>
           <p className="text-base text-[#6B7280] leading-relaxed mb-6">
-            We verify companies through multi-layer checks — corporate
+            We verify companies through multi layer checks corporate
             registration, identity verification, financial documentation, and
             ongoing monitoring. We standardize investment instruments into two
-            clear lanes: Yield for cash-flow backed deals, and Ventures for
+            clear lanes: Yield for cash flow backed deals, and Ventures for
             equity opportunities. And we give both sides the tools to execute
             with confidence.
           </p>
@@ -135,11 +135,11 @@ export default function AboutPage() {
                   Yield Lane
                 </div>
                 <h3 className="text-lg font-bold text-[#0A1F44] mb-3">
-                  Cash-Flow Backed Investments
+                  Cash Flow Backed Investments
                 </h3>
                 <p className="text-base text-[#6B7280] leading-relaxed">
-                  Cash-flow backed investments for companies generating revenue.
-                  Instruments include Revenue Share Notes and Asset-Backed
+                  Cash flow backed investments for companies generating revenue.
+                  Instruments include Revenue Share Notes and Asset Backed
                   Participation. Designed for investors seeking structured
                   returns tied to real business performance.
                 </p>
@@ -154,10 +154,10 @@ export default function AboutPage() {
                   Ventures Lane
                 </div>
                 <h3 className="text-lg font-bold text-[#0A1F44] mb-3">
-                  Equity-Oriented Investments
+                  Equity Oriented Investments
                 </h3>
                 <p className="text-base text-[#6B7280] leading-relaxed">
-                  Equity-oriented investments for high-growth startups.
+                  Equity oriented investments for high growth startups.
                   Instruments include Convertible Notes, SAFEs, and SPV Equity.
                   Designed for investors with higher risk tolerance seeking
                   venture-scale returns.
@@ -181,7 +181,7 @@ export default function AboutPage() {
               </h3>
               <p className="text-base text-[#6B7280] leading-relaxed">
                 We don&apos;t pick winners. We verify that companies are real,
-                compliant, and transparent — then let qualified investors make
+                compliant, and transparent then let qualified investors make
                 their own decisions.
               </p>
             </div>
@@ -226,8 +226,8 @@ export default function AboutPage() {
             Where We&apos;re Headed
           </h2>
           <p className="text-base text-[#6B7280] leading-relaxed mb-6">
-            We&apos;re starting with Nigeria — the largest startup ecosystem in
-            Africa — and expanding across the continent. Our long-term vision is
+            We&apos;re starting with Nigeria the largest startup ecosystem in
+            Africa and expanding across the continent. Our long term vision is
             to become the default infrastructure layer for private capital
             flowing into African businesses.
           </p>
@@ -416,7 +416,7 @@ export default function AboutPage() {
               &copy; 2026 Capvista. All rights reserved.
             </p>
             <p className="text-sm text-gray-400">
-              Securities offered through registered broker-dealer. Member
+              Securities offered through registered broker dealer. Member
               FINRA/SIPC.
             </p>
           </div>
