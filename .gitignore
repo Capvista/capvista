@@ -30,6 +30,9 @@ lerna-debug.log*
 # Vercel
 .vercel
 
+# TypeScript
+*.tsbuildinfo
+
 # Turbo
 .turbo
 

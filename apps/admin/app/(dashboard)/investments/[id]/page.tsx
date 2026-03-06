@@ -219,7 +219,7 @@ function CancelModal({
 }
 
 export default function InvestmentDetailPage() {
-  const { accessToken } = useAuth();
+  const { accessToken, authFetch } = useAuth();
   const params = useParams();
   const [investment, setInvestment] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -228,9 +228,7 @@ export default function InvestmentDetailPage() {
   const fetchInvestment = async () => {
     if (!accessToken) return;
     try {
-      const res = await fetch(`${API_URL}/api/admin/investments/${params.id}`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
+      const res = await authFetch(`${API_URL}/api/admin/investments/${params.id}`);
       const data = await res.json();
       if (data.success) setInvestment(data.data);
     } catch (err) {
@@ -247,9 +245,9 @@ export default function InvestmentDetailPage() {
   const handleConfirmFunding = async (fundedAmount: number, externalRef: string) => {
     if (!accessToken) return;
     try {
-      const res = await fetch(`${API_URL}/api/admin/investments/${params.id}/confirm-funding`, {
+      const res = await authFetch(`${API_URL}/api/admin/investments/${params.id}/confirm-funding`, {
         method: "PATCH",
-        headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ fundedAmount, externalRef: externalRef || undefined }),
       });
       const data = await res.json();
@@ -267,9 +265,9 @@ export default function InvestmentDetailPage() {
   const handleCancel = async (reason: string) => {
     if (!accessToken) return;
     try {
-      const res = await fetch(`${API_URL}/api/admin/investments/${params.id}/cancel`, {
+      const res = await authFetch(`${API_URL}/api/admin/investments/${params.id}/cancel`, {
         method: "PATCH",
-        headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ reason: reason || undefined }),
       });
       const data = await res.json();

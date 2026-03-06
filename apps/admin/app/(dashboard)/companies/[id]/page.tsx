@@ -230,7 +230,7 @@ function VerifyParticipationModal({
 }
 
 export default function CompanyDetailPage() {
-  const { accessToken } = useAuth();
+  const { accessToken, authFetch } = useAuth();
   const params = useParams();
   const router = useRouter();
   const [company, setCompany] = useState<any>(null);
@@ -241,9 +241,7 @@ export default function CompanyDetailPage() {
   const fetchCompany = async () => {
     if (!accessToken) return;
     try {
-      const res = await fetch(`${API_URL}/api/admin/companies/${params.id}`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
+      const res = await authFetch(`${API_URL}/api/admin/companies/${params.id}`);
       const data = await res.json();
       if (data.success) setCompany(data.data);
     } catch (err) {
@@ -267,9 +265,9 @@ export default function CompanyDetailPage() {
     const body = modal === "approve" ? {} : modal === "reject" ? { reason } : { message: reason };
 
     try {
-      const res = await fetch(`${API_URL}/api/admin/companies/${params.id}/${endpoints[modal]}`, {
+      const res = await authFetch(`${API_URL}/api/admin/companies/${params.id}/${endpoints[modal]}`, {
         method: "PATCH",
-        headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
       const data = await res.json();
@@ -285,9 +283,9 @@ export default function CompanyDetailPage() {
   const handleVerifyParticipation = async (adminSignature: string) => {
     if (!accessToken) return;
     try {
-      const res = await fetch(`${API_URL}/api/admin/companies/${params.id}/verify-participation`, {
+      const res = await authFetch(`${API_URL}/api/admin/companies/${params.id}/verify-participation`, {
         method: "PATCH",
-        headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ adminSignature }),
       });
       const data = await res.json();

@@ -35,7 +35,7 @@ function ActionTypeBadge({ type }: { type: string }) {
 }
 
 export default function ActivityPage() {
-  const { accessToken } = useAuth();
+  const { accessToken, authFetch } = useAuth();
   const [actions, setActions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [meta, setMeta] = useState({ total: 0, page: 1, totalPages: 1 });
@@ -44,9 +44,7 @@ export default function ActivityPage() {
     if (!accessToken) return;
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/api/admin/activity?page=${page}&limit=20`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
+      const res = await authFetch(`${API_URL}/api/admin/activity?page=${page}&limit=20`);
       const data = await res.json();
       if (data.success) {
         setActions(data.data);

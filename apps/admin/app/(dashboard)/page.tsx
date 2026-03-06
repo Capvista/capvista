@@ -53,7 +53,7 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 export default function DashboardPage() {
-  const { accessToken } = useAuth();
+  const { accessToken, authFetch } = useAuth();
   const [stats, setStats] = useState<Stats | null>(null);
   const [feed, setFeed] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,11 +61,9 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!accessToken) return;
 
-    const headers = { Authorization: `Bearer ${accessToken}` };
-
     Promise.all([
-      fetch(`${API_URL}/api/admin/stats`, { headers }).then((r) => r.json()),
-      fetch(`${API_URL}/api/admin/activity/recent`, { headers }).then((r) => r.json()),
+      authFetch(`${API_URL}/api/admin/stats`).then((r) => r.json()),
+      authFetch(`${API_URL}/api/admin/activity/recent`).then((r) => r.json()),
     ])
       .then(([statsRes, feedRes]) => {
         if (statsRes.success) setStats(statsRes.data);
