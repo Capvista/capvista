@@ -3,6 +3,7 @@ import { prisma } from "../lib/prisma";
 import { requireAuth } from "../middleware/auth";
 import { submissionLimiter } from "../middleware/rateLimiter";
 import { isValidUUID } from "../utils/sanitize";
+import { trackEvent } from "../utils/trackEvent";
 
 const router = Router();
 
@@ -72,6 +73,10 @@ router.post("/:companyId", submissionLimiter, requireAuth, async (req: Request, 
       update: {},
     });
 
+    trackEvent("company_watchlisted", "engagement", req.user!.id, req.user!.role, {
+      companyId,
+    });
+
     return res.status(201).json({
       success: true,
       message: "Company added to watchlist",
@@ -104,6 +109,10 @@ router.delete("/:companyId", requireAuth, async (req: Request, res: Response) =>
         userId: req.user!.id,
         companyId,
       },
+    });
+
+    trackEvent("company_unwatchlisted", "engagement", req.user!.id, req.user!.role, {
+      companyId,
     });
 
     return res.json({

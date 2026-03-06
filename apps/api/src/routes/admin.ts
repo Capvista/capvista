@@ -11,6 +11,7 @@ import {
   fundingConfirmedEmail,
 } from "../lib/emailTemplates";
 import { sanitizeString } from "../utils/sanitize";
+import { trackEvent } from "../utils/trackEvent";
 
 const router = Router();
 
@@ -317,6 +318,8 @@ router.patch("/companies/:id/approve", async (req: Request, res: Response) => {
       }),
     ]);
 
+    trackEvent("company_approved", "company", req.user!.id, "ADMIN", { companyId: id });
+
     // Fire and forget — company approved email to founder
     (async () => {
       try {
@@ -380,6 +383,8 @@ router.patch("/companies/:id/reject", async (req: Request, res: Response) => {
         },
       }),
     ]);
+
+    trackEvent("company_rejected", "company", req.user!.id, "ADMIN", { companyId: id, reason });
 
     // Fire and forget — company rejected email to founder
     (async () => {
@@ -639,6 +644,8 @@ router.patch("/investors/:id/verify", async (req: Request, res: Response) => {
       }),
     ]);
 
+    trackEvent("investor_verified", "investor", req.user!.id, "ADMIN", { investorProfileId: id });
+
     // Fire and forget — investor verified email
     (async () => {
       try {
@@ -702,6 +709,8 @@ router.patch("/investors/:id/reject", async (req: Request, res: Response) => {
         },
       }),
     ]);
+
+    trackEvent("investor_rejected", "investor", req.user!.id, "ADMIN", { investorProfileId: id, reason });
 
     // Fire and forget — investor rejected email
     (async () => {
@@ -954,6 +963,9 @@ router.patch("/deals/:id/approve", async (req: Request, res: Response) => {
       }),
     ]);
 
+    trackEvent("deal_approved", "deal", req.user!.id, "ADMIN", { dealId: id });
+    trackEvent("deal_status_changed", "deal", req.user!.id, "ADMIN", { dealId: id, from: "UNDER_REVIEW", to: "APPROVED" });
+
     return res.json({ success: true, message: "Deal approved" });
   } catch (error) {
     console.error("Admin approve deal error:", error);
@@ -1069,6 +1081,8 @@ router.patch("/deals/:id/golive", async (req: Request, res: Response) => {
         },
       }),
     ]);
+
+    trackEvent("deal_status_changed", "deal", req.user!.id, "ADMIN", { dealId: id, from: "APPROVED", to: "LIVE" });
 
     // Fire and forget — deal live email to founder
     (async () => {
@@ -1412,6 +1426,12 @@ router.patch("/investments/:id/confirm-funding", async (req: Request, res: Respo
       }),
     ]);
 
+    trackEvent("investment_funded", "investment", req.user!.id, "ADMIN", {
+      investmentId: id,
+      dealId: investment.dealId,
+      fundedAmount,
+    });
+
     // Fire and forget — funding confirmed email to investor
     (async () => {
       try {
@@ -1498,6 +1518,12 @@ router.patch("/investments/:id/cancel", async (req: Request, res: Response) => {
         },
       }),
     ]);
+
+    trackEvent("investment_cancelled", "investment", req.user!.id, "ADMIN", {
+      investmentId: id,
+      dealId: investment.dealId,
+      reason: reason || "Cancelled by admin",
+    });
 
     return res.json({ success: true, message: "Investment cancelled by admin" });
   } catch (error) {

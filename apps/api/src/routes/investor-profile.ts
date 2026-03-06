@@ -5,6 +5,7 @@ import { authLimiter } from "../middleware/rateLimiter";
 import bcrypt from "bcrypt";
 import { pickFields } from "../utils/pickFields";
 import { sanitizeObject } from "../utils/sanitize";
+import { trackEvent } from "../utils/trackEvent";
 
 const router = Router();
 
@@ -408,6 +409,8 @@ router.put(
         data: { passwordHash },
       });
 
+      trackEvent("password_changed", "auth", userId, "INVESTOR");
+
       return res.json({
         success: true,
         data: { message: "Password updated successfully" },
@@ -469,6 +472,8 @@ router.delete(
         where: { id: userId },
         data: { status: "DEACTIVATED" },
       });
+
+      trackEvent("account_deactivated", "auth", userId, "INVESTOR");
 
       return res.json({
         success: true,

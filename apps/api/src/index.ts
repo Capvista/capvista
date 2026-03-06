@@ -6,6 +6,7 @@ import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import { globalLimiter } from "./middleware/rateLimiter";
+import { telemetryMiddleware } from "./middleware/telemetry";
 
 // Import routes
 import companiesRoutes from "./routes/companies";
@@ -18,6 +19,8 @@ import investmentsRoutes from "./routes/investments";
 import watchlistRoutes from "./routes/watchlist";
 import companyManageRoutes from "./routes/company-manage";
 import investorProfileRoutes from "./routes/investor-profile";
+import healthRoutes, { startHealthCheckInterval } from "./routes/health";
+import telemetryRoutes, { startDataRetentionInterval } from "./routes/telemetry";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -59,6 +62,7 @@ app.use(
 );
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
+app.use(telemetryMiddleware); // Request telemetry logging
 app.use("/api/investors", investorsRoutes);
 app.use("/api/investors", investorProfileRoutes);
 
@@ -71,13 +75,7 @@ if (process.env.NODE_ENV === "development") {
 }
 
 // Health check endpoint
-app.get("/health", (req: Request, res: Response) => {
-  res.json({
-    status: "healthy",
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || "development",
-  });
-});
+app.use("/api/health", healthRoutes);
 
 // API version info
 app.get("/api", (req: Request, res: Response) => {
@@ -100,6 +98,7 @@ app.use("/api/deals", dealsRoutes);
 app.use("/api/investments", investmentsRoutes);
 app.use("/api/watchlist", watchlistRoutes);
 app.use("/api/companies", companyManageRoutes);
+app.use("/api/admin/telemetry", telemetryRoutes);
 
 // Error handling middleware
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
@@ -133,6 +132,10 @@ app.listen(PORT, () => {
   console.log(`🚀 Capvista API running on http://localhost:${PORT}`);
   console.log(`📊 Environment: ${process.env.NODE_ENV || "development"}`);
   console.log(`📍 Endpoints available at http://localhost:${PORT}/api`);
+
+  // Start background telemetry jobs
+  startHealthCheckInterval();
+  startDataRetentionInterval();
 });
 
 export default app;
