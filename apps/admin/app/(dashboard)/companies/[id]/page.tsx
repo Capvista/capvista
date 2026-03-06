@@ -5,7 +5,8 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || "https://capvista-api.onrender.com";
 
 const stageLabels: Record<string, string> = {
   PRE_SEED: "Pre-Seed",

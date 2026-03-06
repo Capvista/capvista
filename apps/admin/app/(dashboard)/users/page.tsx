@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/contexts/AuthContext";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || "https://capvista-api.onrender.com";
 
 function RoleBadge({ role }: { role: string }) {
   const colors: Record<string, { bg: string; text: string }> = {

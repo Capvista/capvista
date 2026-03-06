@@ -15,7 +15,8 @@ import {
   ArrowRight,
 } from "lucide-react";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || "https://capvista-api.onrender.com";
 
 type Stats = {
   companies: { total: number; pending: number; approved: number; rejected: number };
