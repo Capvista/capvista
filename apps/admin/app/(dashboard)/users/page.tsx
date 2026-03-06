@@ -21,7 +21,7 @@ function RoleBadge({ role }: { role: string }) {
 }
 
 export default function UsersPage() {
-  const { accessToken } = useAuth();
+  const { accessToken, authFetch } = useAuth();
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [meta, setMeta] = useState({ total: 0, page: 1, totalPages: 1 });
@@ -30,9 +30,7 @@ export default function UsersPage() {
     if (!accessToken) return;
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/api/admin/users?page=${page}`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
+      const res = await authFetch(`${API_URL}/api/admin/users?page=${page}`);
       const data = await res.json();
       if (data.success) {
         setUsers(data.data);

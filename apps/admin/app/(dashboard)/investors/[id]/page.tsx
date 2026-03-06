@@ -123,7 +123,7 @@ function ActionModal({
 }
 
 export default function InvestorDetailPage() {
-  const { accessToken } = useAuth();
+  const { accessToken, authFetch } = useAuth();
   const params = useParams();
   const [investor, setInvestor] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -132,9 +132,7 @@ export default function InvestorDetailPage() {
   const fetchInvestor = async () => {
     if (!accessToken) return;
     try {
-      const res = await fetch(`${API_URL}/api/admin/investors/${params.id}`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
+      const res = await authFetch(`${API_URL}/api/admin/investors/${params.id}`);
       const data = await res.json();
       if (data.success) setInvestor(data.data);
     } catch (err) {
@@ -154,9 +152,9 @@ export default function InvestorDetailPage() {
     const body = modal === "verify" ? {} : modal === "reject" ? { reason } : { message: reason };
 
     try {
-      const res = await fetch(`${API_URL}/api/admin/investors/${params.id}/${endpoints[modal]}`, {
+      const res = await authFetch(`${API_URL}/api/admin/investors/${params.id}/${endpoints[modal]}`, {
         method: "PATCH",
-        headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
       const data = await res.json();

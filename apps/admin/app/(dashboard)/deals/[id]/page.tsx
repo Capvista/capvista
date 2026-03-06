@@ -161,7 +161,7 @@ function ActionModal({
 }
 
 export default function DealDetailPage() {
-  const { accessToken } = useAuth();
+  const { accessToken, authFetch } = useAuth();
   const params = useParams();
   const [deal, setDeal] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -170,9 +170,7 @@ export default function DealDetailPage() {
   const fetchDeal = async () => {
     if (!accessToken) return;
     try {
-      const res = await fetch(`${API_URL}/api/admin/deals/${params.id}`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
+      const res = await authFetch(`${API_URL}/api/admin/deals/${params.id}`);
       const data = await res.json();
       if (data.success) setDeal(data.data);
     } catch (err) {
@@ -197,9 +195,9 @@ export default function DealDetailPage() {
     const body = modal === "reject" || modal === "close" ? { reason } : {};
 
     try {
-      const res = await fetch(`${API_URL}/api/admin/deals/${params.id}/${endpoints[modal]}`, {
+      const res = await authFetch(`${API_URL}/api/admin/deals/${params.id}/${endpoints[modal]}`, {
         method: "PATCH",
-        headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
       const data = await res.json();

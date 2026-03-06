@@ -17,6 +17,7 @@ type AuthContextType = {
   accessToken: string | null;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => void;
+  authFetch: (url: string, options?: RequestInit) => Promise<Response>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -31,22 +32,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
 
+  const clearAuth = () => {
+    localStorage.removeItem("capvista_admin_token");
+    localStorage.removeItem("capvista_admin_user");
+    setAccessToken(null);
+    setUser(null);
+  };
+
   useEffect(() => {
     const storedToken = localStorage.getItem("capvista_admin_token");
     const storedUser = localStorage.getItem("capvista_admin_user");
 
     if (storedToken && storedUser) {
       const parsed = JSON.parse(storedUser);
-      if (parsed.role === "ADMIN") {
-        setAccessToken(storedToken);
-        setUser(parsed);
-      } else {
-        localStorage.removeItem("capvista_admin_token");
-        localStorage.removeItem("capvista_admin_user");
+      if (parsed.role !== "ADMIN") {
+        clearAuth();
+        setLoading(false);
+        return;
       }
-    }
 
-    setLoading(false);
+      // Validate token is still valid by calling the API
+      fetch(`${API_URL}/api/users/me`, {
+        headers: { Authorization: `Bearer ${storedToken}` },
+      })
+        .then((res) => {
+          if (res.ok) {
+            setAccessToken(storedToken);
+            setUser(parsed);
+          } else {
+            // Token is expired or invalid — clear and redirect to login
+            clearAuth();
+          }
+        })
+        .catch(() => {
+          // Network error — still allow offline access with stored data
+          setAccessToken(storedToken);
+          setUser(parsed);
+        })
+        .finally(() => setLoading(false));
+    } else {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -85,15 +111,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = () => {
-    localStorage.removeItem("capvista_admin_token");
-    localStorage.removeItem("capvista_admin_user");
-    setAccessToken(null);
-    setUser(null);
+    clearAuth();
     router.push("/login");
   };
 
+  const authFetch = async (url: string, options: RequestInit = {}): Promise<Response> => {
+    const headers = {
+      ...options.headers,
+      Authorization: `Bearer ${accessToken}`,
+    };
+    const res = await fetch(url, { ...options, headers });
+    if (res.status === 401) {
+      signOut();
+    }
+    return res;
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, accessToken, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, loading, accessToken, signIn, signOut, authFetch }}>
       {children}
     </AuthContext.Provider>
   );

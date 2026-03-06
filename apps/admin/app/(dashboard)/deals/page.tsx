@@ -43,7 +43,7 @@ function LaneBadge({ lane }: { lane: string }) {
 }
 
 export default function DealsPage() {
-  const { accessToken } = useAuth();
+  const { accessToken, authFetch } = useAuth();
   const [deals, setDeals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("");
@@ -61,9 +61,7 @@ export default function DealsPage() {
     params.set("page", String(page));
 
     try {
-      const res = await fetch(`${API_URL}/api/admin/deals?${params}`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
+      const res = await authFetch(`${API_URL}/api/admin/deals?${params}`);
       const data = await res.json();
       if (data.success) {
         setDeals(data.data);

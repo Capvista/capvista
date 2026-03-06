@@ -22,7 +22,7 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 export default function InvestorsPage() {
-  const { accessToken } = useAuth();
+  const { accessToken, authFetch } = useAuth();
   const [investors, setInvestors] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("");
@@ -40,9 +40,7 @@ export default function InvestorsPage() {
     params.set("page", String(page));
 
     try {
-      const res = await fetch(`${API_URL}/api/admin/investors?${params}`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
+      const res = await authFetch(`${API_URL}/api/admin/investors?${params}`);
       const data = await res.json();
       if (data.success) {
         setInvestors(data.data);

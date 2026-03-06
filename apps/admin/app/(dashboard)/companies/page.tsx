@@ -35,7 +35,7 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 export default function CompaniesPage() {
-  const { accessToken } = useAuth();
+  const { accessToken, authFetch } = useAuth();
   const [companies, setCompanies] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("");
@@ -53,9 +53,7 @@ export default function CompaniesPage() {
     params.set("page", String(page));
 
     try {
-      const res = await fetch(`${API_URL}/api/admin/companies?${params}`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
+      const res = await authFetch(`${API_URL}/api/admin/companies?${params}`);
       const data = await res.json();
       if (data.success) {
         setCompanies(data.data);
