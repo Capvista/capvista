@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
-const INVITE_CODE = process.env.NEXT_PUBLIC_ADMIN_INVITE_CODE || "";
 
 type FieldErrors = {
   firstName?: string;
@@ -61,15 +60,6 @@ export default function SignupPage() {
     setError("");
 
     if (!validate()) return;
-
-    // Frontend invite code check
-    if (inviteCode !== INVITE_CODE) {
-      setFieldErrors((prev) => ({
-        ...prev,
-        inviteCode: "Invalid invite code",
-      }));
-      return;
-    }
 
     setLoading(true);
 
