@@ -139,8 +139,9 @@ export default function Footer() {
             &copy; 2026 Capvista. All rights reserved.
           </p>
           <p className="text-sm text-gray-400">
-            Securities offered through registered broker-dealer. Member
-            FINRA/SIPC.
+            Capvista is not a registered broker-dealer or investment adviser.
+            Securities offered through the platform are subject to restrictions
+            and available only to qualified investors.
           </p>
         </div>
       </div>

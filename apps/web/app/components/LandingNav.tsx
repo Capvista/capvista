@@ -23,9 +23,9 @@ export default function LandingNav() {
   const displayName = user ? `${user.firstName} ${user.lastName}` : "";
 
   const navLinks = [
-    { label: "For Founders", href: "#for-founders" },
-    { label: "For Investors", href: "#for-investors" },
-    { label: "How It Works", href: "#how-it-works" },
+    { label: "For Founders", href: "/for-founders" },
+    { label: "For Investors", href: "/for-investors" },
+    { label: "How It Works", href: "/how-it-works" },
     { label: "About", href: "/about" },
   ];
 
@@ -42,27 +42,16 @@ export default function LandingNav() {
 
         {/* Center: Nav links (desktop) */}
         <nav className="hidden md:flex items-center space-x-8">
-          {navLinks.map((link) =>
-            link.href.startsWith("#") ? (
-              <a
-                key={link.label}
-                href={link.href}
-                className="text-sm font-medium transition-colors hover:text-[#10B981]"
-                style={{ color: "#0A1F44" }}
-              >
-                {link.label}
-              </a>
-            ) : (
-              <Link
-                key={link.label}
-                href={link.href}
-                className="text-sm font-medium transition-colors hover:text-[#10B981]"
-                style={{ color: "#0A1F44" }}
-              >
-                {link.label}
-              </Link>
-            )
-          )}
+          {navLinks.map((link) => (
+            <Link
+              key={link.label}
+              href={link.href}
+              className="text-sm font-medium transition-colors hover:text-[#10B981]"
+              style={{ color: "#0A1F44" }}
+            >
+              {link.label}
+            </Link>
+          ))}
         </nav>
 
         {/* Right: Auth actions (desktop) */}
@@ -200,29 +189,17 @@ export default function LandingNav() {
       {/* Mobile menu dropdown */}
       {mobileMenuOpen && (
         <div className="md:hidden border-t border-gray-200 bg-white px-4 py-4 space-y-3">
-          {navLinks.map((link) =>
-            link.href.startsWith("#") ? (
-              <a
-                key={link.label}
-                href={link.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className="block text-sm font-medium py-2 transition-colors hover:text-[#10B981]"
-                style={{ color: "#0A1F44" }}
-              >
-                {link.label}
-              </a>
-            ) : (
-              <Link
-                key={link.label}
-                href={link.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className="block text-sm font-medium py-2 transition-colors hover:text-[#10B981]"
-                style={{ color: "#0A1F44" }}
-              >
-                {link.label}
-              </Link>
-            )
-          )}
+          {navLinks.map((link) => (
+            <Link
+              key={link.label}
+              href={link.href}
+              onClick={() => setMobileMenuOpen(false)}
+              className="block text-sm font-medium py-2 transition-colors hover:text-[#10B981]"
+              style={{ color: "#0A1F44" }}
+            >
+              {link.label}
+            </Link>
+          ))}
         </div>
       )}
     </header>
