@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { requireAuth, requireRole } from "../middleware/auth";
+import { authLimiter } from "../middleware/rateLimiter";
 import bcrypt from "bcrypt";
 import { pickFields } from "../utils/pickFields";
 
@@ -323,6 +324,7 @@ const ALLOWED_PASSWORD_FIELDS = ["currentPassword", "newPassword", "confirmPassw
 
 router.put(
   "/password",
+  authLimiter,
   requireAuth,
   requireRole("INVESTOR"),
   async (req: Request, res: Response) => {

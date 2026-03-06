@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { z } from "zod";
 import { requireAuth, requireRole } from "../middleware/auth";
+import { submissionLimiter } from "../middleware/rateLimiter";
 import { sendEmail } from "../lib/email";
 import { investmentCommitmentEmail, fundingInstructionsEmail } from "../lib/emailTemplates";
 
@@ -61,6 +62,7 @@ function addBusinessDays(date: Date, days: number): Date {
 
 router.post(
   "/express-interest",
+  submissionLimiter,
   requireAuth,
   requireRole("INVESTOR"),
   async (req: Request, res: Response) => {

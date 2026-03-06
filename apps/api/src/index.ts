@@ -34,7 +34,7 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
 
 // Middleware
 app.use(helmet()); // Security headers
-app.use(globalLimiter); // Global rate limiting (100 req / 15 min per IP)
+app.use(globalLimiter); // Global rate limiting (200 req / 15 min per IP)
 app.use(
   cors({
     origin: (origin, callback) => {

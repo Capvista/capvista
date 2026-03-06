@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { z } from "zod";
 import { requireAuth, requireRole } from "../middleware/auth";
+import { submissionLimiter } from "../middleware/rateLimiter";
 import { sendEmail } from "../lib/email";
 import { companySubmissionEmail } from "../lib/emailTemplates";
 import { pickFields } from "../utils/pickFields";
@@ -460,6 +461,7 @@ router.get("/:id", requireAuth, async (req: Request, res: Response) => {
 // POST /api/companies - Create company (founders only)
 router.post(
   "/",
+  submissionLimiter,
   requireAuth,
   requireRole("FOUNDER"),
   async (req: Request, res: Response) => {

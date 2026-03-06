@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { requireAuth } from "../middleware/auth";
+import { submissionLimiter } from "../middleware/rateLimiter";
 
 const router = Router();
 
@@ -31,7 +32,7 @@ router.get("/", requireAuth, async (req: Request, res: Response) => {
 // ============================================================================
 // POST /api/watchlist/:companyId — Add company to watchlist
 // ============================================================================
-router.post("/:companyId", requireAuth, async (req: Request, res: Response) => {
+router.post("/:companyId", submissionLimiter, requireAuth, async (req: Request, res: Response) => {
   try {
     const { companyId } = req.params;
 

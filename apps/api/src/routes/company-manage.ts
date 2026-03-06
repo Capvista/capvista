@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { z } from "zod";
 import { requireAuth, requireRole } from "../middleware/auth";
+import { submissionLimiter } from "../middleware/rateLimiter";
 
 const router = Router();
 
@@ -73,6 +74,7 @@ router.get(
 // POST /api/companies/:companyId/team
 router.post(
   "/:companyId/team",
+  submissionLimiter,
   requireAuth,
   requireRole("FOUNDER"),
   async (req: Request, res: Response) => {
