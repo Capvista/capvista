@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import PhoneInput from "@/components/PhoneInput";
 import {
   AccreditationSection,
   getAccreditationForCountry,
@@ -1217,18 +1218,11 @@ function Step1Identity({
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Phone Number <span className="text-red-500">*</span>
           </label>
-          <input
-            type="tel"
+          <PhoneInput
             value={formData.phone}
-            onChange={(e) => updateField("phone", e.target.value)}
-            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none ${has("phone") ? "border-red-400 ring-2 ring-red-200" : "border-gray-300"}`}
-            placeholder={
-              region === "us"
-                ? "(xxx) xxx-xxxx"
-                : region === "uk"
-                  ? "+44 xxx xxxx xxxx"
-                  : "+234 xxx xxx xxxx"
-            }
+            onChange={(v) => updateField("phone", v)}
+            defaultCountryCode={region === "us" ? "+1" : region === "uk" ? "+44" : "+234"}
+            error={has("phone")}
           />
           {has("phone") && (
             <p className="text-xs text-red-500 mt-1">Required</p>
@@ -2077,13 +2071,10 @@ function Step4Suitability({
           </div>
           <div>
             <label className="block text-xs text-gray-600 mb-1">Phone</label>
-            <input
-              type="tel"
+            <PhoneInput
               value={formData.trustedContactPhone}
-              onChange={(e) =>
-                updateField("trustedContactPhone", e.target.value)
-              }
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent outline-none"
+              onChange={(v) => updateField("trustedContactPhone", v)}
+              defaultCountryCode={getRegion(formData.countryOfResidence) === "us" ? "+1" : getRegion(formData.countryOfResidence) === "uk" ? "+44" : "+234"}
             />
           </div>
           <div>

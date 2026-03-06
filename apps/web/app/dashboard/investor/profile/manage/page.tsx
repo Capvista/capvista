@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import InvestorHeader from "@/components/InvestorHeader";
+import PhoneInput from "@/components/PhoneInput";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -736,7 +737,10 @@ export default function ManageProfilePage() {
                 <InputField label="First Name *" value={firstName} onChange={setFirstName} />
                 <InputField label="Last Name *" value={lastName} onChange={setLastName} />
                 <InputField label="Email" value={email} disabled />
-                <InputField label="Phone" value={phone} onChange={setPhone} />
+                <div>
+                  <label className="block text-sm font-medium text-[#6B7280] mb-1">Phone</label>
+                  <PhoneInput value={phone} onChange={setPhone} />
+                </div>
                 <InputField label="Date of Birth" value={dateOfBirth} onChange={setDateOfBirth} type="date" />
                 <CountrySelect label="Citizenship" value={citizenship} onChange={setCitizenship} />
                 <CountrySelect label="Country of Residence" value={countryOfResidence} onChange={setCountryOfResidence} />

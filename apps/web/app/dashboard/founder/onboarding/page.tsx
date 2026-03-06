@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import CustomSelect from "@/components/CustomSelect";
+import PhoneInput from "@/components/PhoneInput";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { createClient } from "@supabase/supabase-js";
 
@@ -1419,12 +1420,10 @@ function Step3FounderVerification({
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Phone Number <span className="text-red-500">*</span>
           </label>
-          <input
-            type="tel"
+          <PhoneInput
             value={formData.founderPhone}
-            onChange={(e) => updateField("founderPhone", e.target.value)}
-            className={inputClass(has("founderPhone"))}
-            placeholder="+234 xxx xxx xxxx"
+            onChange={(v) => updateField("founderPhone", v)}
+            error={has("founderPhone")}
           />
           <FieldError
             show={has("founderPhone")}
