@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { requireAuth, requireRole } from "../middleware/auth";
 import { sanitizeObject } from "../utils/sanitize";
+import { trackEvent } from "../utils/trackEvent";
 
 const router = Router();
 
@@ -266,6 +267,8 @@ router.put(
           .update({ where: { id: userId }, data: { phone: body.phone } })
           .catch(() => {});
       }
+
+      trackEvent("investor_profile_completed", "investor", userId, "INVESTOR");
 
       return res.json({ success: true, data: profile });
     } catch (error) {

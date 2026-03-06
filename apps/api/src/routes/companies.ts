@@ -7,6 +7,7 @@ import { sendEmail } from "../lib/email";
 import { companySubmissionEmail } from "../lib/emailTemplates";
 import { pickFields } from "../utils/pickFields";
 import { sanitizeObject, sanitizeString, isValidURL } from "../utils/sanitize";
+import { trackEvent } from "../utils/trackEvent";
 
 const router = Router();
 
@@ -580,6 +581,11 @@ router.post(
 
       console.log(`✅ Company created: ${company.legalName} (${company.id})`);
 
+      trackEvent("company_submitted", "company", req.user!.id, "FOUNDER", {
+        companyId: company.id,
+        companyName: company.legalName,
+      });
+
       // Fire and forget — company submission email
       (async () => {
         try {
@@ -710,6 +716,8 @@ router.patch(
             : undefined,
         },
       });
+
+      trackEvent("company_updated", "company", req.user!.id, "FOUNDER", { companyId: id });
 
       return res.json({
         success: true,

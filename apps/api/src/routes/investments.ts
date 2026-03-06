@@ -6,6 +6,7 @@ import { submissionLimiter } from "../middleware/rateLimiter";
 import { sendEmail } from "../lib/email";
 import { investmentCommitmentEmail, fundingInstructionsEmail } from "../lib/emailTemplates";
 import { sanitizeString } from "../utils/sanitize";
+import { trackEvent } from "../utils/trackEvent";
 
 const router = Router();
 
@@ -198,6 +199,12 @@ router.post(
             },
           },
         },
+      });
+
+      trackEvent("investment_interest_expressed", "investment", req.user!.id, "INVESTOR", {
+        investmentId: investment.id,
+        dealId: body.dealId,
+        waitlisted,
       });
 
       return res.status(201).json({
@@ -967,6 +974,12 @@ router.patch(
       const updated = await prisma.investment.update({
         where: { id },
         data: { status: "CANCELLED" },
+      });
+
+      trackEvent("investment_cancelled", "investment", req.user!.id, "INVESTOR", {
+        investmentId: id,
+        dealId: investment.dealId,
+        previousStatus: investment.status,
       });
 
       // If a non-waitlisted investment was cancelled, promote the next waitlisted investor

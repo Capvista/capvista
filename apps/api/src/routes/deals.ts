@@ -6,6 +6,7 @@ import { sendEmail } from "../lib/email";
 import { dealSubmittedEmail } from "../lib/emailTemplates";
 import { pickFields } from "../utils/pickFields";
 import { sanitizeObject } from "../utils/sanitize";
+import { trackEvent } from "../utils/trackEvent";
 
 const router = Router();
 
@@ -305,6 +306,12 @@ router.post(
             },
           },
         },
+      });
+
+      trackEvent("deal_created", "deal", req.user!.id, "FOUNDER", {
+        dealId: deal.id,
+        status: dealStatus,
+        companyId: body.companyId,
       });
 
       // Fire and forget — deal submission email (only if submitted for review)
@@ -705,6 +712,12 @@ router.patch(
       const updatedDeal = await prisma.deal.update({
         where: { id },
         data: { status: "UNDER_REVIEW" },
+      });
+
+      trackEvent("deal_status_changed", "deal", req.user!.id, "FOUNDER", {
+        dealId: id,
+        from: "DRAFT",
+        to: "UNDER_REVIEW",
       });
 
       // Fire and forget — deal submission email

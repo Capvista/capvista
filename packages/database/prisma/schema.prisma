@@ -799,3 +799,52 @@ model Watchlist {
   @@unique([userId, companyId])
   @@index([userId])
 }
+
+// ============================================================================
+// TELEMETRY & ANALYTICS
+// ============================================================================
+
+model ApiRequestLog {
+  id             String   @id @default(cuid())
+  method         String
+  path           String
+  statusCode     Int
+  responseTimeMs Int
+  userId         String?
+  userRole       String?
+  userAgent      String?
+  ipAddress      String?
+  errorMessage   String?
+  createdAt      DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([path])
+  @@index([statusCode])
+  @@index([userId])
+}
+
+model PlatformEvent {
+  id        String   @id @default(cuid())
+  eventType String
+  category  String
+  userId    String?
+  userRole  String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([eventType])
+  @@index([category])
+  @@index([createdAt])
+}
+
+model SystemHealthCheck {
+  id             String   @id @default(cuid())
+  service        String
+  status         String
+  responseTimeMs Int?
+  details        Json?
+  createdAt      DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([service])
+}

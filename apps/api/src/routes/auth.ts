@@ -7,6 +7,7 @@ import { sendEmail } from "../lib/email";
 import { welcomeEmail, passwordResetEmail } from "../lib/emailTemplates";
 import { authLimiter } from "../middleware/rateLimiter";
 import { sanitizeString, isValidEmail } from "../utils/sanitize";
+import { trackEvent } from "../utils/trackEvent";
 
 const router = Router();
 
@@ -145,6 +146,8 @@ router.post("/register", authLimiter, async (req: Request, res: Response) => {
 
     console.log(`✅ Registered: ${validRole} - ${cleanEmail} (${result.user.id})`);
 
+    trackEvent("user_registered", "auth", result.user.id, validRole, { role: validRole });
+
     // Fire and forget — welcome email
     const { subject, html } = welcomeEmail(cleanFirstName, validRole);
     sendEmail({ to: cleanEmail, subject, html }).catch((err) =>
@@ -208,6 +211,7 @@ router.post("/login", authLimiter, async (req: Request, res: Response) => {
     });
 
     if (!user) {
+      trackEvent("user_login_failed", "auth", undefined, undefined, { email: email.trim().toLowerCase() });
       return res.status(401).json({
         success: false,
         error: {
@@ -220,6 +224,7 @@ router.post("/login", authLimiter, async (req: Request, res: Response) => {
     // Check password
     const passwordValid = await bcrypt.compare(password, user.passwordHash);
     if (!passwordValid) {
+      trackEvent("user_login_failed", "auth", user.id, user.role);
       return res.status(401).json({
         success: false,
         error: {
@@ -241,6 +246,8 @@ router.post("/login", authLimiter, async (req: Request, res: Response) => {
     const { accessToken } = generateTokens(user.id, user.role);
 
     console.log(`✅ Login: ${user.role} - ${email}`);
+
+    trackEvent("user_logged_in", "auth", user.id, user.role);
 
     return res.json({
       success: true,
@@ -361,6 +368,8 @@ router.post("/register-admin", authLimiter, async (req: Request, res: Response) 
 
     console.log(`✅ Admin registered: ${email} (${user.id})`);
 
+    trackEvent("user_registered", "auth", user.id, "ADMIN", { role: "ADMIN" });
+
     return res.status(201).json({
       success: true,
       message: "Admin registration successful",
@@ -477,6 +486,8 @@ router.post("/reset-password", authLimiter, async (req: Request, res: Response) 
         resetTokenExpiry: null,
       },
     });
+
+    trackEvent("password_changed", "auth", user.id, user.role);
 
     return res.json({
       success: true,

@@ -4,6 +4,7 @@ import { z } from "zod";
 import { requireAuth, requireRole } from "../middleware/auth";
 import { submissionLimiter } from "../middleware/rateLimiter";
 import { sanitizeObject } from "../utils/sanitize";
+import { trackEvent } from "../utils/trackEvent";
 
 const router = Router();
 
@@ -110,6 +111,11 @@ router.post(
           equityPercent: body.equityPercent ?? null,
           sortOrder: (lastMember?.sortOrder ?? -1) + 1,
         },
+      });
+
+      trackEvent("team_member_added", "team", req.user!.id, "FOUNDER", {
+        companyId,
+        memberId: member.id,
       });
 
       return res.status(201).json({ success: true, data: member });
@@ -238,6 +244,11 @@ router.delete(
       }
 
       await prisma.teamMember.delete({ where: { id: memberId } });
+
+      trackEvent("team_member_removed", "team", req.user!.id, "FOUNDER", {
+        companyId,
+        memberId,
+      });
 
       return res.json({ success: true, message: "Team member removed" });
     } catch (error) {
