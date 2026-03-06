@@ -5,6 +5,7 @@ import { requireAuth, requireRole } from "../middleware/auth";
 import { submissionLimiter } from "../middleware/rateLimiter";
 import { sendEmail } from "../lib/email";
 import { investmentCommitmentEmail, fundingInstructionsEmail } from "../lib/emailTemplates";
+import { sanitizeString } from "../utils/sanitize";
 
 const router = Router();
 
@@ -559,7 +560,7 @@ router.patch(
           confirmedUnderstandsRisks: true,
           confirmedOwnAccount: true,
           confirmedNoLiquidityExpectation: true,
-          eSignature: body.eSignature.trim(),
+          eSignature: sanitizeString(body.eSignature),
           eSignatureTimestamp: now,
           eSignatureIp: clientIp,
           subscriptionAgreementSignedAt: now,

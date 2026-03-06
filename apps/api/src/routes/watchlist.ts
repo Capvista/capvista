@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { requireAuth } from "../middleware/auth";
 import { submissionLimiter } from "../middleware/rateLimiter";
+import { isValidUUID } from "../utils/sanitize";
 
 const router = Router();
 
@@ -35,6 +36,13 @@ router.get("/", requireAuth, async (req: Request, res: Response) => {
 router.post("/:companyId", submissionLimiter, requireAuth, async (req: Request, res: Response) => {
   try {
     const { companyId } = req.params;
+
+    if (!isValidUUID(companyId)) {
+      return res.status(400).json({
+        success: false,
+        error: { code: "VALIDATION_ERROR", message: "Invalid company ID format" },
+      });
+    }
 
     // Verify company exists
     const company = await prisma.company.findUnique({
@@ -83,6 +91,13 @@ router.post("/:companyId", submissionLimiter, requireAuth, async (req: Request, 
 router.delete("/:companyId", requireAuth, async (req: Request, res: Response) => {
   try {
     const { companyId } = req.params;
+
+    if (!isValidUUID(companyId)) {
+      return res.status(400).json({
+        success: false,
+        error: { code: "VALIDATION_ERROR", message: "Invalid company ID format" },
+      });
+    }
 
     await prisma.watchlist.deleteMany({
       where: {

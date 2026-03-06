@@ -6,6 +6,7 @@ import crypto from "crypto";
 import { sendEmail } from "../lib/email";
 import { welcomeEmail, passwordResetEmail } from "../lib/emailTemplates";
 import { authLimiter } from "../middleware/rateLimiter";
+import { sanitizeString, isValidEmail } from "../utils/sanitize";
 
 const router = Router();
 
@@ -34,6 +35,22 @@ router.post("/register", authLimiter, async (req: Request, res: Response) => {
       });
     }
 
+    // Validate types
+    if (typeof email !== "string" || typeof password !== "string" ||
+        typeof firstName !== "string" || typeof lastName !== "string" || typeof role !== "string") {
+      return res.status(400).json({
+        success: false,
+        error: { code: "VALIDATION_ERROR", message: "All fields must be strings" },
+      });
+    }
+
+    if (!isValidEmail(email)) {
+      return res.status(400).json({
+        success: false,
+        error: { code: "VALIDATION_ERROR", message: "Invalid email format" },
+      });
+    }
+
     if (!["FOUNDER", "INVESTOR"].includes(role)) {
       return res.status(400).json({
         success: false,
@@ -43,6 +60,7 @@ router.post("/register", authLimiter, async (req: Request, res: Response) => {
         },
       });
     }
+    const validRole = role as "FOUNDER" | "INVESTOR";
 
     if (password.length < 8) {
       return res.status(400).json({
@@ -51,6 +69,13 @@ router.post("/register", authLimiter, async (req: Request, res: Response) => {
           code: "VALIDATION_ERROR",
           message: "Password must be at least 8 characters",
         },
+      });
+    }
+
+    if (firstName.length > 100 || lastName.length > 100) {
+      return res.status(400).json({
+        success: false,
+        error: { code: "VALIDATION_ERROR", message: "Name fields must be under 100 characters" },
       });
     }
 
@@ -69,6 +94,11 @@ router.post("/register", authLimiter, async (req: Request, res: Response) => {
       });
     }
 
+    // Sanitize text inputs
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanFirstName = sanitizeString(firstName);
+    const cleanLastName = sanitizeString(lastName);
+
     // Hash password
     const passwordHash = await bcrypt.hash(password, 10);
 
@@ -76,16 +106,16 @@ router.post("/register", authLimiter, async (req: Request, res: Response) => {
     const result = await prisma.$transaction(async (tx) => {
       const user = await tx.user.create({
         data: {
-          email,
+          email: cleanEmail,
           passwordHash,
-          role,
-          firstName,
-          lastName,
+          role: validRole,
+          firstName: cleanFirstName,
+          lastName: cleanLastName,
           status: "active",
         },
       });
 
-      if (role === "FOUNDER") {
+      if (validRole === "FOUNDER") {
         const founderProfile = await tx.founderProfile.create({
           data: {
             userId: user.id,
@@ -111,11 +141,11 @@ router.post("/register", authLimiter, async (req: Request, res: Response) => {
     // Generate token
     const { accessToken } = generateTokens(result.user.id, result.user.role);
 
-    console.log(`✅ Registered: ${role} - ${email} (${result.user.id})`);
+    console.log(`✅ Registered: ${validRole} - ${cleanEmail} (${result.user.id})`);
 
     // Fire and forget — welcome email
-    const { subject, html } = welcomeEmail(firstName, role);
-    sendEmail({ to: email, subject, html }).catch((err) =>
+    const { subject, html } = welcomeEmail(cleanFirstName, validRole);
+    sendEmail({ to: cleanEmail, subject, html }).catch((err) =>
       console.error("Welcome email failed:", err),
     );
 
@@ -159,9 +189,16 @@ router.post("/login", authLimiter, async (req: Request, res: Response) => {
       });
     }
 
+    if (typeof email !== "string" || typeof password !== "string") {
+      return res.status(400).json({
+        success: false,
+        error: { code: "VALIDATION_ERROR", message: "Email and password must be strings" },
+      });
+    }
+
     // Find user
     const user = await prisma.user.findUnique({
-      where: { email },
+      where: { email: email.trim().toLowerCase() },
       include: {
         founderProfile: true,
         investorProfile: true,
@@ -241,6 +278,21 @@ router.post("/register-admin", authLimiter, async (req: Request, res: Response) 
       });
     }
 
+    if (typeof email !== "string" || typeof password !== "string" ||
+        typeof firstName !== "string" || typeof lastName !== "string" || typeof inviteCode !== "string") {
+      return res.status(400).json({
+        success: false,
+        error: { code: "VALIDATION_ERROR", message: "All fields must be strings" },
+      });
+    }
+
+    if (!isValidEmail(email)) {
+      return res.status(400).json({
+        success: false,
+        error: { code: "VALIDATION_ERROR", message: "Invalid email format" },
+      });
+    }
+
     // Validate invite code
     const validInviteCode = process.env.ADMIN_INVITE_CODE;
     if (!validInviteCode || inviteCode !== validInviteCode) {
@@ -260,9 +312,21 @@ router.post("/register-admin", authLimiter, async (req: Request, res: Response) 
       });
     }
 
+    if (firstName.length > 100 || lastName.length > 100) {
+      return res.status(400).json({
+        success: false,
+        error: { code: "VALIDATION_ERROR", message: "Name fields must be under 100 characters" },
+      });
+    }
+
+    // Sanitize text inputs
+    const cleanAdminEmail = email.trim().toLowerCase();
+    const cleanAdminFirstName = sanitizeString(firstName);
+    const cleanAdminLastName = sanitizeString(lastName);
+
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
-      where: { email },
+      where: { email: cleanAdminEmail },
     });
 
     if (existingUser) {
@@ -281,11 +345,11 @@ router.post("/register-admin", authLimiter, async (req: Request, res: Response) 
     // Create admin user (no FounderProfile or InvestorProfile)
     const user = await prisma.user.create({
       data: {
-        email,
+        email: cleanAdminEmail,
         passwordHash,
         role: "ADMIN",
-        firstName,
-        lastName,
+        firstName: cleanAdminFirstName,
+        lastName: cleanAdminLastName,
         status: "active",
       },
     });
@@ -323,15 +387,22 @@ router.post("/forgot-password", authLimiter, async (req: Request, res: Response)
   try {
     const { email } = req.body;
 
-    if (!email) {
+    if (!email || typeof email !== "string") {
       return res.status(400).json({
         success: false,
         error: { code: "VALIDATION_ERROR", message: "Email is required" },
       });
     }
 
+    if (!isValidEmail(email)) {
+      return res.status(400).json({
+        success: false,
+        error: { code: "VALIDATION_ERROR", message: "Invalid email format" },
+      });
+    }
+
     // Always return success to prevent email enumeration
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({ where: { email: email.trim().toLowerCase() } });
 
     if (user) {
       const resetToken = crypto.randomBytes(32).toString("hex");
@@ -366,7 +437,7 @@ router.post("/reset-password", authLimiter, async (req: Request, res: Response) 
   try {
     const { token, newPassword } = req.body;
 
-    if (!token || !newPassword) {
+    if (!token || !newPassword || typeof token !== "string" || typeof newPassword !== "string") {
       return res.status(400).json({
         success: false,
         error: { code: "VALIDATION_ERROR", message: "Token and new password are required" },

@@ -5,6 +5,7 @@ import { requireAuth, requireRole } from "../middleware/auth";
 import { sendEmail } from "../lib/email";
 import { dealSubmittedEmail } from "../lib/emailTemplates";
 import { pickFields } from "../utils/pickFields";
+import { sanitizeObject } from "../utils/sanitize";
 
 const router = Router();
 
@@ -136,9 +137,9 @@ router.post(
       // Determine which schema to use based on the requested status
       const requestedStatus = req.body.status || "DRAFT";
       const isDraft = requestedStatus === "DRAFT";
-      const body = isDraft
+      const body = sanitizeObject(isDraft
         ? createDraftDealSchema.parse(req.body)
-        : createDealSchema.parse(req.body);
+        : createDealSchema.parse(req.body));
 
       // Verify user is founder of the company (check both owner and companyFounder)
       const founderProfile = await prisma.founderProfile.findUnique({
@@ -362,6 +363,10 @@ router.get("/", requireAuth, async (req: Request, res: Response) => {
       limit = "20",
     } = req.query;
 
+    // Validate pagination
+    const pageNum = Math.max(1, Math.floor(Number(page)) || 1);
+    const limitNum = Math.min(100, Math.max(1, Math.floor(Number(limit)) || 20));
+
     const where: any = {};
 
     // Allow status=ALL to skip status filter (useful for founders viewing their own deals)
@@ -369,17 +374,17 @@ router.get("/", requireAuth, async (req: Request, res: Response) => {
       where.status = status;
     }
 
-    if (companyId) where.companyId = companyId;
-    if (lane) where.lane = lane;
-    if (sector) {
+    if (companyId && typeof companyId === "string") where.companyId = companyId;
+    if (lane && typeof lane === "string") where.lane = lane;
+    if (sector && typeof sector === "string") {
       where.company = { sector };
     }
-    if (stage) {
+    if (stage && typeof stage === "string") {
       where.company = { ...where.company, stage };
     }
 
-    const skip = (Number(page) - 1) * Number(limit);
-    const take = Number(limit);
+    const skip = (pageNum - 1) * limitNum;
+    const take = limitNum;
 
     const [deals, total] = await Promise.all([
       prisma.deal.findMany({
@@ -430,9 +435,9 @@ router.get("/", requireAuth, async (req: Request, res: Response) => {
       data: deals,
       meta: {
         total,
-        page: Number(page),
-        limit: Number(limit),
-        totalPages: Math.ceil(total / Number(limit)),
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(total / limitNum),
       },
     });
   } catch (error) {
@@ -535,7 +540,7 @@ router.patch(
   async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
-      const body = updateDealSchema.parse(req.body);
+      const body = sanitizeObject(updateDealSchema.parse(req.body));
 
       // Get deal with company
       const deal = await prisma.deal.findUnique({

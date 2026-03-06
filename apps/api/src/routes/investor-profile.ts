@@ -4,6 +4,7 @@ import { requireAuth, requireRole } from "../middleware/auth";
 import { authLimiter } from "../middleware/rateLimiter";
 import bcrypt from "bcrypt";
 import { pickFields } from "../utils/pickFields";
+import { sanitizeObject } from "../utils/sanitize";
 
 const router = Router();
 
@@ -93,7 +94,7 @@ router.put(
   async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;
-      const body = pickFields(req.body, ALLOWED_PERSONAL_FIELDS, "PUT /investors/profile/personal");
+      const body = pickFields(sanitizeObject(req.body), ALLOWED_PERSONAL_FIELDS, "PUT /investors/profile/personal");
 
       if (!body.firstName || !body.lastName) {
         return res.status(400).json({
@@ -163,7 +164,7 @@ router.put(
   async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;
-      const body = pickFields(req.body, ALLOWED_INVESTOR_FIELDS, "PUT /investors/profile/investor");
+      const body = pickFields(sanitizeObject(req.body), ALLOWED_INVESTOR_FIELDS, "PUT /investors/profile/investor");
 
       if (!body.investorType) {
         return res.status(400).json({
@@ -224,7 +225,7 @@ router.put(
   async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;
-      const body = pickFields(req.body, ALLOWED_PREFERENCES_FIELDS, "PUT /investors/profile/preferences");
+      const body = pickFields(sanitizeObject(req.body), ALLOWED_PREFERENCES_FIELDS, "PUT /investors/profile/preferences");
 
       const profile = await prisma.investorProfile.findUnique({
         where: { userId },
@@ -240,19 +241,29 @@ router.put(
         });
       }
 
+      // Validate check sizes
+      const minCheck = body.minimumCheckSize != null ? parseFloat(body.minimumCheckSize) : undefined;
+      const maxCheck = body.maximumCheckSize != null ? parseFloat(body.maximumCheckSize) : undefined;
+      if (minCheck !== undefined && (isNaN(minCheck) || minCheck < 0)) {
+        return res.status(400).json({
+          success: false,
+          error: { message: "minimumCheckSize must be a positive number" },
+        });
+      }
+      if (maxCheck !== undefined && (isNaN(maxCheck) || maxCheck < 0)) {
+        return res.status(400).json({
+          success: false,
+          error: { message: "maximumCheckSize must be a positive number" },
+        });
+      }
+
       await prisma.investorProfile.update({
         where: { userId },
         data: {
           investmentFocus: body.preferredSectors ?? undefined,
           preferredLanes: body.preferredLanes ?? undefined,
-          minimumCheckSize:
-            body.minimumCheckSize != null
-              ? parseFloat(body.minimumCheckSize)
-              : undefined,
-          maximumCheckSize:
-            body.maximumCheckSize != null
-              ? parseFloat(body.maximumCheckSize)
-              : undefined,
+          minimumCheckSize: minCheck,
+          maximumCheckSize: maxCheck,
           holdingPeriod: body.holdingPeriod ?? undefined,
         },
       });
@@ -281,7 +292,7 @@ router.put(
   async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;
-      const sanitized = pickFields(req.body, ALLOWED_NOTIFICATION_FIELDS, "PUT /investors/profile/notifications");
+      const sanitized = pickFields(sanitizeObject(req.body), ALLOWED_NOTIFICATION_FIELDS, "PUT /investors/profile/notifications");
       const { notificationPreferences } = sanitized;
 
       const profile = await prisma.investorProfile.findUnique({
@@ -330,7 +341,7 @@ router.put(
   async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;
-      const sanitized = pickFields(req.body, ALLOWED_PASSWORD_FIELDS, "PUT /investors/password");
+      const sanitized = pickFields(sanitizeObject(req.body), ALLOWED_PASSWORD_FIELDS, "PUT /investors/password");
       const { currentPassword, newPassword, confirmPassword } = sanitized;
 
       if (!currentPassword || !newPassword || !confirmPassword) {
@@ -421,7 +432,7 @@ router.delete(
   async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;
-      const sanitized = pickFields(req.body, ALLOWED_DEACTIVATE_FIELDS, "DELETE /investors/account");
+      const sanitized = pickFields(sanitizeObject(req.body), ALLOWED_DEACTIVATE_FIELDS, "DELETE /investors/account");
       const { confirmEmail } = sanitized;
 
       if (!confirmEmail) {

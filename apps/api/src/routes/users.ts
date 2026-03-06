@@ -3,6 +3,7 @@ import { prisma } from "../lib/prisma";
 import { z } from "zod";
 import { requireAuth } from "../middleware/auth";
 import { pickFields } from "../utils/pickFields";
+import { sanitizeObject } from "../utils/sanitize";
 
 const router = Router();
 
@@ -92,7 +93,7 @@ const ALLOWED_USER_FIELDS = ["firstName", "lastName", "phone"];
 
 router.patch("/me", requireAuth, async (req: Request, res: Response) => {
   try {
-    const body = updateUserSchema.parse(req.body);
+    const body = sanitizeObject(updateUserSchema.parse(req.body));
     const updateData = pickFields(body, ALLOWED_USER_FIELDS, "PATCH /users/me");
 
     const user = await prisma.user.update({

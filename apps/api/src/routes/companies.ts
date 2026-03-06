@@ -6,6 +6,7 @@ import { submissionLimiter } from "../middleware/rateLimiter";
 import { sendEmail } from "../lib/email";
 import { companySubmissionEmail } from "../lib/emailTemplates";
 import { pickFields } from "../utils/pickFields";
+import { sanitizeObject, sanitizeString, isValidURL } from "../utils/sanitize";
 
 const router = Router();
 
@@ -107,14 +108,18 @@ router.get("/", requireAuth, async (req: Request, res: Response) => {
   try {
     const { sector, stage, lane, page = "1", limit = "20" } = req.query;
 
+    // Validate pagination params
+    const pageNum = Math.max(1, Math.floor(Number(page)) || 1);
+    const limitNum = Math.min(100, Math.max(1, Math.floor(Number(limit)) || 20));
+
     const where: any = {};
     where.approvalStatus = 'APPROVED';
-    if (sector) where.sector = sector;
-    if (stage) where.stage = stage;
-    if (lane) where.preferredLane = lane;
+    if (sector && typeof sector === "string") where.sector = sector;
+    if (stage && typeof stage === "string") where.stage = stage;
+    if (lane && typeof lane === "string") where.preferredLane = lane;
 
-    const skip = (Number(page) - 1) * Number(limit);
-    const take = Number(limit);
+    const skip = (pageNum - 1) * limitNum;
+    const take = limitNum;
 
     const [companies, total] = await Promise.all([
       prisma.company.findMany({
@@ -156,9 +161,9 @@ router.get("/", requireAuth, async (req: Request, res: Response) => {
       data: companies,
       meta: {
         total,
-        page: Number(page),
-        limit: Number(limit),
-        totalPages: Math.ceil(total / Number(limit)),
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(total / limitNum),
       },
     });
   } catch (error) {
@@ -466,7 +471,7 @@ router.post(
   requireRole("FOUNDER"),
   async (req: Request, res: Response) => {
     try {
-      const body = createCompanySchema.parse(req.body);
+      const body = sanitizeObject(createCompanySchema.parse(req.body));
 
       // Look up the FounderProfile for this user
       const founderProfile = await prisma.founderProfile.findUnique({
@@ -653,7 +658,7 @@ router.patch(
   async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
-      const body = updateCompanySchema.parse(req.body);
+      const body = sanitizeObject(updateCompanySchema.parse(req.body));
       const updateData = pickFields(body, ALLOWED_COMPANY_UPDATE_FIELDS, "PATCH /companies/:id");
 
       // Get founder profile
@@ -739,7 +744,7 @@ router.patch(
   async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
-      const { signature } = req.body;
+      const { signature } = req.body as { signature?: unknown };
 
       if (!signature || typeof signature !== "string" || !signature.trim()) {
         return res.status(400).json({
@@ -790,7 +795,7 @@ router.patch(
       const updated = await prisma.company.update({
         where: { id },
         data: {
-          participationExecutorSignature: signature.trim(),
+          participationExecutorSignature: sanitizeString(signature),
           participationExecutedAt: new Date(),
           participationExecutorIp: String(clientIp),
           participationStatus: "EXECUTED",
@@ -829,6 +834,17 @@ router.patch(
           success: false,
           error: { code: "VALIDATION_ERROR", message: "All four document URLs are required" },
         });
+      }
+
+      // Validate all are proper URLs
+      const docUrls = { boardResolutionUrl, shareCertificateUrl, shareholderRegisterUrl, capTableConfirmationUrl };
+      for (const [field, url] of Object.entries(docUrls)) {
+        if (typeof url !== "string" || !isValidURL(url)) {
+          return res.status(400).json({
+            success: false,
+            error: { code: "VALIDATION_ERROR", message: `${field} must be a valid URL` },
+          });
+        }
       }
 
       const founderProfile = await prisma.founderProfile.findUnique({

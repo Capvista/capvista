@@ -3,6 +3,7 @@ import { prisma } from "../lib/prisma";
 import { z } from "zod";
 import { requireAuth, requireRole } from "../middleware/auth";
 import { submissionLimiter } from "../middleware/rateLimiter";
+import { sanitizeObject } from "../utils/sanitize";
 
 const router = Router();
 
@@ -88,7 +89,7 @@ router.post(
         });
       }
 
-      const body = teamMemberSchema.parse(req.body);
+      const body = sanitizeObject(teamMemberSchema.parse(req.body));
 
       // Get current max sortOrder
       const lastMember = await prisma.teamMember.findFirst({
@@ -145,10 +146,10 @@ router.put(
       }
 
       const { memberIds } = req.body;
-      if (!Array.isArray(memberIds)) {
+      if (!Array.isArray(memberIds) || !memberIds.every((id: unknown) => typeof id === "string")) {
         return res.status(400).json({
           success: false,
-          error: { code: "VALIDATION_ERROR", message: "memberIds must be an array" },
+          error: { code: "VALIDATION_ERROR", message: "memberIds must be an array of strings" },
         });
       }
 
@@ -188,7 +189,7 @@ router.put(
         });
       }
 
-      const body = teamMemberSchema.partial().parse(req.body);
+      const body = sanitizeObject(teamMemberSchema.partial().parse(req.body));
 
       const member = await prisma.teamMember.update({
         where: { id: memberId },
@@ -289,7 +290,7 @@ router.put(
         });
       }
 
-      const body = updateCompanyInfoSchema.parse(req.body);
+      const body = sanitizeObject(updateCompanyInfoSchema.parse(req.body));
 
       const updated = await prisma.company.update({
         where: { id: companyId },

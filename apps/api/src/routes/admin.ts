@@ -10,6 +10,7 @@ import {
   dealLiveEmail,
   fundingConfirmedEmail,
 } from "../lib/emailTemplates";
+import { sanitizeString } from "../utils/sanitize";
 
 const router = Router();
 
@@ -346,14 +347,15 @@ router.patch("/companies/:id/approve", async (req: Request, res: Response) => {
 router.patch("/companies/:id/reject", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { reason } = req.body;
+    const rawReason = req.body?.reason;
 
-    if (!reason) {
+    if (!rawReason || typeof rawReason !== "string") {
       return res.status(400).json({
         success: false,
         error: { code: "VALIDATION_ERROR", message: "Reason is required for rejection" },
       });
     }
+    const reason = sanitizeString(rawReason);
 
     const company = await prisma.company.findUnique({ where: { id } });
     if (!company) {
@@ -409,14 +411,15 @@ router.patch("/companies/:id/reject", async (req: Request, res: Response) => {
 router.patch("/companies/:id/info", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { message } = req.body;
+    const rawMessage = req.body?.message;
 
-    if (!message) {
+    if (!rawMessage || typeof rawMessage !== "string") {
       return res.status(400).json({
         success: false,
         error: { code: "VALIDATION_ERROR", message: "Message is required" },
       });
     }
+    const cleanMessage = sanitizeString(rawMessage);
 
     const company = await prisma.company.findUnique({ where: { id } });
     if (!company) {
@@ -437,7 +440,7 @@ router.patch("/companies/:id/info", async (req: Request, res: Response) => {
           actionType: "COMPANY_INFO_REQUESTED",
           targetType: "COMPANY",
           targetId: id,
-          reason: message,
+          reason: cleanMessage,
         },
       }),
     ]);
@@ -511,7 +514,7 @@ router.patch("/companies/:id/verify-participation", async (req: Request, res: Re
           actionType: "PARTICIPATION_VERIFIED",
           targetType: "COMPANY",
           targetId: id,
-          metadata: { adminSignature: adminSignature.trim() },
+          metadata: { adminSignature: sanitizeString(adminSignature) },
         },
       }),
     ]);
@@ -666,14 +669,15 @@ router.patch("/investors/:id/verify", async (req: Request, res: Response) => {
 router.patch("/investors/:id/reject", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { reason } = req.body;
+    const rawReason = req.body?.reason;
 
-    if (!reason) {
+    if (!rawReason || typeof rawReason !== "string") {
       return res.status(400).json({
         success: false,
         error: { code: "VALIDATION_ERROR", message: "Reason is required for rejection" },
       });
     }
+    const reason = sanitizeString(rawReason);
 
     const investor = await prisma.investorProfile.findUnique({ where: { id } });
     if (!investor) {
@@ -729,14 +733,15 @@ router.patch("/investors/:id/reject", async (req: Request, res: Response) => {
 router.patch("/investors/:id/info", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { message } = req.body;
+    const rawMessage = req.body?.message;
 
-    if (!message) {
+    if (!rawMessage || typeof rawMessage !== "string") {
       return res.status(400).json({
         success: false,
         error: { code: "VALIDATION_ERROR", message: "Message is required" },
       });
     }
+    const cleanMessage = sanitizeString(rawMessage);
 
     const investor = await prisma.investorProfile.findUnique({ where: { id } });
     if (!investor) {
@@ -752,7 +757,7 @@ router.patch("/investors/:id/info", async (req: Request, res: Response) => {
         actionType: "INVESTOR_INFO_REQUESTED",
         targetType: "INVESTOR",
         targetId: id,
-        reason: message,
+        reason: cleanMessage,
       },
     });
 
@@ -963,14 +968,15 @@ router.patch("/deals/:id/approve", async (req: Request, res: Response) => {
 router.patch("/deals/:id/reject", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { reason } = req.body;
+    const rawReason = req.body?.reason;
 
-    if (!reason) {
+    if (!rawReason || typeof rawReason !== "string") {
       return res.status(400).json({
         success: false,
         error: { code: "VALIDATION_ERROR", message: "Reason is required for rejection" },
       });
     }
+    const reason = sanitizeString(rawReason);
 
     const deal = await prisma.deal.findUnique({ where: { id } });
     if (!deal) {
@@ -1094,7 +1100,7 @@ router.patch("/deals/:id/golive", async (req: Request, res: Response) => {
 router.patch("/deals/:id/close", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { reason } = req.body;
+    const reason = typeof req.body?.reason === "string" ? sanitizeString(req.body.reason) : undefined;
 
     const deal = await prisma.deal.findUnique({
       where: { id },
@@ -1321,6 +1327,17 @@ router.patch("/investments/:id/confirm-funding", async (req: Request, res: Respo
     const { id } = req.params;
     const { fundedAmount, externalRef } = req.body;
 
+    // Validate fundedAmount is a positive number
+    if (fundedAmount == null || typeof fundedAmount !== "number" || fundedAmount <= 0 || !isFinite(fundedAmount)) {
+      return res.status(400).json({
+        success: false,
+        error: { code: "VALIDATION_ERROR", message: "fundedAmount must be a positive number" },
+      });
+    }
+
+    // Sanitize externalRef if provided
+    const cleanExternalRef = typeof externalRef === "string" ? sanitizeString(externalRef) : undefined;
+
     const investment = await prisma.investment.findUnique({
       where: { id },
       include: { deal: true },
@@ -1373,7 +1390,7 @@ router.patch("/investments/:id/confirm-funding", async (req: Request, res: Respo
           amount: fundedAmount,
           direction: "INVESTOR_TO_ESCROW",
           status: "COMPLETED",
-          externalRef: externalRef || investment.fundingReference,
+          externalRef: cleanExternalRef || investment.fundingReference,
         },
       }),
       prisma.deal.update({
@@ -1390,7 +1407,7 @@ router.patch("/investments/:id/confirm-funding", async (req: Request, res: Respo
           targetType: "INVESTMENT",
           targetId: id,
           dealId: investment.dealId,
-          metadata: { fundedAmount, externalRef },
+          metadata: { fundedAmount, externalRef: cleanExternalRef },
         },
       }),
     ]);
@@ -1437,7 +1454,7 @@ router.patch("/investments/:id/confirm-funding", async (req: Request, res: Respo
 router.patch("/investments/:id/cancel", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { reason } = req.body;
+    const reason = typeof req.body?.reason === "string" ? sanitizeString(req.body.reason) : undefined;
 
     const investment = await prisma.investment.findUnique({
       where: { id },

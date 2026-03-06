@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { requireAuth, requireRole } from "../middleware/auth";
+import { sanitizeObject } from "../utils/sanitize";
 
 const router = Router();
 
@@ -91,7 +92,7 @@ router.put(
   async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;
-      const body = req.body;
+      const body = sanitizeObject(req.body);
 
       if (
         !body.investorType ||
@@ -135,6 +136,20 @@ router.put(
           error: {
             message: `Missing required compliance fields: ${complianceMissing.join(", ")}`,
           },
+        });
+      }
+
+      // Validate check sizes are positive numbers if provided
+      if (body.minimumCheckSize != null && (typeof body.minimumCheckSize !== "number" || body.minimumCheckSize < 0)) {
+        return res.status(400).json({
+          success: false,
+          error: { message: "minimumCheckSize must be a positive number" },
+        });
+      }
+      if (body.maximumCheckSize != null && (typeof body.maximumCheckSize !== "number" || body.maximumCheckSize < 0)) {
+        return res.status(400).json({
+          success: false,
+          error: { message: "maximumCheckSize must be a positive number" },
         });
       }
 
