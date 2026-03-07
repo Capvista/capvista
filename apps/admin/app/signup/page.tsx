@@ -258,7 +258,7 @@ export default function SignupPage() {
                 setFieldErrors((prev) => ({ ...prev, email: undefined }));
               }}
               style={inputStyle(!!fieldErrors.email)}
-              placeholder="admin@capvista.com"
+              placeholder="Enter your email"
             />
             {fieldErrors.email && (
               <p style={errorTextStyle}>{fieldErrors.email}</p>
