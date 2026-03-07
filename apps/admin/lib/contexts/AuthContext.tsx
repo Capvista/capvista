@@ -35,6 +35,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const clearAuth = () => {
     localStorage.removeItem("capvista_admin_token");
     localStorage.removeItem("capvista_admin_user");
+    document.cookie = "capvista_admin_token=; path=/; max-age=0";
     setAccessToken(null);
     setUser(null);
   };
@@ -59,6 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (res.ok) {
             setAccessToken(storedToken);
             setUser(parsed);
+            document.cookie = `capvista_admin_token=${storedToken}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`;
           } else {
             // Token is expired or invalid — clear and redirect to login
             clearAuth();
@@ -76,7 +78,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!loading && !user && pathname !== "/login" && pathname !== "/signup") {
+    const publicPaths = ["/login", "/signup", "/setup-mfa", "/verify-mfa"];
+    if (!loading && !user && !publicPaths.includes(pathname)) {
       router.push("/login");
     }
   }, [loading, user, pathname, router]);
@@ -101,6 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       localStorage.setItem("capvista_admin_token", result.data.accessToken);
       localStorage.setItem("capvista_admin_user", JSON.stringify(result.data.user));
+      document.cookie = `capvista_admin_token=${result.data.accessToken}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`;
       setAccessToken(result.data.accessToken);
       setUser(result.data.user);
 
