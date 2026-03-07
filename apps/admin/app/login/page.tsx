@@ -127,7 +127,7 @@ export default function LoginPage() {
                 outline: "none",
                 boxSizing: "border-box",
               }}
-              placeholder="Enter your email"
+              placeholder="admin@capvista.com"
             />
           </div>
 
